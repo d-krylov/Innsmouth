@@ -38,8 +38,46 @@ enum class CommandBufferUsage {
   SIMULTANEOUS_USE = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,
 };
 
+enum class ImageAspect {
+  COLOR = VK_IMAGE_ASPECT_COLOR_BIT,
+  DEPTH = VK_IMAGE_ASPECT_DEPTH_BIT,
+  STENCIL = VK_IMAGE_ASPECT_STENCIL_BIT
+};
+
 enum class BufferUsage {
 #define VULKAN_BUFFER_USAGE(X) X = VK_BUFFER_USAGE_##X##_BIT,
+#include "graphics_types.def"
+};
+
+enum class ImageUsage {
+#define VULKAN_IMAGE_USAGE(X) X = VK_IMAGE_USAGE_##X##_BIT,
+#include "graphics_types.def"
+};
+
+enum class ShaderStage {
+#define VULKAN_SHADER_STAGE(X) X = VK_SHADER_STAGE_##X##_BIT,
+#include "graphics_types.def"
+};
+
+enum class ImageLayout {
+#define VULKAN_IMAGE_LAYOUT(X) X = VK_IMAGE_LAYOUT_##X,
+#include "graphics_types.def"
+  PRESENT_SRC_KHR = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+};
+
+enum class PipelineStage {
+#define VULKAN_PIPELINE_STAGE(X) X = VK_PIPELINE_STAGE_##X##_BIT,
+#include "graphics_types.def"
+  NONE = VK_PIPELINE_STAGE_NONE
+};
+
+enum class SamplerAddressMode {
+#define VULKAN_SAMPLER_ADDRESS_MODE(X) X = VK_SAMPLER_ADDRESS_MODE_##X,
+#include "graphics_types.def"
+};
+
+enum class DescriptorType {
+#define VULKAN_DESCRIPTOR_TYPE(X) X = VK_DESCRIPTOR_TYPE_##X,
 #include "graphics_types.def"
 };
 
@@ -64,6 +102,10 @@ struct WriteDescriptorSet {
 };
 
 [[nodiscard]] VkAccessFlags GetAccessMask(VkImageLayout layout);
+[[nodiscard]] uint32_t GetMipLevels(const VkExtent3D &e);
+[[nodiscard]] VkImageSubresourceRange
+CreateImageSubresourceRange(ImageAspect aspect = ImageAspect::COLOR, uint32_t base_level = 0,
+                            uint32_t levels = 1, uint32_t base_layer = 0, uint32_t layers = 1);
 
 } // namespace Innsmouth
 

@@ -274,6 +274,10 @@ void CreateGraphics(const GraphicsDescription &graphics_description) {
   CreateVmaAllocator(graphics_description);
 }
 
-void DestroyGraphics() {}
+void DestroyGraphics() {
+  vkDestroyCommandPool(device_, command_pool_, nullptr);
+  vkDestroyDevice(device_, nullptr);
+  vkDestroyInstance(instance_, nullptr);
+}
 
 } // namespace Innsmouth

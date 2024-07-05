@@ -14,14 +14,15 @@ public:
 
   ~CoreImage() = default;
 
+  [[nodiscard]] uint32_t GetWidth() const { return uint32_t(size_.x); }
+  [[nodiscard]] uint32_t GetHeight() const { return uint32_t(size_.y); }
   [[nodiscard]] const Vector2i &GetSize() const { return size_; }
   [[nodiscard]] std::size_t GetLength() const { return size_.x * size_.y * channels_; }
 
-  [[nodiscard]] const std::unique_ptr<std::byte[]> &GetData() const { return data_; }
-  [[nodiscard]] std::unique_ptr<std::byte[]> &GetData() { return data_; }
+  [[nodiscard]] std::span<std::byte> GetData() const { return data_; }
 
 private:
-  std::unique_ptr<std::byte[]> data_;
+  std::span<std::byte> data_;
   Vector2i size_;
   int32_t channels_;
 };

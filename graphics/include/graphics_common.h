@@ -2,7 +2,7 @@
 #define INNSMOUTH_GRAPHICS_COMMON_H
 
 #include "graphics/graphics_pipeline/graphics_pipeline.h"
-#include "graphics/image/image.h"
+#include "graphics/image/image_2d.h"
 #include "graphics/include/buffer.h"
 #include "graphics/include/command_buffer.h"
 #include "graphics/include/graphics.h"

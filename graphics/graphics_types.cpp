@@ -33,4 +33,23 @@ VkAccessFlags GetAccessMask(VkImageLayout layout) {
 }
 // clang-format on
 
+uint32_t GetMipLevels(const VkExtent3D &e) {
+  auto m = std::max(e.width, std::max(e.height, e.depth));
+  return static_cast<uint32_t>(std::floor(std::log2(m))) + 1;
+}
+
+// clang-format off
+VkImageSubresourceRange CreateImageSubresourceRange(ImageAspect aspect, uint32_t base_level,
+                                                    uint32_t levels, uint32_t base_layer,
+                                                    uint32_t layers) {
+  return VkImageSubresourceRange{
+    .aspectMask = VkImageAspectFlags(aspect),
+    .baseMipLevel = base_level,
+    .levelCount = levels,
+    .baseArrayLayer = base_layer,
+    .layerCount = layers
+  };
+}
+// clang-format on
+
 } // namespace Innsmouth

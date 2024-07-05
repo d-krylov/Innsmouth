@@ -28,6 +28,10 @@ public:
     buffer_.SetData(std::span<Innsmouth::Vertex>(box));
 
     camera_.SetPosition(Innsmouth::Vector3f(0.0f, 0.0f, 4.0f));
+
+    Innsmouth::CoreImage core_image("../assets/images/container.png");
+
+    image_ = std::make_unique<Innsmouth::Image2D>(core_image);
   }
 
   void OnUpdate(Innsmouth::CommandBuffer &command_buffer) override {
@@ -44,8 +48,13 @@ public:
                      .model_matrix_ = glm::rotate(Innsmouth::Matrix4f(1.0f),
                                                   float(Innsmouth::GetTime()), Innsmouth::Y_)};
 
-    command_buffer.CommandPushConstants(*graphics_pipeline_,
-                                        VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
+    auto write_descriptor =
+      image_->GetWriteDescriptorSet(0, Innsmouth::DescriptorType::COMBINED_IMAGE_SAMPLER);
+
+    command_buffer.CommandPushDescriptorSet(
+      *graphics_pipeline_, 0, Innsmouth::ToSpan(write_descriptor.write_descriptor_set_));
+
+    command_buffer.CommandPushConstants(*graphics_pipeline_, Innsmouth::ShaderStage::VERTEX,
                                         std::as_bytes(Innsmouth::ToSpan(pc)));
 
     command_buffer.CommandDraw(36, 1, 0, 0);
@@ -53,6 +62,7 @@ public:
 
 private:
   std::unique_ptr<Innsmouth::GraphicsPipeline> graphics_pipeline_;
+  std::unique_ptr<Innsmouth::Image2D> image_;
   Innsmouth::Buffer buffer_;
   Innsmouth::Camera camera_;
 };

@@ -22,6 +22,8 @@ public:
 
   ~GraphicsPipeline();
 
+  NO_COPY_SEMANTIC(GraphicsPipeline);
+
   operator const VkPipeline &() const { return graphics_pipeline_; }
 
   [[nodiscard]] const VkPipelineLayout GetPipelineLayout() const { return pipeline_layout_; }

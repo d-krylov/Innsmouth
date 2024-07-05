@@ -47,20 +47,21 @@ public:
   void CommandDrawIndexed(uint32_t index_count, uint32_t instance_count, uint32_t first_index,
                           int32_t vertex_offset, uint32_t first_instance);
 
-  void CommandPushConstants(const GraphicsPipeline &graphics_pipeline, VkShaderStageFlags stage,
+  void CommandPushConstants(const GraphicsPipeline &graphics_pipeline, ShaderStage stage,
                             std::span<const std::byte> data, uint32_t offset = 0);
 
   void CommandPushDescriptorSet(const GraphicsPipeline &graphics_pipeline, uint32_t set_number,
                                 std::span<const VkWriteDescriptorSet> sets);
 
   void CommandCopyBufferToImage(const Buffer &buffer, const Image &image, const VkExtent3D &extent,
+                                uint32_t level = 0, uint32_t base_layer = 0, uint32_t layers = 1,
                                 VkDeviceSize buffer_offset = 0,
                                 const VkOffset3D &image_offset = {0, 0, 0});
 
-  void CommandSetImageLayout(const VkImage &image, VkImageLayout from, VkImageLayout to,
-                             VkPipelineStageFlags source_stage,
-                             VkPipelineStageFlags destination_stage, uint32_t levels,
-                             uint32_t layers);
+  void CommandSetImageLayout(const VkImage &image, ImageLayout from, ImageLayout to,
+                             const VkImageSubresourceRange &range,
+                             PipelineStage source_stage = PipelineStage::ALL_COMMANDS,
+                             PipelineStage destination_stage = PipelineStage::ALL_COMMANDS);
 
 private:
   VkCommandBuffer command_buffer_{VK_NULL_HANDLE};

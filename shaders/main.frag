@@ -9,5 +9,7 @@ layout (location = 0) out vec4 out_color;
 layout (binding = 0) uniform sampler2D texture_sampler;
 
 void main() {
-  out_color = vec4(0.2, 0.3, 0.4, 1.0);
+  //out_color = vec4(0.2, 0.3, 0.4, 1.0);
+
+  out_color = texture(texture_sampler, in_uv);
 }

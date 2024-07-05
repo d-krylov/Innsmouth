@@ -5,11 +5,9 @@
 namespace Innsmouth {
 
 CoreImage::CoreImage(const std::filesystem::path &path) {
-  auto data =
-    ToBytePointer(stbi_load(path.c_str(), &size_.x, &size_.y, &channels_, STBI_rgb_alpha));
-
+  auto data = ToBytePointer(stbi_load(path.c_str(), &size_.x, &size_.y, &channels_, 0));
   if (data != nullptr) {
-    data_ = std::unique_ptr<std::byte[]>(data);
+    data_ = std::span<std::byte>(data, size_.x * size_.y * channels_);
   }
 }
 

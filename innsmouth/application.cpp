@@ -77,7 +77,7 @@ void Application::Run() {
       submit_info.pWaitSemaphores = image_available.get();
       submit_info.pWaitDstStageMask = wait_stages;
       submit_info.commandBufferCount = 1;
-      submit_info.pCommandBuffers = command_buffers_[current_frame_].get();
+      submit_info.pCommandBuffers = command_buffer.get();
       submit_info.signalSemaphoreCount = 1;
       submit_info.pSignalSemaphores = render_finished.get();
     }

@@ -124,10 +124,10 @@ void CommandBuffer::CommandDrawIndexed(uint32_t index_count, uint32_t instance_c
 }
 
 void CommandBuffer::CommandPushConstants(const GraphicsPipeline &graphics_pipeline,
-                                         VkShaderStageFlags stage, std::span<const std::byte> d,
+                                         ShaderStage stage, std::span<const std::byte> d,
                                          uint32_t offset) {
-  vkCmdPushConstants(command_buffer_, graphics_pipeline.GetPipelineLayout(), stage, offset,
-                     d.size(), d.data());
+  vkCmdPushConstants(command_buffer_, graphics_pipeline.GetPipelineLayout(),
+                     VkShaderStageFlags(stage), offset, d.size(), d.data());
 }
 
 void CommandBuffer::CommandPushDescriptorSet(const GraphicsPipeline &graphics_pipeline,
@@ -139,14 +139,16 @@ void CommandBuffer::CommandPushDescriptorSet(const GraphicsPipeline &graphics_pi
 }
 
 void CommandBuffer::CommandCopyBufferToImage(const Buffer &buffer, const Image &image,
-                                             const VkExtent3D &extent, VkDeviceSize buffer_offset,
+                                             const VkExtent3D &extent, uint32_t level,
+                                             uint32_t base_layer, uint32_t layers,
+                                             VkDeviceSize buffer_offset,
                                              const VkOffset3D &image_offset) {
   VkImageSubresourceLayers subresource_layers{};
   {
     subresource_layers.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    subresource_layers.mipLevel = 0;
-    subresource_layers.baseArrayLayer = 0;
-    subresource_layers.layerCount = 1;
+    subresource_layers.mipLevel = level;
+    subresource_layers.baseArrayLayer = base_layer;
+    subresource_layers.layerCount = layers;
   }
 
   VkBufferImageCopy buffer_image_copy{};
@@ -159,46 +161,37 @@ void CommandBuffer::CommandCopyBufferToImage(const Buffer &buffer, const Image &
     buffer_image_copy.imageExtent = extent;
   }
 
-  vkCmdCopyBufferToImage(command_buffer_, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
-                         &buffer_image_copy);
+  VkImageLayout destination = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+  vkCmdCopyBufferToImage(command_buffer_, buffer, image, destination, 1, &buffer_image_copy);
 }
 
-void CommandBuffer::CommandSetImageLayout(const VkImage &image, VkImageLayout from,
-                                          VkImageLayout to, VkPipelineStageFlags source_stage,
-                                          VkPipelineStageFlags destination_stage, uint32_t levels,
-                                          uint32_t layers) {
-  auto access_mask = GetAccessMask(from);
-
-  VkImageSubresourceRange subresource_range{};
-  {
-    subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    subresource_range.baseMipLevel = 0;
-    subresource_range.levelCount = levels;
-    subresource_range.baseArrayLayer = 0;
-    subresource_range.layerCount = layers;
-  }
+void CommandBuffer::CommandSetImageLayout(const VkImage &image, ImageLayout from, ImageLayout to,
+                                          const VkImageSubresourceRange &range,
+                                          PipelineStage source, PipelineStage destination) {
+  auto access_mask = GetAccessMask(VkImageLayout(from));
 
   VkImageMemoryBarrier image_memory_barrier{};
   {
     image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-    image_memory_barrier.oldLayout = from;
-    image_memory_barrier.newLayout = to;
+    image_memory_barrier.oldLayout = VkImageLayout(from);
+    image_memory_barrier.newLayout = VkImageLayout(to);
     image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     image_memory_barrier.image = image;
-    image_memory_barrier.subresourceRange = subresource_range;
+    image_memory_barrier.subresourceRange = range;
     image_memory_barrier.srcAccessMask = access_mask;
     image_memory_barrier.dstAccessMask = access_mask;
   }
 
-  if (to == VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+  if (to == ImageLayout::SHADER_READ_ONLY_OPTIMAL) {
     if (access_mask == 0) {
       image_memory_barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
     }
   }
 
-  vkCmdPipelineBarrier(command_buffer_, source_stage, destination_stage, 0, 0, nullptr, 0, nullptr,
-                       1, &image_memory_barrier);
+  vkCmdPipelineBarrier(command_buffer_, VkPipelineStageFlags(source),
+                       VkPipelineStageFlags(destination), 0, 0, nullptr, 0, nullptr, 1,
+                       &image_memory_barrier);
 }
 
 } // namespace Innsmouth

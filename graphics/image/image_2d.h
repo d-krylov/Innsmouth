@@ -1,6 +1,7 @@
 #ifndef INNSMOUTH_IMAGE_2D_H
 #define INNSMOUTH_IMAGE_2D_H
 
+#include "core/include/core_image.h"
 #include "graphics/image/image.h"
 #include <span>
 
@@ -8,9 +9,9 @@ namespace Innsmouth {
 
 class Image2D : public Image {
 public:
-  Image2D();
+  Image2D(const CoreImage &core_image);
 
-  void SetData(std::span<std::byte> data, uint32_t layers, uint32_t base_layer);
+  void SetData(std::span<std::byte> data);
 
 private:
   uint32_t channels_;

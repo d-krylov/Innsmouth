@@ -135,12 +135,16 @@ void Swapchain::CreateImages() {
 
 void Swapchain::CreateImageViews() {
   image_views_.resize(images_.size());
-  for (uint32_t i = 0; i < image_views_.size(); i++) {
-    Image::CreateImageView(images_[i], image_views_[i], surface_format_.format);
 
-    Image::TransitionImageLayout(images_[i], surface_format_.format,
-                                 VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
-                                 VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, 1, 1);
+  auto range = CreateImageSubresourceRange();
+
+  for (uint32_t i = 0; i < image_views_.size(); i++) {
+    Image::CreateImageView(images_[i], image_views_[i], surface_format_.format,
+                           VkImageViewType::VK_IMAGE_VIEW_TYPE_2D, range);
+
+    Image::TransitionImageLayout(images_[i], ImageLayout::UNDEFINED, ImageLayout::PRESENT_SRC_KHR,
+                                 PipelineStage::TOP_OF_PIPE, PipelineStage::COLOR_ATTACHMENT_OUTPUT,
+                                 range);
   }
 }
 

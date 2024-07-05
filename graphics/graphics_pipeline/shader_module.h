@@ -17,6 +17,8 @@ public:
 
   ~ShaderModule();
 
+  NO_COPY_SEMANTIC(ShaderModule);
+
   [[nodiscard]] const std::vector<VkPushConstantRange> &GetPushConstantRanges() const {
     return push_constant_ranges_;
   }

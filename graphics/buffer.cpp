@@ -25,10 +25,7 @@ Buffer::Buffer(BufferUsage buffer_usage, VkDeviceSize size, VmaMemoryUsage memor
   vmaCreateBuffer(Allocator(), &buffer_ci, &vma_allocation_ci, &buffer_, &allocation_, nullptr);
 }
 
-Buffer::~Buffer() {
-  vkDestroyBuffer(Device(), buffer_, nullptr);
-  vmaDestroyBuffer(Allocator(), buffer_, allocation_);
-}
+Buffer::~Buffer() { vmaDestroyBuffer(Allocator(), buffer_, allocation_); }
 
 std::span<std::byte> Buffer::Map(VkDeviceSize size, VkDeviceSize offset) {
   void *mapped{nullptr};
