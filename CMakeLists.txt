@@ -50,8 +50,8 @@ set(GRAPHICS_SOURCES
 set(GUI_SOURCES
   ${PROJECT_SOURCE_DIR}/gui/window.cpp
   ${PROJECT_SOURCE_DIR}/gui/window_callback.cpp
-  #${PROJECT_SOURCE_DIR}/gui/imgui/imgui_renderer.cpp
-  #${PROJECT_SOURCE_DIR}/gui/imgui/imgui_platform.cpp
+  ${PROJECT_SOURCE_DIR}/gui/imgui/imgui_renderer.cpp
+  ${PROJECT_SOURCE_DIR}/gui/imgui/imgui_platform.cpp
 )
 
 set(MESH_SOURCES
@@ -63,7 +63,7 @@ set(INNSMOUTH_SOURCES
   ${GRAPHICS_SOURCES}
   ${MESH_SOURCES}
   ${SCENE_SOURCES}
-  #${IMGUI_SOURCES}
+  ${IMGUI_SOURCES}
   ${GUI_SOURCES}
   ${PROJECT_SOURCE_DIR}/core/tools.cpp
   ${PROJECT_SOURCE_DIR}/core/core_image.cpp
@@ -76,8 +76,8 @@ set(SHADER_FILES
   ${PROJECT_SOURCE_DIR}/shaders/main.vert
   ${PROJECT_SOURCE_DIR}/shaders/main.frag
   #${PROJECT_SOURCE_DIR}/shaders/test.frag
-  #${PROJECT_SOURCE_DIR}/shaders/gui.vert
-  #${PROJECT_SOURCE_DIR}/shaders/gui.frag
+  ${PROJECT_SOURCE_DIR}/shaders/gui.vert
+  ${PROJECT_SOURCE_DIR}/shaders/gui.frag
   #${PROJECT_SOURCE_DIR}/shaders/canvas.vert
   #${PROJECT_SOURCE_DIR}/shaders/canvas.frag
 )

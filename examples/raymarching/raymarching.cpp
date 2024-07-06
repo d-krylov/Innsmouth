@@ -1,5 +1,6 @@
 #include "core/include/tools.h"
 #include "easyloggingpp/easylogging++.h"
+#include "imgui.h"
 #include "innsmouth/include/application.h"
 #include "mesh/include/primitives.h"
 #include "scene/include/camera.h"
@@ -34,8 +35,14 @@ public:
     image_ = std::make_unique<Innsmouth::Image2D>(core_image);
   }
 
-  void OnUpdate(Innsmouth::CommandBuffer &command_buffer) override {
+  void OnImGui() override {
+    ImGui::Begin("Window");
+    // ImGui::Button("Hello", ImVec2(100.0f, 100.0f));
+    ImGui::End();
+  }
 
+  void OnUpdate(Innsmouth::CommandBuffer &command_buffer) override {
+#if 0
     auto extent = swapchain_->GetSurfaceCapabilities().currentExtent;
 
     command_buffer.CommandSetViewport((float)extent.width, (float)extent.height);
@@ -58,6 +65,7 @@ public:
                                         std::as_bytes(Innsmouth::ToSpan(pc)));
 
     command_buffer.CommandDraw(36, 1, 0, 0);
+#endif
   }
 
 private:

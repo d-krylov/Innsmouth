@@ -4,6 +4,7 @@
 #include "core/include/core_types.h"
 #include "event.h"
 #include "graphics/include/graphics_types.h"
+#include "window_event_handler.h"
 #include <cstdint>
 #include <functional>
 #include <string_view>
@@ -33,6 +34,9 @@ public:
 
   void CreateSurface(const VkInstance instance, VkSurfaceKHR *surface);
 
+  void SetWindowEventHandler(WindowEventHandler *handler) { window_event_handler_ = handler; }
+  [[nodiscard]] WindowEventHandler *GetEventHandler() const { return window_event_handler_; }
+
   void SetEventCallback(const EventCallback &callback) { event_callback_ = callback; }
 
   [[nodiscard]] const EventCallback &GetEventCallback() const { return event_callback_; }
@@ -46,6 +50,7 @@ protected:
 private:
   GLFWwindow *native_window_{nullptr};
   EventCallback event_callback_;
+  WindowEventHandler *window_event_handler_{nullptr};
 };
 
 } // namespace Innsmouth

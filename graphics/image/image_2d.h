@@ -11,6 +11,8 @@ class Image2D : public Image {
 public:
   Image2D(const CoreImage &core_image);
 
+  Image2D(const VkExtent2D &extent, std::span<std::byte> data);
+
   void SetData(std::span<std::byte> data);
 
 private:

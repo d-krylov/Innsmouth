@@ -92,9 +92,12 @@ void CommandBuffer::CommandBeginRendering(const VkImageView image_view, const Vk
 
 void CommandBuffer::CommandEndRendering() { vkCmdEndRenderingKHR(command_buffer_); }
 
-void CommandBuffer::CommandSetScissor(uint32_t w, uint32_t h, int32_t x, int32_t y) {
-  VkRect2D scissor{{x, y}, {w, h}};
+void CommandBuffer::CommandSetScissor(const VkRect2D &scissor) {
   vkCmdSetScissor(command_buffer_, 0, 1, &scissor);
+}
+
+void CommandBuffer::CommandSetScissor(uint32_t w, uint32_t h, int32_t x, int32_t y) {
+  CommandSetScissor({{x, y}, {w, h}});
 }
 
 void CommandBuffer::CommandBindPipeline(const GraphicsPipeline &graphics_pipeline) {

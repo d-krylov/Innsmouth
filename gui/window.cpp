@@ -17,6 +17,10 @@ Window::Window(std::string_view name, const Vector2i &size) {
 
   if (native_window_ == nullptr) {
   }
+
+  SetUserPointer();
+
+  SetCallbacks();
 }
 
 void Window::PollEvents() { glfwPollEvents(); }

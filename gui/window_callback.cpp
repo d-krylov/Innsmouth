@@ -3,37 +3,30 @@
 
 namespace Innsmouth {
 
-void KeyCallback(GLFWwindow *native, int key, int scancode, int action, int mod) {
+WindowEventHandler *GetEventHandler(GLFWwindow *native) {
   Window *window = reinterpret_cast<Window *>(glfwGetWindowUserPointer(native));
-  const auto &callback = window->GetEventCallback();
-  switch (action) {
-  case GLFW_PRESS: {
-    KeyPressEvent event(key, scancode, mod);
-    callback(event);
-    break;
-  }
-  case GLFW_RELEASE: {
-    KeyReleaseEvent event(key, scancode, mod);
-    callback(event);
-    break;
-  }
-  case GLFW_REPEAT: {
-    KeyRepeatEvent event(key, scancode, mod);
-    callback(event);
-    break;
-  }
-  default:
-    break;
-  }
+  auto handler = window->GetEventHandler();
+  return handler;
+}
+
+void KeyCallback(GLFWwindow *native, int key, int scancode, int action, int mod) {
+  auto handler = GetEventHandler(native);
+  handler->OnKey(key, scancode, action, mod);
 }
 
 void WindowSizeCallback(GLFWwindow *wnd, int width, int height) {}
 
 void WindowCloseCallback(GLFWwindow *wnd) {}
 
-void CursorPositionCallback(GLFWwindow *wnd, double xpos, double ypos) {}
+void CursorPositionCallback(GLFWwindow *native, double xpos, double ypos) {
+  auto handler = GetEventHandler(native);
+  handler->OnCursorPos(xpos, ypos);
+}
 
-void MouseButtonCallback(GLFWwindow *wnd, int button, int action, int mods) {}
+void MouseButtonCallback(GLFWwindow *native, int button, int action, int mods) {
+  auto handler = GetEventHandler(native);
+  handler->OnMouseButton(button, action, mods);
+}
 
 void WindowRefreshCallback(GLFWwindow *wnd) {}
 

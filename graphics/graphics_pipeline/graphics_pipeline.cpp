@@ -64,14 +64,26 @@ GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineDescription &descriptio
 
   ProcessDescriptorSets(shader_modules);
 
-  auto attributes = shader_modules[0].GetVertexInputAttributes();
-  auto binding = shader_modules[0].GetVertexInputBinding();
+  std::vector<VkVertexInputAttributeDescription> attributes;
+  std::vector<VkVertexInputBindingDescription> bindings;
+
+  if (description.vertex_attributes_.empty()) {
+    attributes = shader_modules[0].GetVertexInputAttributes();
+  } else {
+    attributes = description.vertex_attributes_;
+  }
+
+  if (description.vertex_bindings_.empty()) {
+    bindings.emplace_back(shader_modules[0].GetVertexInputBinding());
+  } else {
+    bindings = description.vertex_bindings_;
+  }
 
   VkPipelineVertexInputStateCreateInfo vertex_input_state_ci{};
   {
     vertex_input_state_ci.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertex_input_state_ci.vertexBindingDescriptionCount = 1;
-    vertex_input_state_ci.pVertexBindingDescriptions = &binding;
+    vertex_input_state_ci.vertexBindingDescriptionCount = bindings.size();
+    vertex_input_state_ci.pVertexBindingDescriptions = bindings.data();
     vertex_input_state_ci.vertexAttributeDescriptionCount = attributes.size();
     vertex_input_state_ci.pVertexAttributeDescriptions = attributes.data();
   }
@@ -98,8 +110,8 @@ GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineDescription &descriptio
     rasterization_state_ci.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterization_state_ci.polygonMode = VK_POLYGON_MODE_FILL;
     rasterization_state_ci.lineWidth = 1.0f;
-    rasterization_state_ci.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterization_state_ci.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    rasterization_state_ci.cullMode = VK_CULL_MODE_NONE;
+    rasterization_state_ci.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterization_state_ci.depthBiasEnable = VK_FALSE;
   }
 
@@ -129,7 +141,7 @@ GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineDescription &descriptio
 
   VkPipelineColorBlendAttachmentState blend_attachment_state{};
   {
-    blend_attachment_state.blendEnable = VK_FALSE;
+    blend_attachment_state.blendEnable = VK_TRUE;
     blend_attachment_state.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
     blend_attachment_state.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     blend_attachment_state.colorBlendOp = VK_BLEND_OP_ADD;
@@ -152,10 +164,10 @@ GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineDescription &descriptio
     depth_stencil_state_ci.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     depth_stencil_state_ci.depthTestEnable = VK_FALSE;
     depth_stencil_state_ci.depthWriteEnable = VK_FALSE;
-    depth_stencil_state_ci.depthCompareOp = VK_COMPARE_OP_LESS;
+    depth_stencil_state_ci.depthCompareOp = VK_COMPARE_OP_NEVER;
     depth_stencil_state_ci.depthBoundsTestEnable = VK_FALSE;
     depth_stencil_state_ci.minDepthBounds = 0.0f;
-    depth_stencil_state_ci.maxDepthBounds = 1.0f;
+    depth_stencil_state_ci.maxDepthBounds = 0.0f;
     depth_stencil_state_ci.stencilTestEnable = VK_FALSE;
     depth_stencil_state_ci.front = {};
     depth_stencil_state_ci.back = {};

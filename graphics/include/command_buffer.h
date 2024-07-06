@@ -33,7 +33,10 @@ public:
   void Flush();
 
   void CommandSetViewport(float w, float h, float x = 0.0f, float y = 0.0f);
+
+  void CommandSetScissor(const VkRect2D &scissor);
   void CommandSetScissor(uint32_t w, uint32_t h, int32_t x = 0, int32_t y = 0);
+
   void CommandBeginRendering(const VkImageView image_view, const VkExtent2D &extent);
   void CommandEndRendering();
   void CommandBindPipeline(const GraphicsPipeline &graphics_pipeline);

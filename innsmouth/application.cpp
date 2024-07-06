@@ -3,7 +3,7 @@
 namespace Innsmouth {
 
 Application::Application(std::string_view name, uint32_t width, uint32_t height)
-  : window_(name, Vector2i(width, height)) {
+  : window_(name, Vector2i(width, height)), imgui_platform_(&window_) {
   CreateGraphics(GraphicsDescription::CreateDefault());
   Initialize();
 }
@@ -12,6 +12,8 @@ Application::~Application() {}
 
 void Application::Initialize() {
   swapchain_ = std::make_unique<Swapchain>(window_);
+
+  imgui_renderer_ = std::make_unique<ImGuiRenderer>(*swapchain_);
 
   const auto &image_views = swapchain_->GetImageViews();
 
@@ -65,6 +67,11 @@ void Application::Run() {
                                          swapchain_->GetSurfaceCapabilities().currentExtent);
 
     OnUpdate(command_buffer);
+
+    imgui_platform_.NewFrame();
+    imgui_renderer_->Begin();
+    OnImGui();
+    imgui_renderer_->End(command_buffer);
 
     command_buffer.CommandEndRendering();
 

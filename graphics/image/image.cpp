@@ -69,11 +69,12 @@ void Image::CreateImageSampler(VkSampler &sampler, VkFilter min, VkFilter mag, S
     sampler_ci.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
     sampler_ci.compareEnable = VK_FALSE;
     sampler_ci.unnormalizedCoordinates = VK_FALSE;
-    sampler_ci.compareOp = VK_COMPARE_OP_ALWAYS;
+    sampler_ci.compareOp = VK_COMPARE_OP_NEVER;
     sampler_ci.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     sampler_ci.mipLodBias = 0.0f;
-    sampler_ci.minLod = 0.0f;
-    sampler_ci.maxLod = 0.0f;
+    sampler_ci.minLod = -1000.0f;
+    sampler_ci.maxLod = 1000.0f;
+    sampler_ci.maxAnisotropy = 1.0f;
   }
   VK_CHECK(vkCreateSampler(Device(), &sampler_ci, nullptr, &sampler));
 }

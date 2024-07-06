@@ -52,6 +52,7 @@ enum class BufferUsage {
 enum class ImageUsage {
 #define VULKAN_IMAGE_USAGE(X) X = VK_IMAGE_USAGE_##X##_BIT,
 #include "graphics_types.def"
+  SAMPLED_TRANFER_DST = TRANSFER_DST | SAMPLED
 };
 
 enum class ShaderStage {
@@ -78,6 +79,11 @@ enum class SamplerAddressMode {
 
 enum class DescriptorType {
 #define VULKAN_DESCRIPTOR_TYPE(X) X = VK_DESCRIPTOR_TYPE_##X,
+#include "graphics_types.def"
+};
+
+enum class Format {
+#define VULKAN_FORMAT(X) X = VK_FORMAT_##X,
 #include "graphics_types.def"
 };
 

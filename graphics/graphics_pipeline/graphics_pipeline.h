@@ -12,7 +12,7 @@ struct GraphicsPipelineDescription {
   VkPrimitiveTopology topology_{VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST};
   std::vector<std::filesystem::path> paths_;
   std::vector<VkFormat> color_formats_;
-  std::vector<VkVertexInputAttributeDescription> vertex_inputs_;
+  std::vector<VkVertexInputAttributeDescription> vertex_attributes_;
   std::vector<VkVertexInputBindingDescription> vertex_bindings_;
 };
 
