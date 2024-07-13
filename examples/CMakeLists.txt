@@ -1,5 +1,6 @@
 set(EXECUTABLES
   raymarching
+  wavefront_viewer
 )
 
 foreach(exe ${EXECUTABLES})

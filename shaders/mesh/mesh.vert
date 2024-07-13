@@ -21,4 +21,6 @@ void main() {
   gl_Position = PushConstants.u_projection_matrix * 
                 PushConstants.u_view_matrix * 
                 PushConstants.u_model_matrix * vec4(in_position, 1.0);
+
+  gl_Position.y = -gl_Position.y;	
 }

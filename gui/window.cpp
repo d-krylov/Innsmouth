@@ -23,6 +23,8 @@ Window::Window(std::string_view name, const Vector2i &size) {
   SetCallbacks();
 }
 
+void Window::SetCursor(int32_t index) {}
+
 void Window::PollEvents() { glfwPollEvents(); }
 
 bool Window::ShouldClose() const { return glfwWindowShouldClose(native_window_); }

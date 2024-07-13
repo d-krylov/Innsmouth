@@ -9,7 +9,9 @@ class Picture;
 
 class Image {
 public:
-  Image();
+  Image(const VkExtent3D &extent, VkFormat format, uint32_t levels, uint32_t layers,
+        VkSampleCountFlagBits samples, Filter min, Filter mag, SamplerAddressMode u,
+        SamplerAddressMode v, SamplerAddressMode w);
 
   ~Image();
 
@@ -28,14 +30,14 @@ public:
   static void
   CreateImage(VkImage &image, VmaAllocation &allocation, VkImageType image_type,
               const VkExtent3D &extent, uint32_t levels, uint32_t layers, VkFormat image_format,
-              VkImageTiling tiling, VkImageUsageFlags usage,
+              VkImageTiling tiling, ImageUsage usage,
               VkSampleCountFlagBits samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT);
 
   static void CreateImageView(const VkImage &image, VkImageView &image_view, VkFormat format,
                               VkImageViewType view_type, const VkImageSubresourceRange &range);
 
-  static void CreateImageSampler(VkSampler &sampler, VkFilter min, VkFilter mag,
-                                 SamplerAddressMode u, SamplerAddressMode v, SamplerAddressMode w);
+  static void CreateImageSampler(VkSampler &sampler, Filter min, Filter mag, SamplerAddressMode u,
+                                 SamplerAddressMode v, SamplerAddressMode w);
   static void CreateMipmaps();
 
   static void TransitionImageLayout(VkImage image, ImageLayout from, ImageLayout to,
@@ -53,6 +55,9 @@ protected:
   VkImageType type_;
   VkFormat format_;
   VkImageUsageFlags usage_;
+  std::array<SamplerAddressMode, 3> address_mode_;
+  Filter min_;
+  Filter mag_;
   uint32_t levels_{0};
   uint32_t layers_;
 };

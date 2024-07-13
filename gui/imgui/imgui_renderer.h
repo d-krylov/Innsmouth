@@ -27,6 +27,7 @@ private:
   Buffer vertex_buffer_;
   Buffer index_buffer_;
   std::unique_ptr<Image2D> font_image_;
+  WriteDescriptorSet descriptor_;
 };
 
 } // namespace Innsmouth

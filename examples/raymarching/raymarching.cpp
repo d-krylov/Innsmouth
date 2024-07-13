@@ -1,11 +1,8 @@
 #include "core/include/tools.h"
-#include "easyloggingpp/easylogging++.h"
 #include "imgui.h"
 #include "innsmouth/include/application.h"
 #include "mesh/include/primitives.h"
 #include "scene/include/camera.h"
-
-INITIALIZE_EASYLOGGINGPP
 
 struct PushConstants {
   Innsmouth::Matrix4f projection_matrix_;
@@ -18,11 +15,10 @@ public:
   MyApp()
     : Application("MyApp", 800, 600),
       buffer_(Innsmouth::BufferUsage::VERTEX_BUFFER, 1024 * 1024 * 10) {
-    Innsmouth::GraphicsPipelineDescription description{
-      .paths_ = std::vector<std::filesystem::path>{"./main.vert.spv", "./main.frag.spv"},
-      .color_formats_ = {swapchain_->GetSurfaceFormat().format}};
 
-    graphics_pipeline_ = std::make_unique<Innsmouth::GraphicsPipeline>(description);
+    graphics_pipeline_ = std::make_unique<Innsmouth::GraphicsPipeline>(
+      std::vector<std::filesystem::path>{"./main.vert.spv", "./main.frag.spv"},
+      std::vector<VkFormat>{swapchain_->GetSurfaceFormat().format});
 
     auto box = Innsmouth::MakeBox();
 
@@ -36,17 +32,28 @@ public:
   }
 
   void OnImGui() override {
+
+    write_descriptor_ =
+      image_->GetWriteDescriptorSet(0, Innsmouth::DescriptorType::COMBINED_IMAGE_SAMPLER);
+
     ImGui::Begin("Window");
-    // ImGui::Button("Hello", ImVec2(100.0f, 100.0f));
+    ImGui::Button("Hello", ImVec2(100.0f, 100.0f));
+    ImGui::Button("H1", ImVec2(100.0f, 100.0f));
+    auto size = ImGui::GetContentRegionAvail();
+    ImGui::Image((ImTextureID)(intptr_t)&write_descriptor_, size);
+    ImGui::End();
+
+    ImGui::Begin("Window1");
     ImGui::End();
   }
 
   void OnUpdate(Innsmouth::CommandBuffer &command_buffer) override {
-#if 0
     auto extent = swapchain_->GetSurfaceCapabilities().currentExtent;
 
-    command_buffer.CommandSetViewport((float)extent.width, (float)extent.height);
-    command_buffer.CommandSetScissor(extent.width, extent.height);
+    command_buffer.CommandSetCullMode(false, true);
+    command_buffer.CommandSetFrontFace(Innsmouth::FrontFace::CLOCKWISE);
+    command_buffer.CommandSetViewport(0.0f, 0.0f, (float)extent.width, (float)extent.height);
+    command_buffer.CommandSetScissor({{0, 0}, {extent.width, extent.height}});
     command_buffer.CommandBindPipeline(*graphics_pipeline_);
     command_buffer.CommandBindVertexBuffer(buffer_);
 
@@ -65,7 +72,6 @@ public:
                                         std::as_bytes(Innsmouth::ToSpan(pc)));
 
     command_buffer.CommandDraw(36, 1, 0, 0);
-#endif
   }
 
 private:
@@ -73,6 +79,7 @@ private:
   std::unique_ptr<Innsmouth::Image2D> image_;
   Innsmouth::Buffer buffer_;
   Innsmouth::Camera camera_;
+  Innsmouth::WriteDescriptorSet write_descriptor_;
 };
 
 int main() {

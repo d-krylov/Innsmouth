@@ -42,6 +42,7 @@ public:
   [[nodiscard]] const EventCallback &GetEventCallback() const { return event_callback_; }
 
   void PollEvents();
+  void SetCursor(int32_t index);
 
 protected:
   void SetCallbacks();

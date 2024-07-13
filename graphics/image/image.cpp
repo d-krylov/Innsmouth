@@ -4,13 +4,17 @@
 
 namespace Innsmouth {
 
-Image::Image() {}
+Image::Image(const VkExtent3D &extent, VkFormat format, uint32_t levels, uint32_t layers,
+             VkSampleCountFlagBits samples, Filter min, Filter mag, SamplerAddressMode u,
+             SamplerAddressMode v, SamplerAddressMode w)
+  : extent_(extent), format_(format), levels_(levels), layers_(layers), address_mode_{u, v, w},
+    min_(min), mag_(mag) {}
 
 Image::~Image() {}
 
 void Image::CreateImage(VkImage &image, VmaAllocation &allocation, VkImageType image_type,
                         const VkExtent3D &extent, uint32_t levels, uint32_t layers,
-                        VkFormat image_format, VkImageTiling tiling, VkImageUsageFlags usage,
+                        VkFormat image_format, VkImageTiling tiling, ImageUsage usage,
                         VkSampleCountFlagBits samples) {
   VkImageCreateInfo image_ci{};
   {
@@ -22,7 +26,7 @@ void Image::CreateImage(VkImage &image, VmaAllocation &allocation, VkImageType i
     image_ci.format = image_format;
     image_ci.tiling = tiling;
     image_ci.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    image_ci.usage = usage;
+    image_ci.usage = VkImageUsageFlags(usage);
     image_ci.samples = samples;
     image_ci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   }
@@ -56,13 +60,13 @@ void Image::CreateImageView(const VkImage &image, VkImageView &image_view, VkFor
   VK_CHECK(vkCreateImageView(Device(), &image_view_ci, nullptr, &image_view));
 }
 
-void Image::CreateImageSampler(VkSampler &sampler, VkFilter min, VkFilter mag, SamplerAddressMode u,
+void Image::CreateImageSampler(VkSampler &sampler, Filter min, Filter mag, SamplerAddressMode u,
                                SamplerAddressMode v, SamplerAddressMode w) {
   VkSamplerCreateInfo sampler_ci{};
   {
     sampler_ci.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    sampler_ci.magFilter = mag;
-    sampler_ci.minFilter = min;
+    sampler_ci.magFilter = VkFilter(mag);
+    sampler_ci.minFilter = VkFilter(min);
     sampler_ci.addressModeU = VkSamplerAddressMode(u);
     sampler_ci.addressModeV = VkSamplerAddressMode(v);
     sampler_ci.addressModeW = VkSamplerAddressMode(w);

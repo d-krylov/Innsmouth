@@ -6,6 +6,7 @@
 #include "core/include/macros.h"
 #include "volk/volk.h"
 #include <optional>
+#include <vector>
 #include <vma/vk_mem_alloc.h>
 #include <vulkan/vk_enum_string_helper.h>
 #include <vulkan/vk_format_utils.h>
@@ -42,6 +43,17 @@ enum class ImageAspect {
   COLOR = VK_IMAGE_ASPECT_COLOR_BIT,
   DEPTH = VK_IMAGE_ASPECT_DEPTH_BIT,
   STENCIL = VK_IMAGE_ASPECT_STENCIL_BIT
+};
+
+enum class FrontFace {
+  COUNTER_CLOCKWISE = VK_FRONT_FACE_COUNTER_CLOCKWISE,
+  CLOCKWISE = VK_FRONT_FACE_CLOCKWISE
+};
+
+enum class Filter {
+  NEAREST = VK_FILTER_NEAREST,
+  LINEAR = VK_FILTER_LINEAR,
+  CUBIC = VK_FILTER_CUBIC_EXT
 };
 
 enum class BufferUsage {
@@ -87,7 +99,15 @@ enum class Format {
 #include "graphics_types.def"
 };
 
+enum class PrimitiveTopology {
+#define VULKAN_PRIMITIVE_TOPOLOGY(X) X = VK_PRIMITIVE_TOPOLOGY_##X,
+#include "graphics_types.def"
+};
+
 struct WriteDescriptorSet {
+
+  WriteDescriptorSet() = default;
+
   WriteDescriptorSet(const VkDescriptorBufferInfo &buffer_info,
                      const VkWriteDescriptorSet &write_descriptor_set)
     : buffer_info_(std::make_unique<VkDescriptorBufferInfo>(buffer_info)),
@@ -107,6 +127,7 @@ struct WriteDescriptorSet {
   std::unique_ptr<VkDescriptorBufferInfo> buffer_info_;
 };
 
+[[nodiscard]] std::vector<VkDynamicState> GetDynamicStates();
 [[nodiscard]] VkAccessFlags GetAccessMask(VkImageLayout layout);
 [[nodiscard]] uint32_t GetMipLevels(const VkExtent3D &e);
 [[nodiscard]] VkImageSubresourceRange

@@ -1,4 +1,6 @@
 #include "innsmouth/include/application.h"
+#include "easyloggingpp/easylogging++.h"
+INITIALIZE_EASYLOGGINGPP
 
 namespace Innsmouth {
 

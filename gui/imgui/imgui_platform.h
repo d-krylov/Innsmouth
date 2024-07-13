@@ -13,6 +13,8 @@ public:
   void SetFonts();
   void NewFrame();
 
+  void UpdateMouseData();
+
   void OnWindowFocus(int focused) override;
   void OnWindowSize(int, int) override;
   void OnWindowPos(int, int) override;

@@ -3,9 +3,7 @@
 
 #include "graphics/include/graphics_types.h"
 #include <filesystem>
-#include <optional>
 #include <unordered_map>
-#include <vector>
 
 class SpvReflectShaderModule;
 

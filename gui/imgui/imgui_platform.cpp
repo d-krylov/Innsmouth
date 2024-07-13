@@ -202,6 +202,12 @@ void ImGuiPlatform::SetFonts() {
   io.Fonts->AddFontDefault();
 }
 
+void ImGuiPlatform::UpdateMouseData() {
+  auto &io = ImGui::GetIO();
+  uint32_t mouse_viewport_id = 0;
+  Vector2f previous_mouse_position{io.MousePos.x, io.MousePos.y};
+}
+
 void ImGuiPlatform::NewFrame() {
   auto &io = ImGui::GetIO();
 
@@ -213,6 +219,10 @@ void ImGuiPlatform::NewFrame() {
     io.DisplayFramebufferScale = ImVec2((float)framebuffer_size.x / (float)window_size.x,
                                         (float)framebuffer_size.y / (float)window_size.y);
   }
+
+  UpdateMouseData();
+  auto imgui_cursor = ImGui::GetMouseCursor();
+  window_->SetCursor(imgui_cursor);
 }
 
 } // namespace Innsmouth

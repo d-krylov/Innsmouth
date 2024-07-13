@@ -50,6 +50,15 @@ VkImageSubresourceRange CreateImageSubresourceRange(ImageAspect aspect, uint32_t
     .layerCount = layers
   };
 }
+
+std::vector<VkDynamicState> GetDynamicStates() {
+  return std::vector<VkDynamicState>{
+    VK_DYNAMIC_STATE_VIEWPORT,
+    VK_DYNAMIC_STATE_SCISSOR,
+    VK_DYNAMIC_STATE_CULL_MODE,
+    VK_DYNAMIC_STATE_FRONT_FACE
+  };
+}
 // clang-format on
 
 } // namespace Innsmouth

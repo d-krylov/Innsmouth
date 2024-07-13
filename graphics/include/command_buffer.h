@@ -32,10 +32,13 @@ public:
 
   void Flush();
 
-  void CommandSetViewport(float w, float h, float x = 0.0f, float y = 0.0f);
-
+  void CommandSetViewport(float x, float y, float w, float h);
   void CommandSetScissor(const VkRect2D &scissor);
-  void CommandSetScissor(uint32_t w, uint32_t h, int32_t x = 0, int32_t y = 0);
+  void CommandSetCullMode(bool front, bool back);
+  void CommandSetFrontFace(FrontFace front_face);
+  void CommandEnableDepthTest(bool b);
+  void CommandEnableStencilTest(bool b);
+  void CommandEnableBlend(bool b);
 
   void CommandBeginRendering(const VkImageView image_view, const VkExtent2D &extent);
   void CommandEndRendering();
@@ -60,6 +63,9 @@ public:
                                 uint32_t level = 0, uint32_t base_layer = 0, uint32_t layers = 1,
                                 VkDeviceSize buffer_offset = 0,
                                 const VkOffset3D &image_offset = {0, 0, 0});
+
+  void CommandSetPrimitiveTopology(PrimitiveTopology topology);
+  void CommandSetColorBlendEquation();
 
   void CommandSetImageLayout(const VkImage &image, ImageLayout from, ImageLayout to,
                              const VkImageSubresourceRange &range,

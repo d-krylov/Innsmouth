@@ -38,7 +38,12 @@ void WindowFocusCallback(GLFWwindow *window, int focused) {}
 
 void MonitorCallback(GLFWmonitor *, int) {}
 
-void CharCallback(GLFWwindow *window, unsigned int c) {}
+void CharCallback(GLFWwindow *window, unsigned int c) {
+  auto handler = GetEventHandler(window);
+  if (handler) {
+    handler->OnChar(c);
+  }
+}
 
 void WindowPosCallback(GLFWwindow *window, int, int) {}
 

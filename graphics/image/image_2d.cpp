@@ -5,46 +5,22 @@
 
 namespace Innsmouth {
 
-Image2D::Image2D(const CoreImage &core_image) {
+Image2D::Image2D(const CoreImage &core_image)
+  : Image2D({core_image.GetWidth(), core_image.GetHeight()}, core_image.GetData()) {}
 
-  extent_ = VkExtent3D{core_image.GetWidth(), core_image.GetHeight(), 1};
+Image2D::Image2D(const VkExtent2D &extent, std::span<std::byte> data)
+  : Image({extent.width, extent.height, 1}, VkFormat::VK_FORMAT_R8G8B8A8_UNORM, 1, 1,
+          VK_SAMPLE_COUNT_1_BIT, Filter::LINEAR, Filter::LINEAR, SamplerAddressMode::CLAMP_TO_EDGE,
+          SamplerAddressMode::CLAMP_TO_EDGE, SamplerAddressMode::CLAMP_TO_EDGE) {
 
-  auto levels = 1; // GetMipLevels(extent);
+  Image::CreateImage(image_, allocation_, VkImageType::VK_IMAGE_TYPE_2D, extent_, levels_, 1,
+                     format_, VK_IMAGE_TILING_OPTIMAL, ImageUsage::SAMPLED_TRANFER_DST, samples_);
 
-  Image::CreateImage(image_, allocation_, VkImageType::VK_IMAGE_TYPE_2D, extent_, levels, 1,
-                     VkFormat::VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL,
-                     VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT |
-                       VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT,
-                     samples_);
+  Image::CreateImageView(image_, image_view_, format_, VkImageViewType::VK_IMAGE_VIEW_TYPE_2D,
+                         CreateImageSubresourceRange());
 
-  Image::CreateImageView(image_, image_view_, VkFormat::VK_FORMAT_R8G8B8A8_UNORM,
-                         VkImageViewType::VK_IMAGE_VIEW_TYPE_2D, CreateImageSubresourceRange());
-
-  Image::CreateImageSampler(sampler_, VkFilter::VK_FILTER_LINEAR, VkFilter::VK_FILTER_LINEAR,
-                            SamplerAddressMode::CLAMP_TO_EDGE, SamplerAddressMode::CLAMP_TO_EDGE,
-                            SamplerAddressMode::CLAMP_TO_EDGE);
-
-  SetData(core_image.GetData());
-}
-
-Image2D::Image2D(const VkExtent2D &extent, std::span<std::byte> data) {
-
-  auto levels = 1;
-
-  extent_ = VkExtent3D{extent.width, extent.height, 1};
-
-  Image::CreateImage(image_, allocation_, VkImageType::VK_IMAGE_TYPE_2D, extent_, levels, 1,
-                     VkFormat::VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL,
-                     VkImageUsageFlagBits::VK_IMAGE_USAGE_SAMPLED_BIT |
-                       VkImageUsageFlagBits::VK_IMAGE_USAGE_TRANSFER_DST_BIT,
-                     samples_);
-
-  Image::CreateImageView(image_, image_view_, VkFormat::VK_FORMAT_R8G8B8A8_UNORM,
-                         VkImageViewType::VK_IMAGE_VIEW_TYPE_2D, CreateImageSubresourceRange());
-
-  Image::CreateImageSampler(sampler_, VkFilter::VK_FILTER_LINEAR, VkFilter::VK_FILTER_LINEAR,
-                            SamplerAddressMode::REPEAT, SamplerAddressMode::REPEAT,
-                            SamplerAddressMode::REPEAT);
+  Image::CreateImageSampler(sampler_, min_, mag_, address_mode_[0], address_mode_[1],
+                            address_mode_[2]);
 
   SetData(data);
 }

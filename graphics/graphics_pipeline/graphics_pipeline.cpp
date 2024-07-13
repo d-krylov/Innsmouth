@@ -39,13 +39,20 @@ void GraphicsPipeline::ProcessDescriptorSets(const std::vector<ShaderModule> &mo
   }
 }
 
-GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineDescription &description) {
-  std::vector<ShaderModule> shader_modules(description.paths_.begin(), description.paths_.end());
+GraphicsPipeline::GraphicsPipeline(
+  const std::vector<std::filesystem::path> &paths, const std::vector<VkFormat> &color_formats,
+  const std::vector<VkVertexInputAttributeDescription> &vertex_attributes,
+  const std::vector<VkVertexInputBindingDescription> &vertex_bindings,
+  const std::vector<VkDynamicState> dynamic_states, PrimitiveTopology topology) {
+
+  std::vector<ShaderModule> shader_modules(paths.begin(), paths.end());
 
   std::vector<VkPipelineShaderStageCreateInfo> shader_stages_ci;
   std::vector<VkPushConstantRange> push_constant_ranges;
 
   shader_stages_ci.reserve(shader_modules.size());
+
+  uint32_t offset = 0;
 
   for (const auto &shader : shader_modules) {
     VkPipelineShaderStageCreateInfo shader_stage_ci{};
@@ -57,7 +64,13 @@ GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineDescription &descriptio
     }
     shader_stages_ci.emplace_back(shader_stage_ci);
     const auto &pc_range = shader.GetPushConstantRanges();
-    push_constant_ranges.insert(push_constant_ranges.end(), pc_range.begin(), pc_range.end());
+    for (const auto &range : pc_range) {
+      auto &back = push_constant_ranges.emplace_back(range);
+      back.offset = offset;
+      back.size -= offset;
+      offset += back.size;
+      LOG(INFO) << "Push constants range: " << back.offset << " " << back.size;
+    }
     VkDescriptorSetLayout descriptor_set_layout;
     const auto &descriptor_set_data = shader.GetDescriptorSetData();
   }
@@ -67,16 +80,16 @@ GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineDescription &descriptio
   std::vector<VkVertexInputAttributeDescription> attributes;
   std::vector<VkVertexInputBindingDescription> bindings;
 
-  if (description.vertex_attributes_.empty()) {
+  if (vertex_attributes.empty()) {
     attributes = shader_modules[0].GetVertexInputAttributes();
   } else {
-    attributes = description.vertex_attributes_;
+    attributes = vertex_attributes;
   }
 
-  if (description.vertex_bindings_.empty()) {
+  if (vertex_bindings.empty()) {
     bindings.emplace_back(shader_modules[0].GetVertexInputBinding());
   } else {
-    bindings = description.vertex_bindings_;
+    bindings = vertex_bindings;
   }
 
   VkPipelineVertexInputStateCreateInfo vertex_input_state_ci{};
@@ -91,12 +104,9 @@ GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineDescription &descriptio
   VkPipelineInputAssemblyStateCreateInfo input_assembly_state_ci{};
   {
     input_assembly_state_ci.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    input_assembly_state_ci.topology = description.topology_;
+    input_assembly_state_ci.topology = VkPrimitiveTopology(topology);
     input_assembly_state_ci.primitiveRestartEnable = VK_FALSE;
   }
-
-  std::vector<VkDynamicState> dynamic_states = {VK_DYNAMIC_STATE_VIEWPORT,
-                                                VK_DYNAMIC_STATE_SCISSOR};
 
   VkPipelineDynamicStateCreateInfo dynamic_state_ci{};
   {
@@ -110,8 +120,6 @@ GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineDescription &descriptio
     rasterization_state_ci.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     rasterization_state_ci.polygonMode = VK_POLYGON_MODE_FILL;
     rasterization_state_ci.lineWidth = 1.0f;
-    rasterization_state_ci.cullMode = VK_CULL_MODE_NONE;
-    rasterization_state_ci.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterization_state_ci.depthBiasEnable = VK_FALSE;
   }
 
@@ -164,7 +172,7 @@ GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineDescription &descriptio
     depth_stencil_state_ci.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     depth_stencil_state_ci.depthTestEnable = VK_FALSE;
     depth_stencil_state_ci.depthWriteEnable = VK_FALSE;
-    depth_stencil_state_ci.depthCompareOp = VK_COMPARE_OP_NEVER;
+    depth_stencil_state_ci.depthCompareOp = VK_COMPARE_OP_LESS;
     depth_stencil_state_ci.depthBoundsTestEnable = VK_FALSE;
     depth_stencil_state_ci.minDepthBounds = 0.0f;
     depth_stencil_state_ci.maxDepthBounds = 0.0f;
@@ -176,8 +184,8 @@ GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineDescription &descriptio
   VkPipelineRenderingCreateInfo pipeline_rendering_ci{};
   {
     pipeline_rendering_ci.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
-    pipeline_rendering_ci.colorAttachmentCount = description.color_formats_.size();
-    pipeline_rendering_ci.pColorAttachmentFormats = description.color_formats_.data();
+    pipeline_rendering_ci.colorAttachmentCount = color_formats.size();
+    pipeline_rendering_ci.pColorAttachmentFormats = color_formats.data();
   }
 
   VkGraphicsPipelineCreateInfo graphics_pipeline_ci{};

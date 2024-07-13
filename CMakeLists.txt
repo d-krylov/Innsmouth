@@ -56,6 +56,8 @@ set(GUI_SOURCES
 
 set(MESH_SOURCES
   ${PROJECT_SOURCE_DIR}/mesh/primitives.cpp
+  ${PROJECT_SOURCE_DIR}/mesh/wavefront_loader.cpp
+  ${PROJECT_SOURCE_DIR}/mesh/mesh.cpp
 )
 
 set(INNSMOUTH_SOURCES
@@ -69,12 +71,13 @@ set(INNSMOUTH_SOURCES
   ${PROJECT_SOURCE_DIR}/core/core_image.cpp
   ${PROJECT_SOURCE_DIR}/external/spirv_reflect/spirv_reflect.c
   ${PROJECT_SOURCE_DIR}/external/easyloggingpp/easylogging++.cc
+  ${PROJECT_SOURCE_DIR}/external/tinyobjloader/tiny_obj_loader.cc
   ${PROJECT_SOURCE_DIR}/innsmouth/application.cpp
 )
 
 set(SHADER_FILES
-  ${PROJECT_SOURCE_DIR}/shaders/main.vert
-  ${PROJECT_SOURCE_DIR}/shaders/main.frag
+  ${PROJECT_SOURCE_DIR}/shaders/mesh/mesh.vert
+  ${PROJECT_SOURCE_DIR}/shaders/mesh/mesh.frag
   #${PROJECT_SOURCE_DIR}/shaders/test.frag
   ${PROJECT_SOURCE_DIR}/shaders/gui.vert
   ${PROJECT_SOURCE_DIR}/shaders/gui.frag

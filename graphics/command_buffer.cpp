@@ -53,7 +53,7 @@ void CommandBuffer::Flush() {
   fence.Wait();
 }
 
-void CommandBuffer::CommandSetViewport(float w, float h, float x, float y) {
+void CommandBuffer::CommandSetViewport(float x, float y, float w, float h) {
   VkViewport viewport{};
   {
     viewport.x = x;
@@ -66,6 +66,26 @@ void CommandBuffer::CommandSetViewport(float w, float h, float x, float y) {
   vkCmdSetViewport(command_buffer_, 0, 1, &viewport);
 }
 
+void CommandBuffer::CommandSetCullMode(bool front, bool back) {
+  VkCullModeFlags f = front ? VK_CULL_MODE_FRONT_BIT : VK_CULL_MODE_NONE;
+  if (back) {
+    f |= VK_CULL_MODE_BACK_BIT;
+  }
+  vkCmdSetCullMode(command_buffer_, f);
+}
+
+void CommandBuffer::CommandSetFrontFace(FrontFace front_face) {
+  vkCmdSetFrontFace(command_buffer_, VkFrontFace(front_face));
+}
+
+void CommandBuffer::CommandEnableDepthTest(bool b) {
+  vkCmdSetDepthTestEnable(command_buffer_, b ? VK_TRUE : VK_FALSE);
+}
+
+void CommandBuffer::CommandEnableStencilTest(bool b) {
+  vkCmdSetStencilTestEnable(command_buffer_, b ? VK_TRUE : VK_FALSE);
+}
+
 void CommandBuffer::CommandBeginRendering(const VkImageView image_view, const VkExtent2D &extent) {
   VkRenderingAttachmentInfo rendering_ai{};
   {
@@ -76,6 +96,8 @@ void CommandBuffer::CommandBeginRendering(const VkImageView image_view, const Vk
     rendering_ai.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     rendering_ai.clearValue.color = {0.0f, 0.0f, 0.0f, 1.0f};
   }
+
+  VkRenderingAttachmentInfo depthAttachment = {};
 
   VkRenderingInfo rendering_info{};
   {
@@ -92,17 +114,34 @@ void CommandBuffer::CommandBeginRendering(const VkImageView image_view, const Vk
 
 void CommandBuffer::CommandEndRendering() { vkCmdEndRenderingKHR(command_buffer_); }
 
+void CommandBuffer::CommandSetPrimitiveTopology(PrimitiveTopology topology) {
+  vkCmdSetPrimitiveTopology(command_buffer_, VkPrimitiveTopology(topology));
+}
+
+void CommandBuffer::CommandSetColorBlendEquation() {
+  VkColorBlendEquationEXT color_blend_equation{};
+  {
+    color_blend_equation.alphaBlendOp = VK_BLEND_OP_ADD;
+    color_blend_equation.colorBlendOp = VK_BLEND_OP_ADD;
+    color_blend_equation.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    color_blend_equation.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    color_blend_equation.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    color_blend_equation.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+  }
+  vkCmdSetColorBlendEquationEXT(command_buffer_, 0, 1, &color_blend_equation);
+}
+
 void CommandBuffer::CommandSetScissor(const VkRect2D &scissor) {
   vkCmdSetScissor(command_buffer_, 0, 1, &scissor);
 }
 
-void CommandBuffer::CommandSetScissor(uint32_t w, uint32_t h, int32_t x, int32_t y) {
-  CommandSetScissor({{x, y}, {w, h}});
+void CommandBuffer::CommandEnableBlend(bool b) {
+  VkBool32 enable = b ? VK_TRUE : VK_FALSE;
+  vkCmdSetColorBlendEnableEXT(command_buffer_, 0, 1, &enable);
 }
 
 void CommandBuffer::CommandBindPipeline(const GraphicsPipeline &graphics_pipeline) {
-  vkCmdBindPipeline(command_buffer_, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    graphics_pipeline);
+  vkCmdBindPipeline(command_buffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline);
 }
 
 void CommandBuffer::CommandBindVertexBuffer(const Buffer &buffer, VkDeviceSize offset) {

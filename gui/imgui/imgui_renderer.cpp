@@ -1,5 +1,6 @@
 #include "gui/imgui/imgui_renderer.h"
 #include "core/include/core_types.h"
+#include "easyloggingpp/easylogging++.h"
 #include "imgui.h"
 #include <cstring>
 
@@ -34,13 +35,10 @@ std::vector<VkVertexInputAttributeDescription> GetAttributes() {
 }
 
 ImGuiRenderer::ImGuiRenderer(const Swapchain &swapchain)
-  : graphics_pipeline_(GraphicsPipelineDescription{
-      .paths_ = std::vector<std::filesystem::path>{"./gui.vert.spv", "./gui.frag.spv"},
-      .color_formats_ = {swapchain.GetSurfaceFormat().format},
-      .vertex_attributes_ = GetAttributes(),
-      .vertex_bindings_ = GetBinding()}),
-    vertex_buffer_(BufferUsage::VERTEX_BUFFER, 10_MiB),
-    index_buffer_(BufferUsage::INDEX_BUFFER, 10_MiB) {
+  : graphics_pipeline_({"./gui.vert.spv", "./gui.frag.spv"}, {swapchain.GetSurfaceFormat().format},
+                       GetAttributes(), GetBinding()),
+    vertex_buffer_(BufferUsage::VERTEX_BUFFER, 20_MiB),
+    index_buffer_(BufferUsage::INDEX_BUFFER, 20_MiB) {
   CreateFontsTexture();
 }
 
@@ -54,6 +52,8 @@ struct PushConstants {
 void ImGuiRenderer::SetupRenderState(CommandBuffer &command_buffer, ImDrawData *draw_data) {
   auto &io = ImGui::GetIO();
 
+  command_buffer.CommandSetCullMode(false, false);
+  command_buffer.CommandSetFrontFace(FrontFace::COUNTER_CLOCKWISE);
   command_buffer.CommandBindPipeline(graphics_pipeline_);
 
   if (draw_data->TotalVtxCount > 0) {
@@ -64,7 +64,7 @@ void ImGuiRenderer::SetupRenderState(CommandBuffer &command_buffer, ImDrawData *
                                             : VkIndexType::VK_INDEX_TYPE_UINT32);
   }
 
-  command_buffer.CommandSetViewport(io.DisplaySize.x, io.DisplaySize.y);
+  command_buffer.CommandSetViewport(0.0f, 0.0f, io.DisplaySize.x, io.DisplaySize.y);
 
   PushConstants pc;
   pc.scale_ = Vector2f(2.0f / draw_data->DisplaySize.x, 2.0f / draw_data->DisplaySize.y),
@@ -88,12 +88,12 @@ void ImGuiRenderer::RenderDrawData(CommandBuffer &command_buffer, ImDrawData *dr
     std::size_t vbo_offset = 0, ibo_offset = 0;
     for (uint32_t n = 0; n < draw_data->CmdListsCount; n++) {
       const auto *commands = draw_data->CmdLists[n];
-      std::memcpy(vbo_base.subspan(vbo_offset).data(), commands->VtxBuffer.Data,
-                  commands->VtxBuffer.Size * sizeof(ImDrawVert));
-      std::memcpy(ibo_base.subspan(ibo_offset).data(), commands->IdxBuffer.Data,
-                  commands->IdxBuffer.Size * sizeof(ImDrawIdx));
-      vbo_offset += commands->VtxBuffer.Size;
-      ibo_offset += commands->IdxBuffer.Size;
+      auto vsize = commands->VtxBuffer.Size * sizeof(ImDrawVert);
+      auto isize = commands->IdxBuffer.Size * sizeof(ImDrawIdx);
+      std::memcpy(vbo_base.subspan(vbo_offset).data(), commands->VtxBuffer.Data, vsize);
+      std::memcpy(ibo_base.subspan(ibo_offset).data(), commands->IdxBuffer.Data, isize);
+      vbo_offset += vsize;
+      ibo_offset += isize;
     }
     vertex_buffer_.Flush();
     index_buffer_.Flush();
@@ -108,6 +108,9 @@ void ImGuiRenderer::RenderDrawData(CommandBuffer &command_buffer, ImDrawData *dr
 
   int32_t global_vertex_offset = 0;
   int32_t global_index_offset = 0;
+
+  auto write_descriptor_set =
+    font_image_->GetWriteDescriptorSet(0, DescriptorType::COMBINED_IMAGE_SAMPLER);
 
   for (int n = 0; n < draw_data->CmdListsCount; n++) {
     const auto *commands = draw_data->CmdLists[n];
@@ -135,11 +138,12 @@ void ImGuiRenderer::RenderDrawData(CommandBuffer &command_buffer, ImDrawData *dr
       }
       command_buffer.CommandSetScissor(scissor);
 
-      auto write_descriptor_set =
-        font_image_->GetWriteDescriptorSet(0, DescriptorType::COMBINED_IMAGE_SAMPLER);
+      WriteDescriptorSet *descriptor = reinterpret_cast<WriteDescriptorSet *>(command->TextureId);
 
-      command_buffer.CommandPushDescriptorSet(graphics_pipeline_, 0,
-                                              ToSpan(write_descriptor_set.write_descriptor_set_));
+      if (descriptor) {
+        command_buffer.CommandPushDescriptorSet(graphics_pipeline_, 0,
+                                                ToSpan(descriptor->write_descriptor_set_));
+      }
 
       command_buffer.CommandDrawIndexed(command->ElemCount, 1,
                                         command->IdxOffset + global_index_offset,
@@ -164,6 +168,10 @@ void ImGuiRenderer::CreateFontsTexture() {
   std::span<std::byte> data(ToBytePointer(font_data), size);
 
   font_image_ = std::make_unique<Image2D>(VkExtent2D{uint32_t(width), uint32_t(height)}, data);
+
+  descriptor_ = font_image_->GetWriteDescriptorSet(0, DescriptorType::COMBINED_IMAGE_SAMPLER);
+
+  io.Fonts->SetTexID((ImTextureID)(intptr_t)&descriptor_);
 }
 
 void ImGuiRenderer::Begin() { ImGui::NewFrame(); }
