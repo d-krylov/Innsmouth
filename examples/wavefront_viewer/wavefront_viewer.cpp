@@ -23,7 +23,8 @@ public:
 
     graphics_pipeline_ = std::make_unique<Innsmouth::GraphicsPipeline>(
       std::vector<std::filesystem::path>{"./mesh.vert.spv", "./mesh.frag.spv"},
-      std::vector<VkFormat>{swapchain_->GetSurfaceFormat().format});
+      std::vector<VkFormat>{swapchain_->GetSurfaceFormat().format}, Innsmouth::Depth::READ_WRITE,
+      depth_image_->GetFormat());
 
     mesh_.Load("../assets/wavefront/sponza_min/sponza.obj");
 
@@ -35,6 +36,7 @@ public:
   void OnImGui() override {
     ImGui::Begin("Settings");
     ImGui::InputFloat3("Camera position", glm::value_ptr(camera_position));
+    ImGui::SliderFloat3("Model rotation", glm::value_ptr(rotation_), 0.0f, 6.28f);
     ImGui::End();
 
     camera_.SetPosition(camera_position);
@@ -51,7 +53,7 @@ public:
     command_buffer.CommandBindVertexBuffer(vbo_);
 
     matrix_.projection_ = camera_.GetPerspectiveMatrix(), matrix_.view_ = camera_.GetLookAtMatrix(),
-    matrix_.model_ = Innsmouth::Matrix4f(1.0f);
+    matrix_.model_ = glm::rotate(Innsmouth::Matrix4f(1.0), rotation_.y, Innsmouth::Y_);
 
     command_buffer.CommandPushConstants(*graphics_pipeline_, Innsmouth::ShaderStage::VERTEX,
                                         std::as_bytes(Innsmouth::ToSpan(matrix_)));
@@ -60,6 +62,7 @@ public:
   }
 
 private:
+  Innsmouth::Vector3f rotation_;
   Innsmouth::Vector3f camera_position;
   Matrix matrix_;
   Innsmouth::Camera camera_;

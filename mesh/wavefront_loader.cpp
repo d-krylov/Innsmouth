@@ -82,6 +82,8 @@ void Mesh::Load(const std::filesystem::path &path) {
   }
 
   LoadVertices(reader);
+
+  GetNormal();
 }
 
 } // namespace Innsmouth

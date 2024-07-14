@@ -27,6 +27,7 @@ protected:
   std::unique_ptr<Swapchain> swapchain_;
   std::unique_ptr<ImGuiRenderer> imgui_renderer_;
   std::vector<CommandBuffer> command_buffers_;
+  std::unique_ptr<DepthImage> depth_image_;
   std::vector<Semaphore> image_available_semaphores;
   std::vector<Semaphore> render_finished_semaphores;
   std::vector<Fence> fences_;

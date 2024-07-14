@@ -37,10 +37,13 @@ public:
   void CommandSetCullMode(bool front, bool back);
   void CommandSetFrontFace(FrontFace front_face);
   void CommandEnableDepthTest(bool b);
+  void CommandEnableDepthWrite(bool b);
   void CommandEnableStencilTest(bool b);
   void CommandEnableBlend(bool b);
 
-  void CommandBeginRendering(const VkImageView image_view, const VkExtent2D &extent);
+  void CommandBeginRendering(const VkExtent2D &extent, const RenderingAttachment &color,
+                             const VkImageView depth = VK_NULL_HANDLE);
+
   void CommandEndRendering();
   void CommandBindPipeline(const GraphicsPipeline &graphics_pipeline);
   void CommandBindVertexBuffer(const Buffer &buffer, VkDeviceSize offset = 0);

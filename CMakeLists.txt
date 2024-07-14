@@ -38,7 +38,7 @@ set(GRAPHICS_SOURCES
   ${PROJECT_SOURCE_DIR}/graphics/buffer.cpp
   ${PROJECT_SOURCE_DIR}/graphics/swapchain.cpp
   ${PROJECT_SOURCE_DIR}/graphics/command_buffer.cpp
-  #${PROJECT_SOURCE_DIR}/graphics/descriptor/descriptor_set.cpp
+  ${PROJECT_SOURCE_DIR}/graphics/image/depth_image.cpp
   ${PROJECT_SOURCE_DIR}/graphics/graphics.cpp
   ${PROJECT_SOURCE_DIR}/graphics/graphics_types.cpp
   ${PROJECT_SOURCE_DIR}/graphics/graphics_description.cpp

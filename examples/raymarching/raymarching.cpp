@@ -77,6 +77,7 @@ public:
 private:
   std::unique_ptr<Innsmouth::GraphicsPipeline> graphics_pipeline_;
   std::unique_ptr<Innsmouth::Image2D> image_;
+  std::unique_ptr<Innsmouth::DepthImage> depth_;
   Innsmouth::Buffer buffer_;
   Innsmouth::Camera camera_;
   Innsmouth::WriteDescriptorSet write_descriptor_;

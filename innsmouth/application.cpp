@@ -17,6 +17,8 @@ void Application::Initialize() {
 
   imgui_renderer_ = std::make_unique<ImGuiRenderer>(*swapchain_);
 
+  depth_image_ = std::make_unique<DepthImage>(swapchain_->GetSurfaceCapabilities().currentExtent);
+
   const auto &image_views = swapchain_->GetImageViews();
 
   for (std::size_t i = 0; i < image_views.size(); i++) {
@@ -47,6 +49,9 @@ void Application::Run() {
       if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 
         swapchain_->Recreate();
+
+        depth_image_ =
+          std::make_unique<DepthImage>(swapchain_->GetSurfaceCapabilities().currentExtent);
       }
 
       continue;
@@ -65,10 +70,18 @@ void Application::Run() {
     command_buffer.Reset();
     command_buffer.Begin();
 
-    command_buffer.CommandBeginRendering(swapchain_->GetImageViews()[image_index],
-                                         swapchain_->GetSurfaceCapabilities().currentExtent);
+    command_buffer.CommandBeginRendering(
+      swapchain_->GetSurfaceCapabilities().currentExtent,
+      {LoadOperation::CLAER, swapchain_->GetImageViews()[image_index]},
+      depth_image_->GetImageView());
 
     OnUpdate(command_buffer);
+
+    command_buffer.CommandEndRendering();
+
+    command_buffer.CommandBeginRendering(
+      swapchain_->GetSurfaceCapabilities().currentExtent,
+      {LoadOperation::LOAD, swapchain_->GetImageViews()[image_index]});
 
     imgui_platform_.NewFrame();
     imgui_renderer_->Begin();

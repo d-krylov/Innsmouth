@@ -10,11 +10,14 @@ class ShaderModule;
 class GraphicsPipeline {
 public:
   GraphicsPipeline(const std::vector<std::filesystem::path> &paths,
-                   const std::vector<VkFormat> &color_formats,
+                   const std::vector<VkFormat> &color_formats, Depth depth = Depth::NONE,
+                   VkFormat depth_format = VK_FORMAT_UNDEFINED,
                    const std::vector<VkVertexInputAttributeDescription> &vertex_attributes = {},
                    const std::vector<VkVertexInputBindingDescription> &vertex_bindings = {},
                    const std::vector<VkDynamicState> dynamic_states = GetDynamicStates(),
                    PrimitiveTopology topology = PrimitiveTopology::TRIANGLE_LIST);
+
+  GraphicsPipeline();
 
   ~GraphicsPipeline();
 

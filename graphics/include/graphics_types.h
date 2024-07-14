@@ -64,7 +64,8 @@ enum class BufferUsage {
 enum class ImageUsage {
 #define VULKAN_IMAGE_USAGE(X) X = VK_IMAGE_USAGE_##X##_BIT,
 #include "graphics_types.def"
-  SAMPLED_TRANFER_DST = TRANSFER_DST | SAMPLED
+  SAMPLED_TRANFER_DST = TRANSFER_DST | SAMPLED,
+  SAMPLED_DEPTH_STENCIL_ATTACHMENT = DEPTH_STENCIL_ATTACHMENT | SAMPLED
 };
 
 enum class ShaderStage {
@@ -99,9 +100,22 @@ enum class Format {
 #include "graphics_types.def"
 };
 
+enum class LoadOperation {
+  LOAD = VK_ATTACHMENT_LOAD_OP_LOAD,
+  CLAER = VK_ATTACHMENT_LOAD_OP_CLEAR,
+  DONT_CARE = VK_ATTACHMENT_LOAD_OP_DONT_CARE
+};
+
+enum class Depth { NONE, READ, WRITE, READ_WRITE };
+
 enum class PrimitiveTopology {
 #define VULKAN_PRIMITIVE_TOPOLOGY(X) X = VK_PRIMITIVE_TOPOLOGY_##X,
 #include "graphics_types.def"
+};
+
+struct RenderingAttachment {
+  LoadOperation load_operation_;
+  VkImageView image_view_;
 };
 
 struct WriteDescriptorSet {

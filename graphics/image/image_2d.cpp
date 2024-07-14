@@ -13,7 +13,7 @@ Image2D::Image2D(const VkExtent2D &extent, std::span<std::byte> data)
           VK_SAMPLE_COUNT_1_BIT, Filter::LINEAR, Filter::LINEAR, SamplerAddressMode::CLAMP_TO_EDGE,
           SamplerAddressMode::CLAMP_TO_EDGE, SamplerAddressMode::CLAMP_TO_EDGE) {
 
-  Image::CreateImage(image_, allocation_, VkImageType::VK_IMAGE_TYPE_2D, extent_, levels_, 1,
+  Image::CreateImage(image_, allocation_, VkImageType::VK_IMAGE_TYPE_2D, extent_, levels_, layers_,
                      format_, VK_IMAGE_TILING_OPTIMAL, ImageUsage::SAMPLED_TRANFER_DST, samples_);
 
   Image::CreateImageView(image_, image_view_, format_, VkImageViewType::VK_IMAGE_VIEW_TYPE_2D,

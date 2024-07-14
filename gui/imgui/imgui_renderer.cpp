@@ -36,7 +36,7 @@ std::vector<VkVertexInputAttributeDescription> GetAttributes() {
 
 ImGuiRenderer::ImGuiRenderer(const Swapchain &swapchain)
   : graphics_pipeline_({"./gui.vert.spv", "./gui.frag.spv"}, {swapchain.GetSurfaceFormat().format},
-                       GetAttributes(), GetBinding()),
+                       Depth::NONE, VK_FORMAT_UNDEFINED, GetAttributes(), GetBinding()),
     vertex_buffer_(BufferUsage::VERTEX_BUFFER, 20_MiB),
     index_buffer_(BufferUsage::INDEX_BUFFER, 20_MiB) {
   CreateFontsTexture();

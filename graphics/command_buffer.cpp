@@ -68,9 +68,7 @@ void CommandBuffer::CommandSetViewport(float x, float y, float w, float h) {
 
 void CommandBuffer::CommandSetCullMode(bool front, bool back) {
   VkCullModeFlags f = front ? VK_CULL_MODE_FRONT_BIT : VK_CULL_MODE_NONE;
-  if (back) {
-    f |= VK_CULL_MODE_BACK_BIT;
-  }
+  f |= back ? VK_CULL_MODE_BACK_BIT : 0;
   vkCmdSetCullMode(command_buffer_, f);
 }
 
@@ -82,33 +80,51 @@ void CommandBuffer::CommandEnableDepthTest(bool b) {
   vkCmdSetDepthTestEnable(command_buffer_, b ? VK_TRUE : VK_FALSE);
 }
 
+void CommandBuffer::CommandEnableDepthWrite(bool b) {
+  vkCmdSetDepthWriteEnable(command_buffer_, b ? VK_TRUE : VK_FALSE);
+}
+
 void CommandBuffer::CommandEnableStencilTest(bool b) {
   vkCmdSetStencilTestEnable(command_buffer_, b ? VK_TRUE : VK_FALSE);
 }
 
-void CommandBuffer::CommandBeginRendering(const VkImageView image_view, const VkExtent2D &extent) {
-  VkRenderingAttachmentInfo rendering_ai{};
+void CommandBuffer::CommandBeginRendering(const VkExtent2D &extent,
+                                          const RenderingAttachment &color,
+                                          const VkImageView depth) {
+  VkRenderingAttachmentInfo color_ai{};
   {
-    rendering_ai.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-    rendering_ai.imageView = image_view;
-    rendering_ai.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    rendering_ai.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    rendering_ai.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    rendering_ai.clearValue.color = {0.0f, 0.0f, 0.0f, 1.0f};
+    color_ai.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
+    color_ai.imageView = color.image_view_;
+    color_ai.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    color_ai.loadOp = VkAttachmentLoadOp(color.load_operation_);
+    color_ai.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    color_ai.clearValue.color = {0.0f, 0.0f, 0.0f, 1.0f};
   }
 
-  VkRenderingAttachmentInfo depthAttachment = {};
+  VkRenderingAttachmentInfo depth_ai{};
 
   VkRenderingInfo rendering_info{};
   {
     rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
-    rendering_info.renderArea = {0, 0, extent.width, extent.height};
+    rendering_info.renderArea.offset = {0, 0};
+    rendering_info.renderArea.extent = extent;
     rendering_info.layerCount = 1;
     rendering_info.colorAttachmentCount = 1;
-    rendering_info.pColorAttachments = &rendering_ai;
-    rendering_info.pDepthAttachment = nullptr;
-    rendering_info.pStencilAttachment = nullptr;
+    rendering_info.pColorAttachments = &color_ai;
   }
+
+  if (depth != VK_NULL_HANDLE) {
+    depth_ai.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+    depth_ai.imageView = depth;
+    depth_ai.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    depth_ai.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depth_ai.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    depth_ai.clearValue.depthStencil = {1.0f, 0};
+
+    rendering_info.pDepthAttachment = &depth_ai;
+    rendering_info.pStencilAttachment = &depth_ai;
+  }
+
   vkCmdBeginRendering(command_buffer_, &rendering_info);
 }
 
