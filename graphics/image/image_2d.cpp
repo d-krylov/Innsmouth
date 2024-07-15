@@ -22,11 +22,11 @@ Image2D::Image2D(const VkExtent2D &extent, std::span<std::byte> data)
   Image::CreateImageSampler(sampler_, min_, mag_, address_mode_[0], address_mode_[1],
                             address_mode_[2]);
 
-  SetData(data);
+  SetData(data, extent.width * extent.height * 4);
 }
 
-void Image2D::SetData(std::span<std::byte> data) {
-  Buffer buffer(BufferUsage::TRANSFER_SRC, data.size());
+void Image2D::SetData(std::span<std::byte> data, std::size_t buffer_size) {
+  Buffer buffer(BufferUsage::TRANSFER_SRC, (buffer_size == 0) ? data.size() : buffer_size);
   buffer.SetData(data);
   CommandBuffer command_buffer(CommandPool(), true);
   auto range = CreateImageSubresourceRange();

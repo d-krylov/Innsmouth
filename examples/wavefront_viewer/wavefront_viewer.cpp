@@ -42,6 +42,44 @@ public:
     camera_.SetPosition(camera_position);
   }
 
+  void DrawMesh(Innsmouth::CommandBuffer &command_buffer) {
+    auto sub_count = mesh_.offsets_.size();
+
+    for (uint32_t i = 0; i < sub_count; i++) {
+
+      auto material_index = mesh_.material_indices_[i];
+
+      auto ambient = mesh_.materials_[material_index].ambient_texture_;
+      auto diffuse = mesh_.materials_[material_index].diffuse_texture_;
+
+      if (ambient) {
+        auto write_descriptor =
+          ambient->GetWriteDescriptorSet(0, Innsmouth::DescriptorType::COMBINED_IMAGE_SAMPLER);
+
+        command_buffer.CommandPushDescriptorSet(
+          *graphics_pipeline_, 0, Innsmouth::ToSpan(write_descriptor.write_descriptor_set_));
+      }
+
+      if (diffuse) {
+        auto write_descriptor =
+          diffuse->GetWriteDescriptorSet(1, Innsmouth::DescriptorType::COMBINED_IMAGE_SAMPLER);
+
+        command_buffer.CommandPushDescriptorSet(
+          *graphics_pipeline_, 0, Innsmouth::ToSpan(write_descriptor.write_descriptor_set_));
+      }
+
+      uint32_t count{0};
+
+      if (i < sub_count - 1) {
+        count = mesh_.offsets_[i + 1] - mesh_.offsets_[i];
+      } else {
+        count = mesh_.vertices_.size() - mesh_.offsets_[i];
+      }
+
+      command_buffer.CommandDraw(count, 1, mesh_.offsets_[i], 0);
+    }
+  }
+
   void OnUpdate(Innsmouth::CommandBuffer &command_buffer) override {
     auto extent = swapchain_->GetSurfaceCapabilities().currentExtent;
 
@@ -58,7 +96,7 @@ public:
     command_buffer.CommandPushConstants(*graphics_pipeline_, Innsmouth::ShaderStage::VERTEX,
                                         std::as_bytes(Innsmouth::ToSpan(matrix_)));
 
-    command_buffer.CommandDraw(mesh_.vertices_.size(), 1, 0, 0);
+    DrawMesh(command_buffer);
   }
 
 private:

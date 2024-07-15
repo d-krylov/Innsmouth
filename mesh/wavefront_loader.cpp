@@ -11,6 +11,8 @@ void Mesh::LoadVertices(const tinyobj::ObjReader &reader) {
   for (const auto &shape : shapes) {
     std::size_t index_offset = 0;
     offsets_.emplace_back(vertices_.size());
+    material_indices_.emplace_back(shape.mesh.material_ids[0]);
+
     for (std::size_t i = 0; i < shape.mesh.num_face_vertices.size(); i++) {
       auto vertices_in_face = shape.mesh.num_face_vertices[i];
 
@@ -61,9 +63,17 @@ void Mesh::LoadMaterials(const tinyobj::ObjReader &reader) {
     material.properties_ = std::make_shared<MaterialProperties>(material_properties);
 
     if (m.ambient_texname.empty() == false) {
+      auto image_path = path_.parent_path() / m.ambient_texname;
+      CoreImage ambient(image_path);
+      material.ambient_texture_ = std::make_shared<Image2D>(ambient);
+      LOG(INFO) << m.ambient_texname;
     }
 
     if (m.diffuse_texname.empty() == false) {
+      auto image_path = path_.parent_path() / m.diffuse_texname;
+      CoreImage diffuse(image_path);
+      material.diffuse_texture_ = std::make_shared<Image2D>(diffuse);
+      LOG(INFO) << m.diffuse_texname;
     }
 
     if (m.specular_texname.empty() == false) {
@@ -75,6 +85,8 @@ void Mesh::Load(const std::filesystem::path &path) {
   tinyobj::ObjReader reader;
   tinyobj::ObjReaderConfig reader_config;
 
+  path_ = path;
+
   auto status = reader.ParseFromFile(path.string(), reader_config);
 
   if (status != true) {
@@ -82,6 +94,7 @@ void Mesh::Load(const std::filesystem::path &path) {
   }
 
   LoadVertices(reader);
+  LoadMaterials(reader);
 
   GetNormal();
 }

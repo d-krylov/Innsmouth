@@ -13,7 +13,7 @@ public:
 
   Image2D(const VkExtent2D &extent, std::span<std::byte> data);
 
-  void SetData(std::span<std::byte> data);
+  void SetData(std::span<std::byte> data, std::size_t buffer_size = 0);
 
 private:
   uint32_t channels_;

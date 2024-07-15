@@ -28,6 +28,8 @@ public:
   std::vector<Vertex> vertices_;
   std::vector<Material> materials_;
   std::vector<std::size_t> offsets_;
+  std::vector<uint32_t> material_indices_;
+  std::filesystem::path path_;
 };
 
 } // namespace Innsmouth
