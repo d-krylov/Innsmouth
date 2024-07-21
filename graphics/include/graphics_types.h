@@ -118,29 +118,6 @@ struct RenderingAttachment {
   VkImageView image_view_;
 };
 
-struct WriteDescriptorSet {
-
-  WriteDescriptorSet() = default;
-
-  WriteDescriptorSet(const VkDescriptorBufferInfo &buffer_info,
-                     const VkWriteDescriptorSet &write_descriptor_set)
-    : buffer_info_(std::make_unique<VkDescriptorBufferInfo>(buffer_info)),
-      write_descriptor_set_(write_descriptor_set) {
-    write_descriptor_set_.pBufferInfo = buffer_info_.get();
-  }
-
-  WriteDescriptorSet(const VkDescriptorImageInfo &image_info,
-                     const VkWriteDescriptorSet &write_descriptor_set)
-    : image_info_(std::make_unique<VkDescriptorImageInfo>(image_info)),
-      write_descriptor_set_(write_descriptor_set) {
-    write_descriptor_set_.pImageInfo = image_info_.get();
-  }
-
-  VkWriteDescriptorSet write_descriptor_set_;
-  std::unique_ptr<VkDescriptorImageInfo> image_info_;
-  std::unique_ptr<VkDescriptorBufferInfo> buffer_info_;
-};
-
 [[nodiscard]] std::vector<VkDynamicState> GetDynamicStates();
 [[nodiscard]] VkAccessFlags GetAccessMask(VkImageLayout layout);
 [[nodiscard]] uint32_t GetMipLevels(const VkExtent3D &e);

@@ -104,6 +104,21 @@ WriteDescriptorSet Image::GetWriteDescriptorSet(uint32_t binding, DescriptorType
   return WriteDescriptorSet(descriptor_ii, write_descriptor_set);
 }
 
+WriteDescriptorSet
+Image::GetWriteDescriptorSet(const std::vector<VkDescriptorImageInfo> &descriptor_ii,
+                             uint32_t binding, DescriptorType type) {
+  VkWriteDescriptorSet write_descriptor_set{};
+  {
+    write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write_descriptor_set.dstSet = VK_NULL_HANDLE;
+    write_descriptor_set.dstBinding = binding;
+    write_descriptor_set.dstArrayElement = 0;
+    write_descriptor_set.descriptorType = VkDescriptorType(type);
+    write_descriptor_set.descriptorCount = descriptor_ii.size();
+  }
+  return WriteDescriptorSet(descriptor_ii, write_descriptor_set);
+}
+
 void Image::TransitionImageLayout(VkImage image, ImageLayout from, ImageLayout to,
                                   PipelineStage source_stage, PipelineStage destination_stage,
                                   const VkImageSubresourceRange &range) {

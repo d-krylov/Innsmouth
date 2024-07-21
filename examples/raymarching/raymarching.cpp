@@ -4,88 +4,79 @@
 #include "mesh/include/primitives.h"
 #include "scene/include/camera.h"
 
+using namespace Innsmouth;
+
 struct PushConstants {
-  Innsmouth::Matrix4f projection_matrix_;
-  Innsmouth::Matrix4f view_matrix_;
-  Innsmouth::Matrix4f model_matrix_;
+  Vector2f i_mouse;
+  Vector2f i_resolution_;
+  float i_time_;
 };
 
-class MyApp : public Innsmouth::Application {
+class Raymarching : public Application {
 public:
-  MyApp()
-    : Application("MyApp", 800, 600),
-      buffer_(Innsmouth::BufferUsage::VERTEX_BUFFER, 1024 * 1024 * 10) {
+  Raymarching()
+    : Application("Raymarching", 800, 600),
+      graphics_pipeline_({"./canvas.vert.spv", "./raytracing.frag.spv"},
+                         {swapchain_->GetSurfaceFormat().format}) {
+    std::vector<std::filesystem::path> image_paths{
+      GetRoot() / "assets" / "images" / "shadertoy" / "black_stone.png",
+      GetRoot() / "assets" / "images" / "container.png",
+      GetRoot() / "assets" / "images" / "shadertoy" / "color_noise.png",
+    };
 
-    graphics_pipeline_ = std::make_unique<Innsmouth::GraphicsPipeline>(
-      std::vector<std::filesystem::path>{"./main.vert.spv", "./main.frag.spv"},
-      std::vector<VkFormat>{swapchain_->GetSurfaceFormat().format});
+    images_ = std::vector<Image2D>(image_paths.begin(), image_paths.end());
 
-    auto box = Innsmouth::MakeBox();
+    std::vector<VkDescriptorImageInfo> ii;
 
-    buffer_.SetData(std::span<Innsmouth::Vertex>(box));
+    for (auto &image : images_) {
+      VkDescriptorImageInfo descriptor_ii{};
+      {
+        descriptor_ii.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        descriptor_ii.imageView = image.GetImageView();
+        descriptor_ii.sampler = image.GetSampler();
+      }
+      ii.emplace_back(descriptor_ii);
+    }
 
-    camera_.SetPosition(Innsmouth::Vector3f(0.0f, 0.0f, 4.0f));
-
-    Innsmouth::CoreImage core_image("../assets/images/container.png");
-
-    image_ = std::make_unique<Innsmouth::Image2D>(core_image);
+    descriptor_set_ = Image::GetWriteDescriptorSet(ii, 0);
   }
 
   void OnImGui() override {
-
-    write_descriptor_ =
-      image_->GetWriteDescriptorSet(0, Innsmouth::DescriptorType::COMBINED_IMAGE_SAMPLER);
-
-    ImGui::Begin("Window");
-    ImGui::Button("Hello", ImVec2(100.0f, 100.0f));
-    ImGui::Button("H1", ImVec2(100.0f, 100.0f));
-    auto size = ImGui::GetContentRegionAvail();
-    ImGui::Image((ImTextureID)(intptr_t)&write_descriptor_, size);
-    ImGui::End();
-
-    ImGui::Begin("Window1");
+    ImGui::Begin("Settings");
+    cursor_ = ImGui::GetMousePos();
+    ImGui::Text("Coord %f %f", cursor_.x, cursor_.y);
     ImGui::End();
   }
 
   void OnUpdate(Innsmouth::CommandBuffer &command_buffer) override {
     auto extent = swapchain_->GetSurfaceCapabilities().currentExtent;
-
-    command_buffer.CommandSetCullMode(false, true);
-    command_buffer.CommandSetFrontFace(Innsmouth::FrontFace::CLOCKWISE);
     command_buffer.CommandSetViewport(0.0f, 0.0f, (float)extent.width, (float)extent.height);
     command_buffer.CommandSetScissor({{0, 0}, {extent.width, extent.height}});
-    command_buffer.CommandBindPipeline(*graphics_pipeline_);
-    command_buffer.CommandBindVertexBuffer(buffer_);
+    command_buffer.CommandBindPipeline(graphics_pipeline_);
 
-    PushConstants pc{.projection_matrix_ = camera_.GetPerspectiveMatrix(),
-                     .view_matrix_ = camera_.GetLookAtMatrix(),
-                     .model_matrix_ = glm::rotate(Innsmouth::Matrix4f(1.0f),
-                                                  float(Innsmouth::GetTime()), Innsmouth::Y_)};
+    PushConstants pc;
+    pc.i_mouse = Vector2f(cursor_.x, cursor_.y);
+    pc.i_resolution_ = Vector2f(extent.width, extent.height);
+    pc.i_time_ = GetTime();
+    command_buffer.CommandPushConstants(graphics_pipeline_, ShaderStage::FRAGMENT,
+                                        std::as_bytes(ToSpan(pc)));
 
-    auto write_descriptor =
-      image_->GetWriteDescriptorSet(0, Innsmouth::DescriptorType::COMBINED_IMAGE_SAMPLER);
+    command_buffer.CommandPushDescriptorSet(graphics_pipeline_, 0,
+                                            ToSpan(descriptor_set_.write_descriptor_set_));
 
-    command_buffer.CommandPushDescriptorSet(
-      *graphics_pipeline_, 0, Innsmouth::ToSpan(write_descriptor.write_descriptor_set_));
-
-    command_buffer.CommandPushConstants(*graphics_pipeline_, Innsmouth::ShaderStage::VERTEX,
-                                        std::as_bytes(Innsmouth::ToSpan(pc)));
-
-    command_buffer.CommandDraw(36, 1, 0, 0);
+    command_buffer.CommandDraw(3, 1, 0, 0);
   }
 
 private:
-  std::unique_ptr<Innsmouth::GraphicsPipeline> graphics_pipeline_;
-  std::unique_ptr<Innsmouth::Image2D> image_;
-  std::unique_ptr<Innsmouth::DepthImage> depth_;
-  Innsmouth::Buffer buffer_;
-  Innsmouth::Camera camera_;
-  Innsmouth::WriteDescriptorSet write_descriptor_;
+  ImVec2 cursor_;
+  GraphicsPipeline graphics_pipeline_;
+  std::vector<Image2D> images_;
+  WriteDescriptorSet descriptor_set_;
 };
 
 int main() {
 
-  MyApp app;
+  Raymarching app;
 
   app.Run();
 

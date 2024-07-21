@@ -72,8 +72,7 @@ void Application::Run() {
 
     command_buffer.CommandBeginRendering(
       swapchain_->GetSurfaceCapabilities().currentExtent,
-      {LoadOperation::CLAER, swapchain_->GetImageViews()[image_index]},
-      depth_image_->GetImageView());
+      {LoadOperation::CLAER, swapchain_->GetImageViews()[image_index]});
 
     OnUpdate(command_buffer);
 

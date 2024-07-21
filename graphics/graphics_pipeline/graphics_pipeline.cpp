@@ -90,7 +90,9 @@ GraphicsPipeline::GraphicsPipeline(
   }
 
   if (vertex_bindings.empty()) {
-    bindings.emplace_back(shader_modules[0].GetVertexInputBinding());
+    if (attributes.size() > 0) {
+      bindings.emplace_back(shader_modules[0].GetVertexInputBinding());
+    }
   } else {
     bindings = vertex_bindings;
   }

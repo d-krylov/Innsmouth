@@ -21,6 +21,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-volatile")
 
 set(CMAKE_BUILD_TYPE Debug)
 
+add_definitions(-DPROJECT_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
+
 set(IMGUI_SOURCES
   ${PROJECT_SOURCE_DIR}/external/imgui/sources/imgui_draw.cpp
   ${PROJECT_SOURCE_DIR}/external/imgui/sources/imgui_tables.cpp
@@ -81,8 +83,8 @@ set(SHADER_FILES
   #${PROJECT_SOURCE_DIR}/shaders/test.frag
   ${PROJECT_SOURCE_DIR}/shaders/gui.vert
   ${PROJECT_SOURCE_DIR}/shaders/gui.frag
-  #${PROJECT_SOURCE_DIR}/shaders/canvas.vert
-  #${PROJECT_SOURCE_DIR}/shaders/canvas.frag
+  ${PROJECT_SOURCE_DIR}/shaders/raytracing/canvas.vert
+  ${PROJECT_SOURCE_DIR}/shaders/raytracing/raytracing.frag
 )
 
 add_custom_target(shaders COMMAND ${Vulkan_GLSLC_EXECUTABLE} -c --target-env=vulkan1.0 ${SHADER_FILES})

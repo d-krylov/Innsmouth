@@ -1,6 +1,7 @@
 #ifndef INNSMOUTH_BUFFER_H
 #define INNSMOUTH_BUFFER_H
 
+#include "graphics/descriptors/write_descriptor_set.h"
 #include "graphics/include/graphics_types.h"
 #include <span>
 

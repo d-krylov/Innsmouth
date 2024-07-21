@@ -20,4 +20,6 @@ std::vector<std::byte> ReadBinaryFile(const std::filesystem::path &path) {
   return buffer;
 }
 
+std::filesystem::path GetRoot() { return std::filesystem::path(PROJECT_SOURCE_DIR); }
+
 } // namespace Innsmouth

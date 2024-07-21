@@ -169,7 +169,7 @@ void ImGuiRenderer::CreateFontsTexture() {
 
   font_image_ = std::make_unique<Image2D>(VkExtent2D{uint32_t(width), uint32_t(height)}, data);
 
-  descriptor_ = font_image_->GetWriteDescriptorSet(0, DescriptorType::COMBINED_IMAGE_SAMPLER);
+  descriptor_ = font_image_->GetWriteDescriptorSet(0);
 
   io.Fonts->SetTexID((ImTextureID)(intptr_t)&descriptor_);
 }
