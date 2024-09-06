@@ -4,6 +4,9 @@
 
 ### Features
 
+* GUI with ImGui
+* Wavefront obj viewer
+
 ### TODO
 
 ### Examples

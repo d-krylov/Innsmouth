@@ -23,7 +23,7 @@ vec2 scene(vec3 p) {
   vec2 q = (i_mouse - i_resolution.xy) / i_resolution.xy;
   q.y *= i_resolution.y / i_resolution.x;
 
-  float ret = sdRoundBox(p, vec3(0.5, 0.5, 0.5), 0.0);
+  float ret = sdRoundBox(p, vec3(2.0, 2.0, 2.0), 0.0);
 
   return vec2(ret, 0);
 }
@@ -61,7 +61,7 @@ void main() {
   uv.y *= i_resolution.y / i_resolution.x;
 
   Ray ray;
-  ray.origin = vec3(0.0, 0.0, 4.0);
+  ray.origin = vec3(0.0, 0.0, 6.0);
   ray.direction = vec3(normalize(vec3(uv, -1.0)));
   
   vec3 color = vec3(0.0, 0.0, 0.0);
