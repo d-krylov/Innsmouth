@@ -1,6 +1,7 @@
 #ifndef INNSMOUTH_APPLICATION_H
 #define INNSMOUTH_APPLICATION_H
 
+#include "innsmouth/graphics/include/graphics.h"
 #include "innsmouth/gui/imgui/imgui_layer.h"
 #include "innsmouth/gui/imgui/imgui_renderer.h"
 #include "innsmouth/gui/include/window.h"
@@ -15,26 +16,31 @@ public:
 
   void Run();
 
-  void OnImGui() {}
+  void OnEvent(Event &event);
+
+  [[nodiscard]] static Application &Get() { return *application_instance_; }
+
+  [[nodiscard]] Swapchain &GetSwapchain() { return swapchain_; }
 
   void AddLayer(Layer *layer);
-
-  void OnUpdate(CommandBuffer &command_buffer) {}
 
 protected:
   void Initialize();
 
-protected:
+private:
+  Graphics graphics_;
   Window window_;
+  Swapchain swapchain_;
   ImGuiLayer imgui_layer_;
-  std::unique_ptr<Swapchain> swapchain_;
-  std::unique_ptr<ImGuiRenderer> imgui_renderer_;
+  ImGuiRenderer imgui_renderer_;
   std::vector<CommandBuffer> command_buffers_;
   std::vector<Semaphore> image_available_semaphores;
   std::vector<Semaphore> render_finished_semaphores;
   std::vector<Fence> fences_;
   std::vector<Layer *> layers_;
   uint32_t current_frame_{0};
+
+  static Application *application_instance_;
 };
 
 } // namespace Innsmouth

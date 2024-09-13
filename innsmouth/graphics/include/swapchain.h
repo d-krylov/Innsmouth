@@ -17,16 +17,17 @@ public:
 
   ~Swapchain();
 
+  auto begin() { return image_views_.begin(); }
+  auto begin() const { return image_views_.begin(); }
+
+  auto end() { return image_views_.end(); }
+  auto end() const { return image_views_.end(); }
+
   operator const VkSwapchainKHR &() const { return swapchain_; }
   [[nodiscard]] const VkSwapchainKHR *get() const { return &swapchain_; }
 
-  [[nodiscard]] const std::vector<VkImage> &GetImages() const { return images_; }
-  [[nodiscard]] const std::vector<VkImageView> &GetImageViews() const { return image_views_; }
-
-  [[nodiscard]] const VkSurfaceFormatKHR &GetSurfaceFormat() const { return surface_format_; }
-  [[nodiscard]] const VkSurfaceCapabilitiesKHR &GetSurfaceCapabilities() const {
-    return surface_capabilities_;
-  }
+  [[nodiscard]] Format GetSurfaceFormat() const { return surface_format_; }
+  [[nodiscard]] const VkExtent2D &GetSurfaceExtent() const { return surface_extent_; }
 
   [[nodiscard]] std::size_t GetImageCount() const { return images_.size(); }
   [[nodiscard]] uint32_t GetCurrentImageIndex() const { return current_image_; }
@@ -35,19 +36,20 @@ public:
 
   [[nodiscard]] VkResult AcquireNextImage(const Semaphore &semaphore);
 
+  [[nodiscard]] const VkImageView GetCurrentImageView() const { return image_views_[current_image_]; }
+
   void Cleanup();
   void Recreate();
 
 protected:
   void CreateSurface(Window &window);
   void CreateSwapchain();
-  void CreateImages();
   void CreateImageViews();
 
 private:
+  Format surface_format_;
+  VkExtent2D surface_extent_;
   VkSurfaceKHR surface_{VK_NULL_HANDLE};
-  VkSurfaceFormatKHR surface_format_{};
-  VkSurfaceCapabilitiesKHR surface_capabilities_;
   VkSwapchainKHR swapchain_{VK_NULL_HANDLE};
   VkSwapchainKHR swapchain_previous_{VK_NULL_HANDLE};
   std::vector<VkImage> images_;

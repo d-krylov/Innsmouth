@@ -14,8 +14,7 @@ void SetMeshMaterial(const tinyobj::ObjReader &reader, Mesh &mesh, const tinyobj
   mesh.material_.shininess = material.shininess;
 }
 
-void LoadMeshes(const tinyobj::ObjReader &reader, std::vector<Vertex> &vertices,
-                std::vector<Mesh> &meshes) {
+void LoadMeshes(const tinyobj::ObjReader &reader, std::vector<Vertex> &vertices, std::vector<Mesh> &meshes) {
 
   auto &shapes = reader.GetShapes();
   auto &attributes = reader.GetAttrib();

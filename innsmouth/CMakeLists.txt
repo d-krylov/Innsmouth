@@ -22,6 +22,10 @@ set(WIDGET_SOURCES
 )
 
 set(GRAPHICS_SOURCES
+  ${INNSMOUTH_SOURCE_DIR}/graphics/graphics.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_types.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_helpers.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_constants.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/graphics_pipeline.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/compute_pipeline.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/shader_module.cpp
@@ -29,13 +33,11 @@ set(GRAPHICS_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/graphics/buffer/buffer.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/swapchain.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/command_buffer.cpp
-  ${INNSMOUTH_SOURCE_DIR}/graphics/image/depth_image.cpp
-  ${INNSMOUTH_SOURCE_DIR}/graphics/graphics.cpp
-  ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_types.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_description.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/synchronization.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/image/image.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/image/image_2d.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/image/depth_image.cpp
 )
 
 set(GUI_SOURCES
@@ -64,20 +66,7 @@ set(INNSMOUTH_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/core/core_image.cpp
   ${INNSMOUTH_SOURCE_DIR}/application/application.cpp
   ${PROJECT_SOURCE_DIR}/external/spirv_reflect/spirv_reflect.c
-  ${PROJECT_SOURCE_DIR}/external/easyloggingpp/easylogging++.cc
 )
-
-set(SHADER_FILES
-  ${PROJECT_SOURCE_DIR}/shaders/mesh/mesh.vert
-  ${PROJECT_SOURCE_DIR}/shaders/mesh/mesh.frag
-  #${PROJECT_SOURCE_DIR}/shaders/test.frag
-  ${PROJECT_SOURCE_DIR}/shaders/gui.vert
-  ${PROJECT_SOURCE_DIR}/shaders/gui.frag
-  ${PROJECT_SOURCE_DIR}/shaders/raytracing/canvas.vert
-  ${PROJECT_SOURCE_DIR}/shaders/raytracing/raytracing.frag
-)
-
-add_custom_target(shaders COMMAND ${Vulkan_GLSLC_EXECUTABLE} -c --target-env=vulkan1.0 ${SHADER_FILES})
 
 set(INNSMOUTH_INCLUDES
   ${PROJECT_SOURCE_DIR}
@@ -99,5 +88,5 @@ target_link_libraries(${PROJECT_NAME}
   glfw
   glm::glm
   volk
-  $ENV{VULKAN_SDK}/lib/libVkLayer_utils.a
+  $ENV{VULKAN_SDK}/lib/libVulkanLayerSettings.a
 )

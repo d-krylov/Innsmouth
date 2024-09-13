@@ -4,7 +4,6 @@
 #include "event.h"
 #include "innsmouth/core/include/core_types.h"
 #include "innsmouth/graphics/include/graphics_types.h"
-#include "window_event_handler.h"
 #include <cstdint>
 #include <functional>
 #include <string_view>

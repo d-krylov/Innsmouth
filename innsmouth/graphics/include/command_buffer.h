@@ -1,6 +1,7 @@
 #ifndef INNSMOUTH_COMMAND_BUFFER_H
 #define INNSMOUTH_COMMAND_BUFFER_H
 
+#include "innsmouth/core/include/concepts.h"
 #include "innsmouth/graphics/include/graphics_types.h"
 #include <span>
 
@@ -44,10 +45,9 @@ public:
   void CommandDepthCompareOperation(CompareOperation compare_operation);
   void CommandDepthBounds(float min, float max);
 
-  void CommandEnableBlend(bool b);
-
-  void CommandBeginRendering(const VkExtent2D &extent, const RenderingAttachment &color,
-                             const VkImageView depth = VK_NULL_HANDLE);
+  void CommandBeginRendering(const VkExtent2D &extent, Range<RenderingAttachment> auto &&colors,
+                             std::optional<RenderingAttachment> depth = std::nullopt,
+                             std::optional<RenderingAttachment> stencil = std::nullopt);
 
   void CommandEndRendering();
   void CommandBindPipeline(const GraphicsPipeline &graphics_pipeline);
@@ -55,11 +55,10 @@ public:
   void CommandBindIndexBuffer(const Buffer &buffer, VkDeviceSize offset = 0,
                               VkIndexType index_type = VkIndexType::VK_INDEX_TYPE_UINT32);
 
-  void CommandDraw(uint32_t vertex_count, uint32_t instance_count, uint32_t first_vertex,
-                   uint32_t first_instance);
+  void CommandDraw(uint32_t vertex_count, uint32_t instance_count, uint32_t vertex_0, uint32_t instance_0);
 
-  void CommandDrawIndexed(uint32_t index_count, uint32_t instance_count, uint32_t first_index,
-                          int32_t vertex_offset, uint32_t first_instance);
+  void CommandDrawIndexed(uint32_t index_count, uint32_t instance_count, uint32_t index_0,
+                          int32_t vertex_offset, uint32_t instance_0);
 
   void CommandPushConstants(const GraphicsPipeline &graphics_pipeline, ShaderStage stage,
                             std::span<const std::byte> data, uint32_t offset = 0);
@@ -69,11 +68,9 @@ public:
 
   void CommandCopyBufferToImage(const Buffer &buffer, const Image &image, const VkExtent3D &extent,
                                 uint32_t level = 0, uint32_t base_layer = 0, uint32_t layers = 1,
-                                VkDeviceSize buffer_offset = 0,
-                                const VkOffset3D &image_offset = {0, 0, 0});
+                                VkDeviceSize buffer_offset = 0, const VkOffset3D &image_offset = {0, 0, 0});
 
   void CommandSetPrimitiveTopology(PrimitiveTopology topology);
-  void CommandSetColorBlendEquation();
 
   void CommandSetImageLayout(const VkImage &image, ImageLayout from, ImageLayout to,
                              const VkImageSubresourceRange &range,

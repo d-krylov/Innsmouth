@@ -25,9 +25,7 @@ Semaphore::Semaphore() {
   VK_CHECK(vkCreateSemaphore(Device(), &semaphore_ci, nullptr, &semaphore_));
 }
 
-Semaphore::Semaphore(Semaphore &&other) noexcept {
-  semaphore_ = std::exchange(other.semaphore_, nullptr);
-}
+Semaphore::Semaphore(Semaphore &&other) noexcept { semaphore_ = std::exchange(other.semaphore_, nullptr); }
 
 Semaphore::~Semaphore() { vkDestroySemaphore(Device(), semaphore_, nullptr); }
 

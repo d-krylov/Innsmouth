@@ -10,9 +10,15 @@ class CommandBuffer;
 
 class Renderer {
 public:
-  Renderer(VkFormat format);
+  Renderer(uint32_t width, uint32_t height, Format format);
 
   void DrawModel(CommandBuffer &command_buffer, const Model &model);
+
+  void OnResize(uint32_t width, uint32_t height);
+
+  void Begin(CommandBuffer &command_buffer);
+
+  void End(CommandBuffer &command_buffer);
 
 private:
   std::unique_ptr<GraphicsPipeline> graphics_pipeline_;

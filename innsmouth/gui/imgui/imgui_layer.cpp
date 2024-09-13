@@ -7,8 +7,8 @@ namespace Innsmouth {
 
 ImGuiKey ToImGuiKey(Key key) {
   switch (key) {
-#define KEY(X, Y)                                                                                  \
-  case Key::K_##X:                                                                                 \
+#define KEY(X, Y)                                                                                            \
+  case Key::K_##X:                                                                                           \
     return ImGuiKey::ImGuiKey_##Y;
 #include "innsmouth/gui/include/key.def"
   default:

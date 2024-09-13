@@ -1,8 +1,9 @@
 #include "innsmouth/graphics/include/graphics.h"
+#include "innsmouth/graphics/include/graphics_constants.h"
+#include "innsmouth/graphics/include/graphics_helpers.h"
 #define VMA_IMPLEMENTATION
 #include <vma/vk_mem_alloc.h>
 //#define NDEBUG
-#include "easyloggingpp/easylogging++.h"
 #include <assert.h>
 #include <cstring>
 
@@ -48,33 +49,12 @@ const VkCommandPool CommandPool() {
   return command_pool_;
 }
 
+void WaitIdle() {
+  assert(device_ != VK_NULL_HANDLE);
+  vkDeviceWaitIdle(device_);
+}
+
 uint32_t GraphicsIndex() { return graphics_queue_index_; }
-
-[[nodiscard]] bool GetSupportedFeatures(const VkPhysicalDeviceFeatures &required_features,
-                                        const VkPhysicalDeviceFeatures &supported_features) {
-  const auto *supported = reinterpret_cast<const VkBool32 *>(&supported_features);
-  const auto *required = reinterpret_cast<const VkBool32 *>(&required_features);
-  auto n = sizeof(required_features) / sizeof(VkBool32);
-  for (uint32_t i = 0; i < n; ++i) {
-    if (required[i] && !supported[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-[[nodiscard]] bool GetSupportedExtensions(const std::vector<const char *> &required,
-                                          const std::vector<VkExtensionProperties> &supported) {
-  for (const auto &r : required) {
-    auto it = std::find_if(supported.begin(), supported.end(),
-                           [&r](const auto &e) { return (strcmp(e.extensionName, r) == 0); });
-
-    if (it == supported.end()) {
-      return false;
-    }
-  }
-  return true;
-}
 
 void CreateInstance(const GraphicsDescription &gd) {
   VK_CHECK(volkInitialize());
@@ -86,13 +66,13 @@ void CreateInstance(const GraphicsDescription &gd) {
     application_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     application_info.pEngineName = gd.engine_name_.data();
     application_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    application_info.apiVersion = gd.api_version_;
+    application_info.apiVersion = VK_API_VERSION_1_3;
   }
 
   std::vector<const char *> required_layers;
   std::vector<const char *> required_extensions;
 
-  if (gd.message_type_ != DebugMessageType::NONE) {
+  if (gd.message_type_.has_value()) {
     required_layers.emplace_back("VK_LAYER_KHRONOS_validation");
     required_extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
   }
@@ -113,9 +93,9 @@ void CreateInstance(const GraphicsDescription &gd) {
 
   VkDebugUtilsMessengerCreateInfoEXT debug_ci{};
 
-  if (gd.message_type_ != DebugMessageType::NONE) {
+  if (gd.message_type_.has_value()) {
     debug_ci.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    debug_ci.messageType = static_cast<VkFlags>(gd.message_type_);
+    debug_ci.messageType = static_cast<VkFlags>(gd.message_type_.value());
     debug_ci.messageSeverity = static_cast<VkFlags>(gd.message_severity_);
     debug_ci.pfnUserCallback = gd.debug_function_;
     debug_ci.pUserData = nullptr;
@@ -126,38 +106,21 @@ void CreateInstance(const GraphicsDescription &gd) {
   VK_CHECK(vkCreateInstance(&instance_ci, nullptr, &instance_));
   volkLoadInstance(instance_);
 
-  if (gd.message_type_ != DebugMessageType::NONE) {
+  if (gd.message_type_.has_value()) {
     VK_CHECK(vkCreateDebugUtilsMessengerEXT(instance_, &debug_ci, nullptr, &debug_messenger_));
   }
 }
 
-std::optional<uint32_t> GetGraphicsFamily(std::vector<VkQueueFamilyProperties> &properties) {
-  std::optional<uint32_t> ret;
-  for (auto i = 0; i < properties.size(); ++i) {
-    if (properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-      ret = i;
-    }
-  }
-  return ret;
-}
-
-[[nodiscard]] std::optional<uint32_t>
-IsDeviceSuitable(const VkPhysicalDevice device, const VkPhysicalDeviceFeatures &required_features,
-                 const std::vector<const char *> &required_extensions) {
+[[nodiscard]] std::optional<uint32_t> IsDeviceSuitable(const VkPhysicalDevice device,
+                                                       const VkPhysicalDeviceFeatures &required_features,
+                                                       const std::vector<const char *> &required_extensions) {
   VkPhysicalDeviceProperties device_properties;
   vkGetPhysicalDeviceProperties(device, &device_properties);
   bool is_discrete = device_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
-  VkPhysicalDeviceFeatures supported_features;
-  vkGetPhysicalDeviceFeatures(device, &supported_features);
-  auto family_properties =
-    Enumerate<VkQueueFamilyProperties>(vkGetPhysicalDeviceQueueFamilyProperties, device);
-  auto extensions =
-    Enumerate<VkExtensionProperties>(vkEnumerateDeviceExtensionProperties, device, nullptr);
-  bool is_supported_extensions = GetSupportedExtensions(required_extensions, extensions);
-  auto graphics_index = GetGraphicsFamily(family_properties);
-  auto is_supported_features = GetSupportedFeatures(required_features, supported_features);
-  if (graphics_index.has_value() && is_discrete && is_supported_features &&
-      is_supported_extensions) {
+  bool is_supported_extensions = GetSupportedExtensions(device, required_extensions);
+  auto graphics_index = GetQueueFamily(device, VK_QUEUE_GRAPHICS_BIT);
+  auto is_supported_features = GetSupportedFeatures(device, required_features);
+  if (graphics_index.has_value() && is_discrete && is_supported_features && is_supported_extensions) {
     return graphics_index;
   }
   return std::nullopt;
@@ -167,7 +130,7 @@ void PickPhysicalDevice(const GraphicsDescription &gd) {
   auto devices = Enumerate<VkPhysicalDevice>(vkEnumeratePhysicalDevices, instance_);
   VkPhysicalDevice suitable_device{VK_NULL_HANDLE};
   for (const auto &device : devices) {
-    auto queue_index = IsDeviceSuitable(device, gd.device_features_, gd.device_extensions_);
+    auto queue_index = IsDeviceSuitable(device, gd.device_features_, GetDeviceExtensions());
     if (queue_index.has_value()) {
       physical_device_ = device;
       graphics_queue_index_ = queue_index.value();
@@ -193,13 +156,15 @@ void CreateDevice(const GraphicsDescription &gd) {
     dynamic_rendering.dynamicRendering = VK_TRUE;
   }
 
+  auto device_extensions = GetDeviceExtensions();
+
   VkDeviceCreateInfo device_ci{};
   {
     device_ci.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     device_ci.pQueueCreateInfos = &graphics_queue_ci;
     device_ci.queueCreateInfoCount = 1;
-    device_ci.ppEnabledExtensionNames = gd.device_extensions_.data();
-    device_ci.enabledExtensionCount = gd.device_extensions_.size();
+    device_ci.ppEnabledExtensionNames = device_extensions.data();
+    device_ci.enabledExtensionCount = device_extensions.size();
     device_ci.pEnabledFeatures = &gd.device_features_;
     device_ci.pNext = &dynamic_rendering;
   }
@@ -234,13 +199,13 @@ void CreateVmaAllocator(const GraphicsDescription &gd) {
     allocator_ci.instance = Instance();
     allocator_ci.physicalDevice = PhysicalDevice();
     allocator_ci.device = Device();
-    allocator_ci.vulkanApiVersion = gd.api_version_;
+    allocator_ci.vulkanApiVersion = VK_API_VERSION_1_3;
     allocator_ci.pVulkanFunctions = &vulkan_functions;
   }
   VK_CHECK(vmaCreateAllocator(&allocator_ci, &vma_allocator_));
 }
 
-void CreateGraphics(const GraphicsDescription &graphics_description) {
+Graphics::Graphics(const GraphicsDescription &graphics_description) {
   CreateInstance(graphics_description);
   PickPhysicalDevice(graphics_description);
   CORE_VERIFY(physical_device_ != VK_NULL_HANDLE);
@@ -251,7 +216,7 @@ void CreateGraphics(const GraphicsDescription &graphics_description) {
   CreateVmaAllocator(graphics_description);
 }
 
-void DestroyGraphics() {
+Graphics::~Graphics() {
   vkDestroyCommandPool(device_, command_pool_, nullptr);
   vkDestroyDevice(device_, nullptr);
   vkDestroyInstance(instance_, nullptr);

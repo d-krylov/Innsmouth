@@ -51,8 +51,8 @@ void Buffer::SetData(std::span<const std::byte> source) {
   Unmap();
 }
 
-WriteDescriptorSet Buffer::GetWriteDescriptorSet(uint32_t binding, VkDescriptorType type,
-                                                 VkDeviceSize offset, VkDeviceSize size) const {
+WriteDescriptorSet Buffer::GetWriteDescriptorSet(uint32_t binding, VkDescriptorType type, VkDeviceSize offset,
+                                                 VkDeviceSize size) const {
   VkDescriptorBufferInfo descriptor_bi{};
   {
     descriptor_bi.buffer = buffer_;

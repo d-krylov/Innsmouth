@@ -1,15 +1,13 @@
 #include "shader_module.h"
-#include "easyloggingpp/easylogging++.h"
 #include "innsmouth/core/include/tools.h"
 #include "innsmouth/graphics/include/graphics.h"
+#include "innsmouth/graphics/include/graphics_helpers.h"
 #include "spirv_reflect/spirv_reflect.h"
 
 namespace Innsmouth {
 
-void ShaderModule::GetDescriptorSets(const SpvReflectShaderModule &module,
-                                     VkShaderStageFlags stage) {
-  auto descriptor_sets =
-    Enumerate<SpvReflectDescriptorSet *>(spvReflectEnumerateDescriptorSets, &module);
+void ShaderModule::GetDescriptorSets(const SpvReflectShaderModule &module, VkShaderStageFlags stage) {
+  auto descriptor_sets = Enumerate<SpvReflectDescriptorSet *>(spvReflectEnumerateDescriptorSets, &module);
   for (auto &set : descriptor_sets) {
     auto &bindings = descriptor_map_[set->set];
     for (uint32_t i = 0; i < set->binding_count; ++i) {
@@ -34,8 +32,7 @@ void ShaderModule::GetDescriptorSets(const SpvReflectShaderModule &module,
 
 [[nodiscard]] std::vector<VkVertexInputAttributeDescription>
 GetShaderInputs(const SpvReflectShaderModule &module) {
-  auto inputs =
-    Enumerate<SpvReflectInterfaceVariable *>(spvReflectEnumerateInputVariables, &module);
+  auto inputs = Enumerate<SpvReflectInterfaceVariable *>(spvReflectEnumerateInputVariables, &module);
   std::vector<VkVertexInputAttributeDescription> attributes;
   attributes.reserve(inputs.size());
   for (auto input : inputs) {
@@ -57,10 +54,8 @@ GetShaderInputs(const SpvReflectShaderModule &module) {
   return attributes;
 }
 
-[[nodiscard]] auto GetPushConstants(const SpvReflectShaderModule &module,
-                                    VkShaderStageFlags stage) {
-  auto reflect_blocks =
-    Enumerate<SpvReflectBlockVariable *>(spvReflectEnumeratePushConstantBlocks, &module);
+[[nodiscard]] auto GetPushConstants(const SpvReflectShaderModule &module, VkShaderStageFlags stage) {
+  auto reflect_blocks = Enumerate<SpvReflectBlockVariable *>(spvReflectEnumeratePushConstantBlocks, &module);
   std::vector<VkPushConstantRange> pc_ranges;
   for (auto block : reflect_blocks) {
     VkPushConstantRange range{};
@@ -92,7 +87,7 @@ void ShaderModule::GetShaderInformation(const std::vector<std::byte> &data) {
 
   for (auto &input : inputs_) {
     input.offset = binding_description_.stride;
-    binding_description_.stride += FormatElementSize(input.format);
+    binding_description_.stride += vkuFormatElementSize(input.format);
   }
 
   push_constant_ranges_ = GetPushConstants(module, shader_stage_);

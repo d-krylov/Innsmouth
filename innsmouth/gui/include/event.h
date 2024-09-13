@@ -18,9 +18,9 @@ enum class EventKind {
   MOUSE_SCROLL
 };
 
-#define EVENT_CLASS_KIND(kind)                                                                     \
-  static EventKind GetStaticKind() { return EventKind::kind; }                                     \
-  EventKind GetEventKind() const override { return GetStaticKind(); }                              \
+#define EVENT_CLASS_KIND(kind)                                                                               \
+  static EventKind GetStaticKind() { return EventKind::kind; }                                               \
+  EventKind GetEventKind() const override { return GetStaticKind(); }                                        \
   std::string_view GetName() const override { return #kind; }
 
 class Event {
@@ -52,8 +52,7 @@ private:
 
 class KeyEvent : public Event {
 public:
-  KeyEvent(Key key, int32_t scancode, Action action)
-    : key_(key), scancode_(scancode), action_(action) {}
+  KeyEvent(Key key, int32_t scancode, Action action) : key_(key), scancode_(scancode), action_(action) {}
 
   [[nodiscard]] Key GetKey() const { return key_; }
   [[nodiscard]] int32_t GetScanCode() const { return scancode_; }

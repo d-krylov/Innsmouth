@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_GRAPHICS_COMMON_H
 #define INNSMOUTH_GRAPHICS_COMMON_H
 
-#include "command_buffer.h"
+#include "command_buffer.ipp"
 #include "graphics.h"
 #include "innsmouth/graphics/buffer/buffer.h"
 #include "innsmouth/graphics/image/depth_image.h"

@@ -26,8 +26,7 @@ public:
     return descriptor_map_;
   }
 
-  [[nodiscard]] const std::vector<VkVertexInputAttributeDescription> &
-  GetVertexInputAttributes() const {
+  [[nodiscard]] const std::vector<VkVertexInputAttributeDescription> &GetVertexInputAttributes() const {
     return inputs_;
   }
 

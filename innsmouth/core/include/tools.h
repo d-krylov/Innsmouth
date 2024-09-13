@@ -11,6 +11,7 @@ namespace Innsmouth {
 [[nodiscard]] std::vector<std::byte> ReadBinaryFile(const std::filesystem::path &path);
 
 inline const std::filesystem::path ROOT = PROJECT_SOURCE_DIR;
+inline const std::filesystem::path SHADER_DIR = ROOT / "shaders" / "spirv";
 
 void INNSMOUTH_LOG(const std::string_view message,
                    const std::source_location location = std::source_location::current());

@@ -13,7 +13,7 @@ public:
 
   Image2D(const CoreImage &core_image);
 
-  Image2D(const VkExtent2D &extent, std::span<const std::byte> data);
+  Image2D(uint32_t width, uint32_t height, std::span<const std::byte> data);
 
   void SetData(std::span<const std::byte> data, std::size_t buffer_size = 0);
 

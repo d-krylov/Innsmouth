@@ -20,9 +20,7 @@ public:
   [[nodiscard]] const Vector2i &GetSize() const { return size_; }
   [[nodiscard]] std::size_t GetLength() const { return size_.x * size_.y * IMAGE_CHANNELS; }
 
-  [[nodiscard]] std::span<const std::byte> GetData() const {
-    return std::span<const std::byte>(data_);
-  }
+  [[nodiscard]] std::span<const std::byte> GetData() const { return std::span<const std::byte>(data_); }
 
 private:
   std::vector<std::byte> data_;

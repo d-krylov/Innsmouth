@@ -16,7 +16,9 @@ public:
     ImGui::End();
   }
 
-  void OnUpdate(Innsmouth::CommandBuffer &command_buffer) override {}
+  void OnUpdate(Innsmouth::CommandBuffer &command_buffer) override {
+    command_buffer.CommandSetPrimitiveTopology(PrimitiveTopology::TRIANGLE_LIST);
+  }
 
 private:
 };

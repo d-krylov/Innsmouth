@@ -1,25 +1,33 @@
 #include "innsmouth/application/include/application.h"
-#include "easyloggingpp/easylogging++.h"
-INITIALIZE_EASYLOGGINGPP
 
 namespace Innsmouth {
 
+Application *Application::application_instance_ = nullptr;
+
+// clang-format off
 Application::Application(std::string_view name, uint32_t width, uint32_t height)
-  : window_(name, Vector2i(width, height)), imgui_layer_(&window_) {
-  CreateGraphics(GraphicsDescription::CreateDefault());
+  : graphics_(GraphicsDescription::CreateDefault()),
+    window_(name, Vector2i(width, height)),
+    swapchain_(window_),
+    imgui_layer_(&window_),
+    imgui_renderer_(swapchain_) {
+
   Initialize();
+
+  application_instance_ = this;
 }
+// clang-format on
 
 Application::~Application() {}
 
+void Application::OnEvent(Event &event) {
+  for (auto &layer : layers_) {
+    layer->OnEvent(event);
+  }
+}
+
 void Application::Initialize() {
-  swapchain_ = std::make_unique<Swapchain>(window_);
-
-  imgui_renderer_ = std::make_unique<ImGuiRenderer>(*swapchain_);
-
-  const auto &image_views = swapchain_->GetImageViews();
-
-  for (std::size_t i = 0; i < image_views.size(); i++) {
+  for (auto &image_view : swapchain_) {
     fences_.emplace_back(true);
     command_buffers_.emplace_back(CommandPool());
     image_available_semaphores.emplace_back();
@@ -45,18 +53,18 @@ void Application::Run() {
 
     fences_[current_frame_].Wait();
 
-    auto result = swapchain_->AcquireNextImage(image_available);
+    auto result = swapchain_.AcquireNextImage(image_available);
 
     if ((result == VK_ERROR_OUT_OF_DATE_KHR) || (result == VK_SUBOPTIMAL_KHR)) {
       if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-        swapchain_->Recreate();
+        swapchain_.Recreate();
       }
       continue;
     } else {
       VK_CHECK(result);
     }
 
-    auto image_index = swapchain_->GetCurrentImageIndex();
+    auto image_index = swapchain_.GetCurrentImageIndex();
 
     auto &command_buffer = command_buffers_[current_frame_];
 
@@ -65,30 +73,18 @@ void Application::Run() {
     command_buffer.Reset();
     command_buffer.Begin();
 
-    command_buffer.CommandBeginRendering(
-      swapchain_->GetSurfaceCapabilities().currentExtent,
-      {LoadOperation::CLEAR, swapchain_->GetImageViews()[image_index]});
-
     for (auto layer : layers_) {
       layer->OnUpdate(command_buffer);
     }
 
-    command_buffer.CommandEndRendering();
-
-    command_buffer.CommandBeginRendering(
-      swapchain_->GetSurfaceCapabilities().currentExtent,
-      {LoadOperation::LOAD, swapchain_->GetImageViews()[image_index]});
-
     imgui_layer_.NewFrame();
-    imgui_renderer_->Begin();
+    imgui_renderer_.Begin(command_buffer);
 
     for (auto layer : layers_) {
       layer->OnImGui();
     }
 
-    imgui_renderer_->End(command_buffer);
-
-    command_buffer.CommandEndRendering();
+    imgui_renderer_.End(command_buffer);
 
     command_buffer.End();
 
@@ -106,10 +102,12 @@ void Application::Run() {
 
     VK_CHECK(vkQueueSubmit(GraphicsQueue(), 1, &submit_info, fences_[current_frame_]));
 
-    result = swapchain_->Present(render_finished);
+    result = swapchain_.Present(render_finished);
 
-    current_frame_ = (current_frame_ + 1) % (swapchain_->GetImageCount() - 1);
+    current_frame_ = (current_frame_ + 1) % (swapchain_.GetImageCount() - 1);
   }
+
+  vkQueueWaitIdle(GraphicsQueue());
 }
 
 } // namespace Innsmouth

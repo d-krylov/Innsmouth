@@ -96,72 +96,14 @@ void CommandBuffer::CommandDepthBounds(float min, float max) {
   vkCmdSetDepthBounds(command_buffer_, min, max);
 }
 
-void CommandBuffer::CommandBeginRendering(const VkExtent2D &extent,
-                                          const RenderingAttachment &color,
-                                          const VkImageView depth) {
-  VkRenderingAttachmentInfo color_ai{};
-  {
-    color_ai.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
-    color_ai.imageView = color.image_view_;
-    color_ai.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    color_ai.loadOp = VkAttachmentLoadOp(color.load_operation_);
-    color_ai.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    color_ai.clearValue.color = {0.0f, 0.0f, 0.0f, 1.0f};
-  }
-
-  VkRenderingAttachmentInfo depth_ai{};
-
-  VkRenderingInfo rendering_info{};
-  {
-    rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
-    rendering_info.renderArea.offset = {0, 0};
-    rendering_info.renderArea.extent = extent;
-    rendering_info.layerCount = 1;
-    rendering_info.colorAttachmentCount = 1;
-    rendering_info.pColorAttachments = &color_ai;
-  }
-
-  if (depth != VK_NULL_HANDLE) {
-    depth_ai.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-    depth_ai.imageView = depth;
-    depth_ai.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    depth_ai.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    depth_ai.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    depth_ai.clearValue.depthStencil = {1.0f, 0};
-
-    rendering_info.pDepthAttachment = &depth_ai;
-    rendering_info.pStencilAttachment = &depth_ai;
-  }
-
-  vkCmdBeginRendering(command_buffer_, &rendering_info);
-}
-
 void CommandBuffer::CommandEndRendering() { vkCmdEndRenderingKHR(command_buffer_); }
 
 void CommandBuffer::CommandSetPrimitiveTopology(PrimitiveTopology topology) {
   vkCmdSetPrimitiveTopology(command_buffer_, VkPrimitiveTopology(topology));
 }
 
-void CommandBuffer::CommandSetColorBlendEquation() {
-  VkColorBlendEquationEXT color_blend_equation{};
-  {
-    color_blend_equation.alphaBlendOp = VK_BLEND_OP_ADD;
-    color_blend_equation.colorBlendOp = VK_BLEND_OP_ADD;
-    color_blend_equation.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-    color_blend_equation.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-    color_blend_equation.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-    color_blend_equation.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-  }
-  vkCmdSetColorBlendEquationEXT(command_buffer_, 0, 1, &color_blend_equation);
-}
-
 void CommandBuffer::CommandSetScissor(const VkRect2D &scissor) {
   vkCmdSetScissor(command_buffer_, 0, 1, &scissor);
-}
-
-void CommandBuffer::CommandEnableBlend(bool b) {
-  VkBool32 enable = b ? VK_TRUE : VK_FALSE;
-  vkCmdSetColorBlendEnableEXT(command_buffer_, 0, 1, &enable);
 }
 
 void CommandBuffer::CommandBindPipeline(const GraphicsPipeline &graphics_pipeline) {
@@ -177,37 +119,31 @@ void CommandBuffer::CommandBindIndexBuffer(const Buffer &buffer, VkDeviceSize of
   vkCmdBindIndexBuffer(command_buffer_, buffer, offset, index_type);
 }
 
-void CommandBuffer::CommandDraw(uint32_t vertex_count, uint32_t instance_count,
-                                uint32_t first_vertex, uint32_t first_instance) {
+void CommandBuffer::CommandDraw(uint32_t vertex_count, uint32_t instance_count, uint32_t first_vertex,
+                                uint32_t first_instance) {
   vkCmdDraw(command_buffer_, vertex_count, instance_count, first_vertex, first_instance);
 }
 
-void CommandBuffer::CommandDrawIndexed(uint32_t index_count, uint32_t instance_count,
-                                       uint32_t first_index, int32_t vertex_offset,
-                                       uint32_t first_instance) {
-  vkCmdDrawIndexed(command_buffer_, index_count, instance_count, first_index, vertex_offset,
-                   first_instance);
+void CommandBuffer::CommandDrawIndexed(uint32_t index_count, uint32_t instance_count, uint32_t first_index,
+                                       int32_t vertex_offset, uint32_t first_instance) {
+  vkCmdDrawIndexed(command_buffer_, index_count, instance_count, first_index, vertex_offset, first_instance);
 }
 
-void CommandBuffer::CommandPushConstants(const GraphicsPipeline &graphics_pipeline,
-                                         ShaderStage stage, std::span<const std::byte> d,
-                                         uint32_t offset) {
-  vkCmdPushConstants(command_buffer_, graphics_pipeline.GetPipelineLayout(),
-                     VkShaderStageFlags(stage), offset, d.size(), d.data());
+void CommandBuffer::CommandPushConstants(const GraphicsPipeline &graphics_pipeline, ShaderStage stage,
+                                         std::span<const std::byte> d, uint32_t offset) {
+  vkCmdPushConstants(command_buffer_, graphics_pipeline.GetPipelineLayout(), VkShaderStageFlags(stage),
+                     offset, d.size(), d.data());
 }
 
-void CommandBuffer::CommandPushDescriptorSet(const GraphicsPipeline &graphics_pipeline,
-                                             uint32_t set_number,
+void CommandBuffer::CommandPushDescriptorSet(const GraphicsPipeline &graphics_pipeline, uint32_t set_number,
                                              std::span<const VkWriteDescriptorSet> sets) {
   vkCmdPushDescriptorSetKHR(command_buffer_, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            graphics_pipeline.GetPipelineLayout(), set_number, sets.size(),
-                            sets.data());
+                            graphics_pipeline.GetPipelineLayout(), set_number, sets.size(), sets.data());
 }
 
 void CommandBuffer::CommandCopyBufferToImage(const Buffer &buffer, const Image &image,
-                                             const VkExtent3D &extent, uint32_t level,
-                                             uint32_t base_layer, uint32_t layers,
-                                             VkDeviceSize buffer_offset,
+                                             const VkExtent3D &extent, uint32_t level, uint32_t base_layer,
+                                             uint32_t layers, VkDeviceSize buffer_offset,
                                              const VkOffset3D &image_offset) {
   VkImageSubresourceLayers subresource_layers{};
   {
@@ -232,8 +168,8 @@ void CommandBuffer::CommandCopyBufferToImage(const Buffer &buffer, const Image &
 }
 
 void CommandBuffer::CommandSetImageLayout(const VkImage &image, ImageLayout from, ImageLayout to,
-                                          const VkImageSubresourceRange &range,
-                                          PipelineStage source, PipelineStage destination) {
+                                          const VkImageSubresourceRange &range, PipelineStage source,
+                                          PipelineStage destination) {
   auto access_mask = GetAccessMask(VkImageLayout(from));
 
   VkImageMemoryBarrier image_memory_barrier{};
@@ -255,9 +191,8 @@ void CommandBuffer::CommandSetImageLayout(const VkImage &image, ImageLayout from
     }
   }
 
-  vkCmdPipelineBarrier(command_buffer_, VkPipelineStageFlags(source),
-                       VkPipelineStageFlags(destination), 0, 0, nullptr, 0, nullptr, 1,
-                       &image_memory_barrier);
+  vkCmdPipelineBarrier(command_buffer_, VkPipelineStageFlags(source), VkPipelineStageFlags(destination), 0, 0,
+                       nullptr, 0, nullptr, 1, &image_memory_barrier);
 }
 
 } // namespace Innsmouth

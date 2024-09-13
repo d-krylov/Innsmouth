@@ -6,8 +6,8 @@ namespace Innsmouth {
 
 Key ToKey(int32_t key) {
   switch (key) {
-#define KEY(X, Y)                                                                                  \
-  case GLFW_KEY_##X:                                                                               \
+#define KEY(X, Y)                                                                                            \
+  case GLFW_KEY_##X:                                                                                         \
     return Key::K_##X;
 #include "innsmouth/gui/include/key.def"
   default:
@@ -18,8 +18,8 @@ Key ToKey(int32_t key) {
 
 int32_t ToNativeKey(Key key) {
   switch (key) {
-#define KEY(X, Y)                                                                                  \
-  case Key::K_##X:                                                                                 \
+#define KEY(X, Y)                                                                                            \
+  case Key::K_##X:                                                                                           \
     return GLFW_KEY_##X;
 #include "innsmouth/gui/include/key.def"
   default:

@@ -7,9 +7,7 @@ namespace Innsmouth {
 
 class DepthImage : public Image {
 public:
-  DepthImage(const VkExtent2D &extent, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT);
-
-private:
+  DepthImage(uint32_t width, uint32_t height, Format format, SampleCount samples = SampleCount::BIT1);
 };
 
 } // namespace Innsmouth

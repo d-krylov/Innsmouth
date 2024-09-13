@@ -4,9 +4,7 @@ namespace Innsmouth {
 
 Camera::Camera() { UpdateVectors(); }
 
-Matrix4f Camera::GetPerspectiveMatrix() const {
-  return glm::perspective(fov_, aspect_, near_, far_);
-}
+Matrix4f Camera::GetPerspectiveMatrix() const { return glm::perspective(fov_, aspect_, near_, far_); }
 
 Matrix4f Camera::GetLookAtMatrix() const { return glm::lookAt(position_, position_ + front_, up_); }
 

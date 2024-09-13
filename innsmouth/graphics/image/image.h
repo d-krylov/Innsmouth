@@ -6,15 +6,20 @@
 
 namespace Innsmouth {
 
-class Picture;
+struct SamplerAddress {
+  SamplerAddress(SamplerAddressMode x) : u_(x), v_(x), w_(x) {}
+  SamplerAddress(SamplerAddressMode u, SamplerAddressMode v, SamplerAddressMode w) : u_(u), v_(v), w_(w) {}
+  SamplerAddressMode u_;
+  SamplerAddressMode v_;
+  SamplerAddressMode w_;
+};
 
 class Image {
 public:
   Image() = default;
 
-  Image(const VkExtent3D &extent, VkFormat format, uint32_t levels, uint32_t layers,
-        VkSampleCountFlagBits samples, Filter min, Filter mag, SamplerAddressMode u,
-        SamplerAddressMode v, SamplerAddressMode w);
+  Image(uint32_t width, uint32_t height, uint32_t depth, Format format, uint32_t levels, uint32_t layers,
+        SampleCount samples, Filter min, Filter mag, SamplerAddress uvw);
 
   ~Image();
 
@@ -23,17 +28,14 @@ public:
   [[nodiscard]] const VkExtent3D &GetExtent() const { return extent_; }
   [[nodiscard]] const VkImageView GetImageView() const { return image_view_; }
   [[nodiscard]] const VkSampler GetSampler() const { return sampler_; }
-  [[nodiscard]] VkFormat GetFormat() const { return format_; }
+  [[nodiscard]] Format GetFormat() const { return format_; }
 
   [[nodiscard]] WriteDescriptorSet
-  GetWriteDescriptorSet(uint32_t binding,
-                        DescriptorType type = DescriptorType::COMBINED_IMAGE_SAMPLER) const;
+  GetWriteDescriptorSet(uint32_t binding, DescriptorType type = DescriptorType::COMBINED_IMAGE_SAMPLER) const;
 
-  static void
-  CreateImage(VkImage &image, VmaAllocation &allocation, VkImageType image_type,
-              const VkExtent3D &extent, uint32_t levels, uint32_t layers, VkFormat image_format,
-              VkImageTiling tiling, ImageUsage usage,
-              VkSampleCountFlagBits samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT);
+  static void CreateImage(VkImage &image, VmaAllocation &allocation, ImageType image_type,
+                          const VkExtent3D &extent, uint32_t levels, uint32_t layers, Format format,
+                          ImageTiling tiling, ImageUsage usage, SampleCount samples = SampleCount::BIT1);
 
   // STATIC
 
@@ -41,11 +43,10 @@ public:
   GetWriteDescriptorSet(const std::vector<VkDescriptorImageInfo> &descriptor_ii, uint32_t binding,
                         DescriptorType type = DescriptorType::COMBINED_IMAGE_SAMPLER);
 
-  static void CreateImageView(const VkImage &image, VkImageView &image_view, VkFormat format,
-                              VkImageViewType view_type, const VkImageSubresourceRange &range);
+  static void CreateImageView(const VkImage &image, VkImageView &image_view, Format format,
+                              ImageViewType view_type, const VkImageSubresourceRange &range);
 
-  static void CreateImageSampler(VkSampler &sampler, Filter min, Filter mag, SamplerAddressMode u,
-                                 SamplerAddressMode v, SamplerAddressMode w);
+  static void CreateImageSampler(VkSampler &sampler, Filter min, Filter mag, const SamplerAddress &uvw);
   static void CreateMipmaps();
 
   static void TransitionImageLayout(VkImage image, ImageLayout from, ImageLayout to,
@@ -59,11 +60,11 @@ protected:
   VkSampler sampler_{VK_NULL_HANDLE};
   VmaAllocation allocation_{VK_NULL_HANDLE};
   VkExtent3D extent_{0, 0, 0};
-  VkSampleCountFlagBits samples_{VK_SAMPLE_COUNT_1_BIT};
+  SampleCount samples_{SampleCount::BIT1};
   VkImageType type_;
-  VkFormat format_;
-  VkImageUsageFlags usage_;
-  std::array<SamplerAddressMode, 3> address_mode_;
+  Format format_;
+  ImageUsage usage_;
+  SamplerAddress sampler_address_;
   Filter min_;
   Filter mag_;
   uint32_t levels_{0};

@@ -11,12 +11,10 @@ class ImGuiRenderer {
 public:
   ImGuiRenderer(const Swapchain &swapchain);
 
-  ~ImGuiRenderer();
-
   void RenderDrawData(CommandBuffer &command_buffer, ImDrawData *draw_data);
   void SetupRenderState(CommandBuffer &command_buffer, ImDrawData *draw_data);
 
-  void Begin();
+  void Begin(CommandBuffer &command_buffer);
   void End(CommandBuffer &command_buffer);
 
   void CreateFontsTexture();

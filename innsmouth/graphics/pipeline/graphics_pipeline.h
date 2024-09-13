@@ -1,30 +1,27 @@
 #ifndef INNSMOUTH_GRAPHICS_PIPELINE_H
 #define INNSMOUTH_GRAPHICS_PIPELINE_H
 
+#include "innsmouth/core/include/concepts.h"
 #include "innsmouth/core/include/macros.h"
-#include "innsmouth/graphics/include/graphics_types.h"
+#include "pipeline.h"
 
 namespace Innsmouth {
 
 class ShaderModule;
 
-class GraphicsPipeline {
+class GraphicsPipeline : public Pipeline {
 public:
-  GraphicsPipeline(const std::vector<std::filesystem::path> &paths,
-                   const std::vector<VkFormat> &color_formats, Depth depth = Depth::NONE,
-                   VkFormat depth_format = VK_FORMAT_UNDEFINED,
+  GraphicsPipeline(const std::vector<std::filesystem::path> &paths, const std::vector<Format> &color_formats,
+                   Format depth_format = Format::UNDEFINED,
                    const std::vector<VkVertexInputAttributeDescription> &vertex_attributes = {},
                    const std::vector<VkVertexInputBindingDescription> &vertex_bindings = {},
-                   const std::vector<VkDynamicState> dynamic_states = GetDynamicStates(),
-                   PrimitiveTopology topology = PrimitiveTopology::TRIANGLE_LIST);
-
-  GraphicsPipeline();
+                   const std::vector<VkDynamicState> dynamic_states = GetDynamicStates());
 
   ~GraphicsPipeline();
 
   NO_COPY_SEMANTIC(GraphicsPipeline);
 
-  operator const VkPipeline &() const { return graphics_pipeline_; }
+  operator const VkPipeline &() const { return pipeline_; }
 
   [[nodiscard]] const VkPipelineLayout GetPipelineLayout() const { return pipeline_layout_; }
   [[nodiscard]] const std::vector<VkDescriptorSetLayout> &GetDescriptorSetLayouts() const {
@@ -39,9 +36,6 @@ protected:
   void ProcessDescriptorSets(const std::vector<ShaderModule> &modules);
 
 private:
-  VkPipeline graphics_pipeline_{VK_NULL_HANDLE};
-  VkPipelineLayout pipeline_layout_{VK_NULL_HANDLE};
-  std::vector<VkDescriptorSetLayout> descriptor_set_layouts_;
 };
 
 } // namespace Innsmouth

@@ -31,14 +31,11 @@ void GraphicsPipeline::ProcessDescriptorSets(const std::vector<ShaderModule> &mo
   }
 }
 
-GraphicsPipeline::GraphicsPipeline() {}
-
-GraphicsPipeline::GraphicsPipeline(
-  const std::vector<std::filesystem::path> &paths, const std::vector<VkFormat> &color_formats,
-  Depth d, VkFormat depth_format,
-  const std::vector<VkVertexInputAttributeDescription> &vertex_attributes,
-  const std::vector<VkVertexInputBindingDescription> &vertex_bindings,
-  const std::vector<VkDynamicState> dynamic_states, PrimitiveTopology topology) {
+GraphicsPipeline::GraphicsPipeline(const std::vector<std::filesystem::path> &paths,
+                                   const std::vector<Format> &color_formats, Format depth_format,
+                                   const std::vector<VkVertexInputAttributeDescription> &vertex_attributes,
+                                   const std::vector<VkVertexInputBindingDescription> &vertex_bindings,
+                                   const std::vector<VkDynamicState> dynamic_states) {
 
   std::vector<ShaderModule> shader_modules(paths.begin(), paths.end());
 
@@ -100,7 +97,7 @@ GraphicsPipeline::GraphicsPipeline(
   VkPipelineInputAssemblyStateCreateInfo input_assembly_state_ci{};
   {
     input_assembly_state_ci.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-    input_assembly_state_ci.topology = VkPrimitiveTopology(topology);
+    input_assembly_state_ci.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     input_assembly_state_ci.primitiveRestartEnable = VK_FALSE;
   }
 
@@ -163,14 +160,9 @@ GraphicsPipeline::GraphicsPipeline(
     color_blending_state_ci.pAttachments = &blend_attachment_state;
   }
 
-  auto depth_rd = (d == Depth::NONE || d == Depth::WRITE) ? VK_FALSE : VK_TRUE;
-  auto depth_wr = (d == Depth::NONE || d == Depth::READ) ? VK_FALSE : VK_TRUE;
-
   VkPipelineDepthStencilStateCreateInfo depth_stencil_state_ci{};
   {
     depth_stencil_state_ci.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depth_stencil_state_ci.depthTestEnable = depth_rd;
-    depth_stencil_state_ci.depthWriteEnable = depth_wr;
     depth_stencil_state_ci.depthCompareOp = VK_COMPARE_OP_LESS;
     depth_stencil_state_ci.depthBoundsTestEnable = VK_FALSE;
     depth_stencil_state_ci.minDepthBounds = 0.0f;
@@ -184,9 +176,9 @@ GraphicsPipeline::GraphicsPipeline(
   {
     pipeline_rendering_ci.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
     pipeline_rendering_ci.colorAttachmentCount = color_formats.size();
-    pipeline_rendering_ci.pColorAttachmentFormats = color_formats.data();
-    pipeline_rendering_ci.depthAttachmentFormat = depth_format;
-    pipeline_rendering_ci.stencilAttachmentFormat = depth_format;
+    pipeline_rendering_ci.pColorAttachmentFormats = reinterpret_cast<const VkFormat *>(color_formats.data());
+    pipeline_rendering_ci.depthAttachmentFormat = VkFormat(depth_format);
+    pipeline_rendering_ci.stencilAttachmentFormat = VkFormat(depth_format);
   }
 
   VkGraphicsPipelineCreateInfo graphics_pipeline_ci{};
@@ -209,8 +201,7 @@ GraphicsPipeline::GraphicsPipeline(
     graphics_pipeline_ci.renderPass = VK_NULL_HANDLE;
   }
 
-  VK_CHECK(vkCreateGraphicsPipelines(Device(), VK_NULL_HANDLE, 1, &graphics_pipeline_ci, nullptr,
-                                     &graphics_pipeline_));
+  VK_CHECK(vkCreateGraphicsPipelines(Device(), nullptr, 1, &graphics_pipeline_ci, nullptr, &pipeline_));
 }
 
 GraphicsPipeline::~GraphicsPipeline() {}

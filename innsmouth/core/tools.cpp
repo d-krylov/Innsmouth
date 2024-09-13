@@ -22,8 +22,8 @@ std::vector<std::byte> ReadBinaryFile(const std::filesystem::path &path) {
 }
 
 void INNSMOUTH_LOG(const std::string_view message, const std::source_location location) {
-  std::clog << "FILE: " << location.file_name() << '(' << location.line() << ':'
-            << location.column() << ") " << location.function_name() << " : " << message << '\n';
+  std::clog << "FILE: " << location.file_name() << '(' << location.line() << ':' << location.column() << ") "
+            << location.function_name() << " : " << message << '\n';
 }
 
 } // namespace Innsmouth
