@@ -21,6 +21,10 @@ template <AllowedBitmaskEnum Enum> Enum operator|(Enum LHS, Enum RHS) {
 template <typename R, typename U>
 concept Range = std::ranges::contiguous_range<R> &&std::same_as<std::ranges::range_value_t<R>, U>;
 
+template <typename T>
+concept PlainType =
+  std::is_trivial_v<std::remove_cvref_t<T>> &&std::is_standard_layout_v<std::remove_cvref_t<T>>;
+
 } // namespace Innsmouth
 
 #endif // INNSMOUTH_CONCEPTS_H

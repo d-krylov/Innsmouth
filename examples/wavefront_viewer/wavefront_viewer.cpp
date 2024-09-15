@@ -13,32 +13,34 @@ public:
   void OnImGui() override {
     transform_.OnImGui();
     camera_.OnImGui();
+    light_.OnImGui();
   }
 
-  bool OnWindowSizeEvent(const WindowSizeEvent &event) {
-    // renderer_.OnResize(event.GetWidth(), event.GetHeight());
-    return true;
+  void OnSwapchain() override {
+    auto &swapchain = Application::Get().GetSwapchain();
+    renderer_.OnResize(swapchain.GetSurfaceWidth(), swapchain.GetSurfaceHeight());
   }
 
-  void OnEvent(Event &event) override {
-    EventDispatcher dispatcher(event);
-    dispatcher.Dispatch<WindowSizeEvent>(BIND_FUNCTION(Viewer::OnWindowSizeEvent));
-  }
-
-  void OnUpdate(Innsmouth::CommandBuffer &command_buffer) override {
-
-    renderer_.Begin(command_buffer);
-
+  void OnUpdate(CommandBuffer &command_buffer) override {
     camera_.OnUpdate();
+
+    renderer_.Begin(command_buffer, light_.GetPointLights().front(), camera_.GetCamera());
+
+    renderer_.DrawModel(command_buffer, model_);
 
     renderer_.End(command_buffer);
   }
 
-  void OnAttach() override { model_.LoadWavefront(ROOT / "assets" / "Sponza-master" / "sponza.obj"); }
+  void OnAttach() override {
+    light_.AddPointLight();
+    model_.LoadWavefront(ROOT / "assets" / "wavefront" / "cube" / "cube.obj");
+    renderer_.PushModel(model_);
+  }
 
 private:
   CameraWidget camera_;
   TransformWidget transform_;
+  LightWidget light_;
   Model model_;
   Renderer renderer_;
 };

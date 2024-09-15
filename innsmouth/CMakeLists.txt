@@ -19,6 +19,7 @@ set(RENDERER_SOURCES
 set(WIDGET_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/widgets/camera_widget.cpp
   ${INNSMOUTH_SOURCE_DIR}/widgets/transform_widget.cpp
+  ${INNSMOUTH_SOURCE_DIR}/widgets/light_widget.cpp
 )
 
 set(GRAPHICS_SOURCES

@@ -28,9 +28,10 @@ add_subdirectory(innsmouth)
 set(SHADER_FILES
   ${PROJECT_SOURCE_DIR}/shaders/sources/mesh/mesh.vert
   ${PROJECT_SOURCE_DIR}/shaders/sources/mesh/mesh.frag
-  #${PROJECT_SOURCE_DIR}/shaders/test.frag
   ${PROJECT_SOURCE_DIR}/shaders/sources/gui/gui.vert
   ${PROJECT_SOURCE_DIR}/shaders/sources/gui/gui.frag
+  ${PROJECT_SOURCE_DIR}/shaders/sources/test/test.vert
+  ${PROJECT_SOURCE_DIR}/shaders/sources/test/test.frag
   ${PROJECT_SOURCE_DIR}/shaders/sources/raytracing/canvas.vert
   ${PROJECT_SOURCE_DIR}/shaders/sources/raytracing/raytracing.frag
 )
@@ -44,7 +45,7 @@ foreach(SHADER ${SHADER_FILES})
 
   add_custom_command(
     OUTPUT ${SHADER_OUTPUT}
-    COMMAND ${Vulkan_GLSLC_EXECUTABLE} -c --target-env=vulkan1.0 ${SHADER} -o ${SHADER_OUTPUT}
+    COMMAND ${Vulkan_GLSLC_EXECUTABLE} -c --target-env=vulkan1.3 ${SHADER} -o ${SHADER_OUTPUT}
     DEPENDS ${SHADER}
     COMMENT "Compiling ${SHADER} to ${SHADER_OUTPUT}"
   )
@@ -62,6 +63,8 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   add_clang_format_target(format "build;external")
 
   add_subdirectory(examples)
+
+  add_subdirectory(test)
 
 endif()
 

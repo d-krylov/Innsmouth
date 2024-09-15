@@ -9,7 +9,9 @@ CoreImage::CoreImage(const std::filesystem::path &path) {
 
   stbi_set_flip_vertically_on_load(true);
 
-  auto pixels = ToBytePointer(stbi_load(path.c_str(), &size_.x, &size_.y, &channels, 0));
+  std::byte *pixels =
+    reinterpret_cast<std::byte *>(stbi_load(path.c_str(), &size_.x, &size_.y, &channels, 0));
+
   if (pixels != nullptr) {
     if (channels == 3) {
       data_.resize(size_.x * size_.y * IMAGE_CHANNELS);

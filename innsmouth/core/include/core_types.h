@@ -33,14 +33,6 @@ constexpr inline Vector3f Z_ = Vector3f(0.0f, 0.0f, 1.0f);
 
 constexpr inline float PI_ = glm::pi<float>();
 
-template <typename T> [[nodiscard]] inline std::byte *ToBytePointer(T *data) {
-  return reinterpret_cast<std::byte *>(data);
-}
-
-template <typename T> [[nodiscard]] inline std::span<const T> ToSpan(const T &value) {
-  return std::span<const T>(&value, 1);
-}
-
 constexpr std::size_t IMAGE_CHANNELS = 4;
 
 } // namespace Innsmouth

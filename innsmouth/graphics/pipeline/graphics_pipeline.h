@@ -9,7 +9,7 @@ namespace Innsmouth {
 
 class ShaderModule;
 
-class GraphicsPipeline : public Pipeline {
+class GraphicsPipeline {
 public:
   GraphicsPipeline(const std::vector<std::filesystem::path> &paths, const std::vector<Format> &color_formats,
                    Format depth_format = Format::UNDEFINED,
@@ -24,18 +24,14 @@ public:
   operator const VkPipeline &() const { return pipeline_; }
 
   [[nodiscard]] const VkPipelineLayout GetPipelineLayout() const { return pipeline_layout_; }
-  [[nodiscard]] const std::vector<VkDescriptorSetLayout> &GetDescriptorSetLayouts() const {
-    return descriptor_set_layouts_;
-  }
-
-  [[nodiscard]] const VkDescriptorSetLayout GetDescriptorSetLayout(uint32_t i) const {
-    return descriptor_set_layouts_[i];
-  }
 
 protected:
   void ProcessDescriptorSets(const std::vector<ShaderModule> &modules);
 
 private:
+  VkPipeline pipeline_{VK_NULL_HANDLE};
+  VkPipelineLayout pipeline_layout_{VK_NULL_HANDLE};
+  std::vector<VkDescriptorSetLayout> descriptor_set_layouts_;
 };
 
 } // namespace Innsmouth

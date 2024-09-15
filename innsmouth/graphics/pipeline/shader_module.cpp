@@ -43,7 +43,7 @@ GetShaderInputs(const SpvReflectShaderModule &module) {
     {
       attribute.location = input->location;
       attribute.binding = 0;
-      attribute.format = static_cast<VkFormat>(input->format);
+      attribute.format = VkFormat(input->format);
       attribute.offset = 0;
     }
 
@@ -113,6 +113,6 @@ ShaderModule::ShaderModule(const std::filesystem::path &path) {
   VK_CHECK(vkCreateShaderModule(Device(), &shader_module_ci, nullptr, &shader_module_));
 }
 
-ShaderModule::~ShaderModule() {}
+ShaderModule::~ShaderModule() { vkDestroyShaderModule(Device(), shader_module_, nullptr); }
 
 } // namespace Innsmouth

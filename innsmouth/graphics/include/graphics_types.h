@@ -33,6 +33,11 @@ enum class ImageAspect {
 #include "graphics_types.def"
 };
 
+enum class CullMode {
+#define VULKAN_CULL_MODE(X) X = VK_CULL_MODE_##X,
+#include "graphics_types.def"
+};
+
 enum class DebugMessageType {
 #define VULKAN_DEBUG_MESSAGE_TYPE(X) X = VK_DEBUG_UTILS_MESSAGE_TYPE_##X##_BIT_EXT,
 #include "graphics_types.def"

@@ -1,6 +1,8 @@
 #include "graphics_pipeline.h"
 #include "innsmouth/graphics/include/graphics.h"
 #include "shader_module.h"
+#include <algorithm>
+#include <iostream>
 
 namespace Innsmouth {
 
@@ -62,8 +64,6 @@ GraphicsPipeline::GraphicsPipeline(const std::vector<std::filesystem::path> &pat
       back.size -= offset;
       offset += back.size;
     }
-    VkDescriptorSetLayout descriptor_set_layout;
-    const auto &descriptor_set_data = shader.GetDescriptorSetData();
   }
 
   ProcessDescriptorSets(shader_modules);
@@ -204,6 +204,11 @@ GraphicsPipeline::GraphicsPipeline(const std::vector<std::filesystem::path> &pat
   VK_CHECK(vkCreateGraphicsPipelines(Device(), nullptr, 1, &graphics_pipeline_ci, nullptr, &pipeline_));
 }
 
-GraphicsPipeline::~GraphicsPipeline() {}
+GraphicsPipeline::~GraphicsPipeline() {
+  vkDestroyPipeline(Device(), pipeline_, nullptr);
+  vkDestroyPipelineLayout(Device(), pipeline_layout_, nullptr);
+  std::ranges::for_each(descriptor_set_layouts_,
+                        [](auto &ds) { vkDestroyDescriptorSetLayout(Device(), ds, nullptr); });
+}
 
 } // namespace Innsmouth

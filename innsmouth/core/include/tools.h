@@ -1,8 +1,10 @@
 #ifndef INNSMOUTH_TOOLS_H
 #define INNSMOUTH_TOOLS_H
 
+#include <bit>
 #include <filesystem>
 #include <source_location>
+#include <span>
 #include <vector>
 
 namespace Innsmouth {

@@ -28,6 +28,8 @@ public:
 
   [[nodiscard]] Format GetSurfaceFormat() const { return surface_format_; }
   [[nodiscard]] const VkExtent2D &GetSurfaceExtent() const { return surface_extent_; }
+  [[nodiscard]] uint32_t GetSurfaceWidth() const { return surface_extent_.width; }
+  [[nodiscard]] uint32_t GetSurfaceHeight() const { return surface_extent_.height; }
 
   [[nodiscard]] std::size_t GetImageCount() const { return images_.size(); }
   [[nodiscard]] uint32_t GetCurrentImageIndex() const { return current_image_; }

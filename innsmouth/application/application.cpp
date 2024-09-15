@@ -14,6 +14,9 @@ Application::Application(std::string_view name, uint32_t width, uint32_t height)
 
   Initialize();
 
+  window_.SetEventCallback(BIND_FUNCTION(Application::OnEvent));
+  layers_.push_back(&imgui_layer_);
+  
   application_instance_ = this;
 }
 // clang-format on
@@ -58,6 +61,9 @@ void Application::Run() {
     if ((result == VK_ERROR_OUT_OF_DATE_KHR) || (result == VK_SUBOPTIMAL_KHR)) {
       if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         swapchain_.Recreate();
+        for (auto &layer : layers_) {
+          layer->OnSwapchain();
+        }
       }
       continue;
     } else {
@@ -107,7 +113,7 @@ void Application::Run() {
     current_frame_ = (current_frame_ + 1) % (swapchain_.GetImageCount() - 1);
   }
 
-  vkQueueWaitIdle(GraphicsQueue());
+  WaitIdle();
 }
 
 } // namespace Innsmouth

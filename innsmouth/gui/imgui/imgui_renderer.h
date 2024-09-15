@@ -21,11 +21,17 @@ public:
   void AddTexture();
 
 private:
+  struct PushConstants {
+    Vector2f scale_;
+    Vector2f translate_;
+  };
+
+private:
   GraphicsPipeline graphics_pipeline_;
   Buffer vertex_buffer_;
   Buffer index_buffer_;
   std::unique_ptr<Image2D> font_image_;
-  WriteDescriptorSet descriptor_;
+  PushConstants push_constants_;
 };
 
 } // namespace Innsmouth

@@ -49,6 +49,13 @@ void CommandBuffer::CommandBeginRendering(const VkExtent2D &extent, Range<Render
   vkCmdBeginRendering(command_buffer_, &rendering_info);
 }
 
+template <typename T>
+void CommandBuffer::CommandPushConstants(const GraphicsPipeline &graphics_pipeline, ShaderStage stage,
+                                         const T &data, uint32_t offset) {
+  vkCmdPushConstants(command_buffer_, graphics_pipeline.GetPipelineLayout(), VkShaderStageFlags(stage),
+                     offset, sizeof(T), &data);
+}
+
 } // namespace Innsmouth
 
 #endif // INNSMOUTH_COMMAND_BUFFER_IPP

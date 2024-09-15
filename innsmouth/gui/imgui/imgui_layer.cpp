@@ -74,10 +74,7 @@ void ImGuiLayer::OnEvent(Event &event) {
   dispatcher.Dispatch<KeyEvent>(BIND_FUNCTION(ImGuiLayer::OnKeyEvent));
 }
 
-ImGuiLayer::ImGuiLayer(Window *window) : window_(window) {
-  ImGui::CreateContext();
-  window_->SetEventCallback(BIND_FUNCTION(ImGuiLayer::OnEvent));
-}
+ImGuiLayer::ImGuiLayer(Window *window) : window_(window) { ImGui::CreateContext(); }
 
 void ImGuiLayer::NewFrame() {
   auto &io = ImGui::GetIO();

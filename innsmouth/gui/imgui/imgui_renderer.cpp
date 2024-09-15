@@ -25,15 +25,10 @@ ImGuiRenderer::ImGuiRenderer(const Swapchain &swapchain)
   CreateFontsTexture();
 }
 
-struct PushConstants {
-  Vector2f scale_;
-  Vector2f translate_;
-};
-
 void ImGuiRenderer::SetupRenderState(CommandBuffer &command_buffer, ImDrawData *draw_data) {
   auto &io = ImGui::GetIO();
 
-  command_buffer.CommandSetCullMode(false, false);
+  command_buffer.CommandSetCullMode(CullMode::NONE);
   command_buffer.CommandSetFrontFace(FrontFace::COUNTER_CLOCKWISE);
   command_buffer.CommandBindPipeline(graphics_pipeline_);
   command_buffer.CommandEnableDepthTest(false);
@@ -48,12 +43,12 @@ void ImGuiRenderer::SetupRenderState(CommandBuffer &command_buffer, ImDrawData *
 
   command_buffer.CommandSetViewport(0.0f, 0.0f, io.DisplaySize.x, io.DisplaySize.y);
 
-  PushConstants pc;
-  pc.scale_ = Vector2f(2.0f / draw_data->DisplaySize.x, 2.0f / draw_data->DisplaySize.y),
-  pc.translate_ =
-    Vector2f(-1.0f - draw_data->DisplayPos.x * pc.scale_.x, -1.0f - draw_data->DisplayPos.y * pc.scale_.y);
+  push_constants_.scale_.x = 2.0f / draw_data->DisplaySize.x;
+  push_constants_.scale_.y = 2.0f / draw_data->DisplaySize.y;
+  push_constants_.translate_.x = -1.0f - draw_data->DisplayPos.x * push_constants_.scale_.x,
+  push_constants_.translate_.y = -1.0f - draw_data->DisplayPos.y * push_constants_.scale_.y;
 
-  command_buffer.CommandPushConstants(graphics_pipeline_, ShaderStage::VERTEX, std::as_bytes(ToSpan(pc)));
+  command_buffer.CommandPushConstants(graphics_pipeline_, ShaderStage::VERTEX, push_constants_);
 }
 
 void ImGuiRenderer::RenderDrawData(CommandBuffer &command_buffer, ImDrawData *draw_data) {
@@ -90,8 +85,6 @@ void ImGuiRenderer::RenderDrawData(CommandBuffer &command_buffer, ImDrawData *dr
   int32_t global_vertex_offset = 0;
   int32_t global_index_offset = 0;
 
-  auto write_descriptor_set = font_image_->GetWriteDescriptorSet(0, DescriptorType::COMBINED_IMAGE_SAMPLER);
-
   for (int n = 0; n < draw_data->CmdListsCount; n++) {
     const auto *commands = draw_data->CmdLists[n];
     for (uint32_t i = 0; i < commands->CmdBuffer.Size; i++) {
@@ -109,20 +102,13 @@ void ImGuiRenderer::RenderDrawData(CommandBuffer &command_buffer, ImDrawData *dr
         continue;
       }
 
-      VkRect2D scissor;
-      {
-        scissor.offset.x = (int32_t)(clip_min.x);
-        scissor.offset.y = (int32_t)(clip_min.y);
-        scissor.extent.width = (uint32_t)(clip_max.x - clip_min.x);
-        scissor.extent.height = (uint32_t)(clip_max.y - clip_min.y);
-      }
-      command_buffer.CommandSetScissor(scissor);
+      command_buffer.CommandSetScissor(int32_t(clip_min.x), int32_t(clip_min.y),
+                                       uint32_t(clip_max.x - clip_min.x), uint32_t(clip_max.y - clip_min.y));
 
-      WriteDescriptorSet *descriptor = reinterpret_cast<WriteDescriptorSet *>(command->TextureId);
+      Image *image = reinterpret_cast<Image *>(command->TextureId);
 
-      if (descriptor) {
-        command_buffer.CommandPushDescriptorSet(graphics_pipeline_, 0,
-                                                ToSpan(descriptor->write_descriptor_set_));
+      if (image) {
+        command_buffer.CommandPushDescriptorSet(graphics_pipeline_, 0, 0, *image);
       }
 
       command_buffer.CommandDrawIndexed(command->ElemCount, 1, command->IdxOffset + global_index_offset,
@@ -131,26 +117,22 @@ void ImGuiRenderer::RenderDrawData(CommandBuffer &command_buffer, ImDrawData *dr
     global_index_offset += commands->IdxBuffer.Size;
     global_vertex_offset += commands->VtxBuffer.Size;
   }
-
-  VkRect2D scissor = {{0, 0}, {(uint32_t)framebuffer_w, (uint32_t)framebuffer_h}};
-  command_buffer.CommandSetScissor(scissor);
+  command_buffer.CommandSetScissor(0, 0, (uint32_t)framebuffer_w, (uint32_t)framebuffer_h);
 }
 
 void ImGuiRenderer::CreateFontsTexture() {
   auto &io = ImGui::GetIO();
 
-  unsigned char *font_data;
+  std::byte *font_data;
   int32_t width, height;
-  io.Fonts->GetTexDataAsRGBA32(&font_data, &width, &height);
+  io.Fonts->GetTexDataAsRGBA32(reinterpret_cast<unsigned char **>(&font_data), &width, &height);
 
   auto size = width * height * 4;
-  std::span<std::byte> data(ToBytePointer(font_data), size);
+  std::span<std::byte> data(font_data, size);
 
   font_image_ = std::make_unique<Image2D>(width, height, data);
 
-  descriptor_ = font_image_->GetWriteDescriptorSet(0);
-
-  io.Fonts->SetTexID((ImTextureID)(intptr_t)&descriptor_);
+  io.Fonts->SetTexID((ImTextureID)(intptr_t)font_image_.get());
 }
 
 void ImGuiRenderer::Begin(CommandBuffer &command_buffer) {
@@ -159,7 +141,7 @@ void ImGuiRenderer::Begin(CommandBuffer &command_buffer) {
   auto &swapchain = Application::Get().GetSwapchain();
 
   std::vector<RenderingAttachment> attachments{
-    {LoadOperation::CLEAR, StoreOperation::STORE, swapchain.GetCurrentImageView()}};
+    {LoadOperation::LOAD, StoreOperation::STORE, swapchain.GetCurrentImageView()}};
 
   command_buffer.CommandBeginRendering(swapchain.GetSurfaceExtent(), attachments);
 }

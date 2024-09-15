@@ -27,6 +27,6 @@ void main() {
   gl_Position = transformations.projection * 
                 transformations.view *
                 transformations.model * vec4(in_position, 1.0);
-
+                
   gl_Position.y = -gl_Position.y;	
 }

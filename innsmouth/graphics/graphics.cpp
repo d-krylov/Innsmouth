@@ -218,7 +218,9 @@ Graphics::Graphics(const GraphicsDescription &graphics_description) {
 
 Graphics::~Graphics() {
   vkDestroyCommandPool(device_, command_pool_, nullptr);
+  vmaDestroyAllocator(vma_allocator_);
   vkDestroyDevice(device_, nullptr);
+  vkDestroyDebugUtilsMessengerEXT(instance_, debug_messenger_, nullptr);
   vkDestroyInstance(instance_, nullptr);
 }
 

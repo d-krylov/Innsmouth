@@ -1,7 +1,6 @@
 #ifndef INNSMOUTH_IMAGE_H
 #define INNSMOUTH_IMAGE_H
 
-#include "innsmouth/graphics/descriptors/write_descriptor_set.h"
 #include "innsmouth/graphics/include/graphics_types.h"
 
 namespace Innsmouth {
@@ -23,6 +22,10 @@ public:
 
   ~Image();
 
+  NO_COPY_SEMANTIC(Image);
+
+  Image(Image &&other) noexcept;
+
   operator const VkImage &() const { return image_; }
 
   [[nodiscard]] const VkExtent3D &GetExtent() const { return extent_; }
@@ -30,18 +33,11 @@ public:
   [[nodiscard]] const VkSampler GetSampler() const { return sampler_; }
   [[nodiscard]] Format GetFormat() const { return format_; }
 
-  [[nodiscard]] WriteDescriptorSet
-  GetWriteDescriptorSet(uint32_t binding, DescriptorType type = DescriptorType::COMBINED_IMAGE_SAMPLER) const;
-
   static void CreateImage(VkImage &image, VmaAllocation &allocation, ImageType image_type,
                           const VkExtent3D &extent, uint32_t levels, uint32_t layers, Format format,
                           ImageTiling tiling, ImageUsage usage, SampleCount samples = SampleCount::BIT1);
 
   // STATIC
-
-  static WriteDescriptorSet
-  GetWriteDescriptorSet(const std::vector<VkDescriptorImageInfo> &descriptor_ii, uint32_t binding,
-                        DescriptorType type = DescriptorType::COMBINED_IMAGE_SAMPLER);
 
   static void CreateImageView(const VkImage &image, VkImageView &image_view, Format format,
                               ImageViewType view_type, const VkImageSubresourceRange &range);

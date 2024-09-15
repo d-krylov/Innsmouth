@@ -1,6 +1,7 @@
 #include "image.h"
 #include "innsmouth/graphics/include/command_buffer.h"
 #include "innsmouth/graphics/include/graphics.h"
+#include <iostream>
 
 namespace Innsmouth {
 
@@ -10,9 +11,26 @@ Image::Image(uint32_t width, uint32_t height, uint32_t depth, Format format, uin
     min_(min), mag_(mag) {}
 
 Image::~Image() {
-  vkDestroySampler(Device(), sampler_, nullptr);
-  vkDestroyImageView(Device(), image_view_, nullptr);
-  vmaDestroyImage(Allocator(), image_, allocation_);
+  if (sampler_) {
+    vkDestroySampler(Device(), sampler_, nullptr);
+  }
+  if (image_view_) {
+    vkDestroyImageView(Device(), image_view_, nullptr);
+  }
+  if (image_) {
+    vmaDestroyImage(Allocator(), image_, allocation_);
+  }
+}
+
+Image::Image(Image &&other) noexcept
+  : image_(std::exchange(other.image_, VK_NULL_HANDLE)),
+    image_view_(std::exchange(other.image_view_, VK_NULL_HANDLE)), image_layout_(other.image_layout_),
+    sampler_(std::exchange(other.sampler_, VK_NULL_HANDLE)), allocation_(other.allocation_),
+    extent_(other.extent_), samples_(other.samples_), type_(other.type_), format_(other.format_),
+    usage_(other.usage_), sampler_address_(other.sampler_address_), min_(other.min_), mag_(other.mag_),
+    levels_(other.levels_), layers_(other.layers_) {
+
+  std::cout << image_view_ << std::endl;
 }
 
 void Image::CreateImage(VkImage &image, VmaAllocation &allocation, ImageType image_type,
@@ -84,39 +102,6 @@ void Image::CreateImageSampler(VkSampler &sampler, Filter min, Filter mag, const
 }
 
 void Image::CreateMipmaps() {}
-
-WriteDescriptorSet Image::GetWriteDescriptorSet(uint32_t binding, DescriptorType type) const {
-  VkDescriptorImageInfo descriptor_ii{};
-  {
-    descriptor_ii.sampler = sampler_;
-    descriptor_ii.imageView = image_view_;
-    descriptor_ii.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  }
-  VkWriteDescriptorSet write_descriptor_set{};
-  {
-    write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    write_descriptor_set.dstSet = VK_NULL_HANDLE;
-    write_descriptor_set.dstBinding = binding;
-    write_descriptor_set.dstArrayElement = 0;
-    write_descriptor_set.descriptorType = VkDescriptorType(type);
-    write_descriptor_set.descriptorCount = 1;
-  }
-  return WriteDescriptorSet(descriptor_ii, write_descriptor_set);
-}
-
-WriteDescriptorSet Image::GetWriteDescriptorSet(const std::vector<VkDescriptorImageInfo> &descriptor_ii,
-                                                uint32_t binding, DescriptorType type) {
-  VkWriteDescriptorSet write_descriptor_set{};
-  {
-    write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    write_descriptor_set.dstSet = VK_NULL_HANDLE;
-    write_descriptor_set.dstBinding = binding;
-    write_descriptor_set.dstArrayElement = 0;
-    write_descriptor_set.descriptorType = VkDescriptorType(type);
-    write_descriptor_set.descriptorCount = descriptor_ii.size();
-  }
-  return WriteDescriptorSet(descriptor_ii, write_descriptor_set);
-}
 
 void Image::TransitionImageLayout(VkImage image, ImageLayout from, ImageLayout to, PipelineStage source_stage,
                                   PipelineStage destination_stage, const VkImageSubresourceRange &range) {

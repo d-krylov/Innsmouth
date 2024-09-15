@@ -5,13 +5,15 @@ namespace Innsmouth {
 
 void SetMeshMaterial(const tinyobj::ObjReader &reader, Mesh &mesh, const tinyobj::shape_t &shape) {
   auto &materials = reader.GetMaterials();
-  auto material_index = shape.mesh.material_ids[0];
-  auto &material = materials[material_index];
-  mesh.material_.textures_[TextureType::AMBIENT] = material.ambient_texname;
-  mesh.material_.textures_[TextureType::DIFFUSE] = material.diffuse_texname;
-  mesh.material_.textures_[TextureType::SPECULAR] = material.specular_texname;
-  mesh.material_.textures_[TextureType::BUMP] = material.bump_texname;
-  mesh.material_.shininess = material.shininess;
+  if (materials.size() > 0) {
+    auto material_index = shape.mesh.material_ids[0];
+    auto &material = materials[material_index];
+    mesh.material_.names_.ambient_ = material.ambient_texname;
+    mesh.material_.names_.diffuse_ = material.diffuse_texname;
+    mesh.material_.names_.specular_ = material.specular_texname;
+    mesh.material_.names_.bump_ = material.bump_texname;
+    mesh.material_.shininess = material.shininess;
+  }
 }
 
 void LoadMeshes(const tinyobj::ObjReader &reader, std::vector<Vertex> &vertices, std::vector<Mesh> &meshes) {
@@ -120,16 +122,6 @@ void Model::LoadWavefront(const std::filesystem::path &path) {
 
   auto &attributes = reader.GetAttrib();
   auto &shapes = reader.GetShapes();
-
-  uint64_t indices_size{0};
-
-  for (auto &shape : shapes) {
-    indices_size += shape.mesh.num_face_vertices.size();
-  }
-
-  auto vertices_size = attributes.vertices.size();
-
-  vertices_.reserve(indices_size);
 
   LoadMeshes(reader, vertices_, meshes_);
   LoadMaterials(path_, reader, textures_);

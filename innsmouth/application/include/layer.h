@@ -11,6 +11,7 @@ class Layer {
 public:
   virtual ~Layer() = default;
 
+  virtual void OnSwapchain() {}
   virtual void OnImGui() {}
   virtual void OnUpdate(CommandBuffer &command_buffer) {}
   virtual void OnAttach() {}

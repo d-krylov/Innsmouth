@@ -17,8 +17,6 @@ CommandBuffer::CommandBuffer(const VkCommandPool command_pool, bool begin) {
   }
 }
 
-CommandBuffer::~CommandBuffer() {}
-
 CommandBuffer::CommandBuffer(CommandBuffer &&other) noexcept {
   command_buffer_ = std::exchange(other.command_buffer_, VK_NULL_HANDLE);
 }
@@ -27,7 +25,7 @@ void CommandBuffer::Begin(CommandBufferUsage usage) {
   VkCommandBufferBeginInfo command_buffer_bi{};
   {
     command_buffer_bi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    command_buffer_bi.flags = static_cast<VkCommandBufferUsageFlags>(usage);
+    command_buffer_bi.flags = VkCommandBufferUsageFlags(usage);
   }
   VK_CHECK(vkBeginCommandBuffer(command_buffer_, &command_buffer_bi));
 }
@@ -66,26 +64,33 @@ void CommandBuffer::CommandSetViewport(float x, float y, float w, float h) {
   vkCmdSetViewport(command_buffer_, 0, 1, &viewport);
 }
 
-void CommandBuffer::CommandSetCullMode(bool front, bool back) {
-  VkCullModeFlags f = front ? VK_CULL_MODE_FRONT_BIT : VK_CULL_MODE_NONE;
-  f |= back ? VK_CULL_MODE_BACK_BIT : 0;
-  vkCmdSetCullMode(command_buffer_, f);
+void CommandBuffer::CommandSetScissor(int32_t x, int32_t y, uint32_t width, uint32_t height) {
+  VkRect2D scissor;
+  {
+    scissor.offset.x = x;
+    scissor.offset.y = y;
+    scissor.extent.width = width;
+    scissor.extent.height = height;
+  }
+  vkCmdSetScissor(command_buffer_, 0, 1, &scissor);
+}
+
+void CommandBuffer::CommandSetCullMode(CullMode mode) {
+  vkCmdSetCullMode(command_buffer_, VkCullModeFlags(mode));
 }
 
 void CommandBuffer::CommandSetFrontFace(FrontFace front_face) {
   vkCmdSetFrontFace(command_buffer_, VkFrontFace(front_face));
 }
 
-void CommandBuffer::CommandEnableDepthTest(bool b) {
-  vkCmdSetDepthTestEnable(command_buffer_, b ? VK_TRUE : VK_FALSE);
-}
+void CommandBuffer::CommandEnableDepthTest(bool b) { vkCmdSetDepthTestEnable(command_buffer_, uint32_t(b)); }
 
 void CommandBuffer::CommandEnableDepthWrite(bool b) {
-  vkCmdSetDepthWriteEnable(command_buffer_, b ? VK_TRUE : VK_FALSE);
+  vkCmdSetDepthWriteEnable(command_buffer_, uint32_t(b));
 }
 
 void CommandBuffer::CommandEnableStencilTest(bool b) {
-  vkCmdSetStencilTestEnable(command_buffer_, b ? VK_TRUE : VK_FALSE);
+  vkCmdSetStencilTestEnable(command_buffer_, uint32_t(b));
 }
 
 void CommandBuffer::CommandDepthCompareOperation(CompareOperation compare_operation) {
@@ -102,16 +107,63 @@ void CommandBuffer::CommandSetPrimitiveTopology(PrimitiveTopology topology) {
   vkCmdSetPrimitiveTopology(command_buffer_, VkPrimitiveTopology(topology));
 }
 
-void CommandBuffer::CommandSetScissor(const VkRect2D &scissor) {
-  vkCmdSetScissor(command_buffer_, 0, 1, &scissor);
-}
-
 void CommandBuffer::CommandBindPipeline(const GraphicsPipeline &graphics_pipeline) {
   vkCmdBindPipeline(command_buffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline);
 }
 
 void CommandBuffer::CommandBindVertexBuffer(const Buffer &buffer, VkDeviceSize offset) {
   vkCmdBindVertexBuffers(command_buffer_, 0, 1, buffer.get(), &offset);
+}
+
+void CommandBuffer::CommandPushDescriptorSet(const GraphicsPipeline &graphics_pipeline, uint32_t set_number,
+                                             uint32_t binding, const Image &image) {
+
+  VkDescriptorImageInfo descriptor_ii{};
+  {
+    descriptor_ii.sampler = image.GetSampler();
+    descriptor_ii.imageView = image.GetImageView();
+    descriptor_ii.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  }
+
+  VkWriteDescriptorSet write_descriptor_set{};
+  {
+    write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write_descriptor_set.dstSet = VK_NULL_HANDLE;
+    write_descriptor_set.dstBinding = binding;
+    write_descriptor_set.dstArrayElement = 0;
+    write_descriptor_set.descriptorType = VkDescriptorType(DescriptorType::COMBINED_IMAGE_SAMPLER);
+    write_descriptor_set.descriptorCount = 1;
+    write_descriptor_set.pImageInfo = &descriptor_ii;
+  }
+
+  vkCmdPushDescriptorSetKHR(command_buffer_, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            graphics_pipeline.GetPipelineLayout(), set_number, 1, &write_descriptor_set);
+}
+
+void CommandBuffer::CommandPushDescriptorSet(const GraphicsPipeline &graphics_pipeline, uint32_t set_number,
+                                             uint32_t binding, const Buffer &buffer, uint64_t offset,
+                                             uint64_t size) {
+
+  VkDescriptorBufferInfo descriptor_bi{};
+  {
+    descriptor_bi.buffer = buffer;
+    descriptor_bi.offset = offset;
+    descriptor_bi.range = size;
+  }
+
+  VkWriteDescriptorSet write_descriptor_set{};
+  {
+    write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write_descriptor_set.dstSet = VK_NULL_HANDLE;
+    write_descriptor_set.dstBinding = binding;
+    write_descriptor_set.dstArrayElement = 0;
+    write_descriptor_set.descriptorType = VkDescriptorType(DescriptorType::UNIFORM_BUFFER);
+    write_descriptor_set.descriptorCount = 1;
+    write_descriptor_set.pBufferInfo = &descriptor_bi;
+  }
+
+  vkCmdPushDescriptorSetKHR(command_buffer_, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+                            graphics_pipeline.GetPipelineLayout(), set_number, 1, &write_descriptor_set);
 }
 
 void CommandBuffer::CommandBindIndexBuffer(const Buffer &buffer, VkDeviceSize offset,
@@ -127,18 +179,6 @@ void CommandBuffer::CommandDraw(uint32_t vertex_count, uint32_t instance_count, 
 void CommandBuffer::CommandDrawIndexed(uint32_t index_count, uint32_t instance_count, uint32_t first_index,
                                        int32_t vertex_offset, uint32_t first_instance) {
   vkCmdDrawIndexed(command_buffer_, index_count, instance_count, first_index, vertex_offset, first_instance);
-}
-
-void CommandBuffer::CommandPushConstants(const GraphicsPipeline &graphics_pipeline, ShaderStage stage,
-                                         std::span<const std::byte> d, uint32_t offset) {
-  vkCmdPushConstants(command_buffer_, graphics_pipeline.GetPipelineLayout(), VkShaderStageFlags(stage),
-                     offset, d.size(), d.data());
-}
-
-void CommandBuffer::CommandPushDescriptorSet(const GraphicsPipeline &graphics_pipeline, uint32_t set_number,
-                                             std::span<const VkWriteDescriptorSet> sets) {
-  vkCmdPushDescriptorSetKHR(command_buffer_, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
-                            graphics_pipeline.GetPipelineLayout(), set_number, sets.size(), sets.data());
 }
 
 void CommandBuffer::CommandCopyBufferToImage(const Buffer &buffer, const Image &image,

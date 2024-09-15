@@ -18,10 +18,11 @@ ComputePipeline::ComputePipeline(const std::filesystem::path &path) {
   VkComputePipelineCreateInfo compute_pipeline_ci{};
   {
     compute_pipeline_ci.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-    compute_pipeline_ci.layout = pipeline_layout_;
+    // compute_pipeline_ci.layout = pipeline_layout_;
     compute_pipeline_ci.stage = shader_stage_ci;
   }
-  VK_CHECK(vkCreateComputePipelines(Device(), VK_NULL_HANDLE, 1, &compute_pipeline_ci, nullptr, &pipeline_));
+  // VK_CHECK(vkCreateComputePipelines(Device(), VK_NULL_HANDLE, 1, &compute_pipeline_ci, nullptr,
+  // &pipeline_));
 }
 
 ComputePipeline::~ComputePipeline() {}

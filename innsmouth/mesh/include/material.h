@@ -7,11 +7,16 @@
 
 namespace Innsmouth {
 
-enum TextureType { AMBIENT = 0, DIFFUSE, SPECULAR, BUMP, COUNT };
+struct TextureNames {
+  std::string ambient_;
+  std::string diffuse_;
+  std::string specular_;
+  std::string bump_;
+};
 
 struct Material {
   float shininess;
-  std::array<std::string, TextureType::COUNT> textures_;
+  TextureNames names_;
 };
 
 } // namespace Innsmouth

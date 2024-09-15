@@ -12,10 +12,10 @@ struct Ray {
 };
 
 struct Hit {
-  float t;
   vec3 position;
   vec3 normal;
   float id;
+  float t;
 };
 
 #endif

@@ -2,7 +2,7 @@
 #define INNSMOUTH_COMMAND_BUFFER_H
 
 #include "innsmouth/core/include/concepts.h"
-#include "innsmouth/graphics/include/graphics_types.h"
+#include "innsmouth/graphics/pipeline/graphics_pipeline.h"
 #include <span>
 
 namespace Innsmouth {
@@ -14,8 +14,6 @@ class Image;
 class CommandBuffer {
 public:
   CommandBuffer(const VkCommandPool command_pool, bool begin = false);
-
-  ~CommandBuffer();
 
   NO_COPY_SEMANTIC(CommandBuffer);
 
@@ -34,8 +32,8 @@ public:
   void Flush();
 
   void CommandSetViewport(float x, float y, float w, float h);
-  void CommandSetScissor(const VkRect2D &scissor);
-  void CommandSetCullMode(bool front, bool back);
+  void CommandSetScissor(int32_t x, int32_t y, uint32_t width, uint32_t height);
+  void CommandSetCullMode(CullMode mode);
   void CommandSetFrontFace(FrontFace front_face);
 
   // Depth
@@ -60,11 +58,15 @@ public:
   void CommandDrawIndexed(uint32_t index_count, uint32_t instance_count, uint32_t index_0,
                           int32_t vertex_offset, uint32_t instance_0);
 
-  void CommandPushConstants(const GraphicsPipeline &graphics_pipeline, ShaderStage stage,
-                            std::span<const std::byte> data, uint32_t offset = 0);
+  template <typename T>
+  void CommandPushConstants(const GraphicsPipeline &graphics_pipeline, ShaderStage stage, const T &data,
+                            uint32_t offset = 0);
 
   void CommandPushDescriptorSet(const GraphicsPipeline &graphics_pipeline, uint32_t set_number,
-                                std::span<const VkWriteDescriptorSet> sets);
+                                uint32_t binding, const Image &image);
+
+  void CommandPushDescriptorSet(const GraphicsPipeline &graphics_pipeline, uint32_t set_number,
+                                uint32_t binding, const Buffer &buffer, uint64_t offset, uint64_t size);
 
   void CommandCopyBufferToImage(const Buffer &buffer, const Image &image, const VkExtent3D &extent,
                                 uint32_t level = 0, uint32_t base_layer = 0, uint32_t layers = 1,
