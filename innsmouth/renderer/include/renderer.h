@@ -2,6 +2,7 @@
 #define INNSMOUTH_RENDERER_H
 
 #include "innsmouth/graphics/include/graphics_common.h"
+#include "innsmouth/scene/include/light.h"
 
 namespace Innsmouth {
 
@@ -31,12 +32,22 @@ private:
     Matrix4f model_;
   };
 
+  struct UniformBufferData {
+    float shininess{0.0f};
+    Vector3f ambient_{0.0f, 0.0f, 0.0f};
+    Vector3f diffuse_{0.0f, 0.0f, 0.0f};
+    Vector3f specular_{0.0f, 0.0f, 0.0f};
+    Vector3f camera_position_;
+    PointLight light_;
+  };
+
 private:
   std::unique_ptr<GraphicsPipeline> graphics_pipeline_;
   std::unique_ptr<DepthImage> depth_image_;
   Buffer vertex_buffer_;
   Buffer uniform_buffer_;
   PushConstants push_constants_;
+  UniformBufferData uniform_buffer_data;
 };
 
 } // namespace Innsmouth

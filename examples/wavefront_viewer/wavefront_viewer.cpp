@@ -33,7 +33,7 @@ public:
 
   void OnAttach() override {
     light_.AddPointLight();
-    model_.LoadWavefront(ROOT / "assets" / "wavefront" / "cube" / "cube.obj");
+    model_.LoadWavefront(ROOT / "assets" / "wavefront" / "sponza1" / "sponza.obj");
     renderer_.PushModel(model_);
   }
 

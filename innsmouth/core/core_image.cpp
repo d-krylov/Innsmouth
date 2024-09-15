@@ -27,4 +27,12 @@ CoreImage::CoreImage(const std::filesystem::path &path) {
   }
 }
 
+CoreImage::CoreImage() {
+  size_ = Vector2i(1, 1);
+  data_.emplace_back(std::byte(0xff));
+  data_.emplace_back(std::byte(0xff));
+  data_.emplace_back(std::byte(0xff));
+  data_.emplace_back(std::byte(0xff));
+}
+
 } // namespace Innsmouth

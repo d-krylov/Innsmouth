@@ -8,9 +8,10 @@ void SetMeshMaterial(const tinyobj::ObjReader &reader, Mesh &mesh, const tinyobj
   if (materials.size() > 0) {
     auto material_index = shape.mesh.material_ids[0];
     auto &material = materials[material_index];
-    mesh.material_.names_.ambient_ = material.ambient_texname;
-    mesh.material_.names_.diffuse_ = material.diffuse_texname;
-    mesh.material_.names_.specular_ = material.specular_texname;
+    mesh.material_.names_.ambient_ = material.ambient_texname.empty() ? "default" : material.ambient_texname;
+    mesh.material_.names_.diffuse_ = material.diffuse_texname.empty() ? "default" : material.diffuse_texname;
+    mesh.material_.names_.specular_ =
+      material.specular_texname.empty() ? "default" : material.specular_texname;
     mesh.material_.names_.bump_ = material.bump_texname;
     mesh.material_.shininess = material.shininess;
   }
@@ -122,6 +123,8 @@ void Model::LoadWavefront(const std::filesystem::path &path) {
 
   auto &attributes = reader.GetAttrib();
   auto &shapes = reader.GetShapes();
+
+  textures_.emplace("default", Image2D(CoreImage()));
 
   LoadMeshes(reader, vertices_, meshes_);
   LoadMaterials(path_, reader, textures_);

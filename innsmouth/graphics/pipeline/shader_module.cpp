@@ -3,6 +3,7 @@
 #include "innsmouth/graphics/include/graphics.h"
 #include "innsmouth/graphics/include/graphics_helpers.h"
 #include "spirv_reflect/spirv_reflect.h"
+#include <iostream>
 
 namespace Innsmouth {
 

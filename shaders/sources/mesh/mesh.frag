@@ -14,10 +14,10 @@ layout (binding = 0) uniform sampler2D u_ambient_map;
 layout (binding = 1) uniform sampler2D u_diffuse_map;
 layout (binding = 2) uniform sampler2D u_specular_map;
 
-layout (binding = 3) uniform UBO {
-  PointLight point_light;
+layout (set = 0, binding = 3) uniform UBO {
   Material material;
   vec3 camera_position;
+  PointLight point_light;
 } ubo;
 
 vec3 GetPointLight(Material material, PointLight point_light, vec3 camera_position, vec3 fragment_position) {
@@ -30,18 +30,18 @@ vec3 GetPointLight(Material material, PointLight point_light, vec3 camera_positi
   float NdotH = max(dot(in_normal, H_direction), 0.0);
   vec3 diffuse  = point_light.color * NdotL * material.diffuse;   
   vec3 specular = point_light.color * pow(NdotH, material.shininess) * material.specular;
-  return (material.ambient + diffuse + specular) * attenuation;
+  return (material.ambient + diffuse + specular * 0.0);// * attenuation;
 }
 
 void main() {
 
-  vec3 color = vec3(0.5);
+  vec3 color = vec3(0.0);
 
   Material material;
 
-  material.ambient  = vec3(0.2); //texture(u_ambient_map,  in_uv).rgb;
-  material.diffuse  = vec3(0.5); //texture(u_diffuse_map,  in_uv).rgb;
-  material.specular = vec3(0.4); //texture(u_specular_map, in_uv).rgb;
+  material.ambient  = texture(u_ambient_map,  in_uv).rgb;
+  material.diffuse  = texture(u_diffuse_map,  in_uv).rgb;
+  material.specular = texture(u_specular_map,  in_uv).rgb;
 
   color += GetPointLight(material, ubo.point_light, ubo.camera_position, in_position);
 

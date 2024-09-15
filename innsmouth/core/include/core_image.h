@@ -13,6 +13,8 @@ class CoreImage {
 public:
   CoreImage(const std::filesystem::path &path);
 
+  CoreImage();
+
   ~CoreImage() = default;
 
   [[nodiscard]] uint32_t GetWidth() const { return uint32_t(size_.x); }

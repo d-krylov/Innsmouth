@@ -128,7 +128,6 @@ void CommandBuffer::CommandPushDescriptorSet(const GraphicsPipeline &graphics_pi
   VkWriteDescriptorSet write_descriptor_set{};
   {
     write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    write_descriptor_set.dstSet = VK_NULL_HANDLE;
     write_descriptor_set.dstBinding = binding;
     write_descriptor_set.dstArrayElement = 0;
     write_descriptor_set.descriptorType = VkDescriptorType(DescriptorType::COMBINED_IMAGE_SAMPLER);
@@ -154,7 +153,6 @@ void CommandBuffer::CommandPushDescriptorSet(const GraphicsPipeline &graphics_pi
   VkWriteDescriptorSet write_descriptor_set{};
   {
     write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    write_descriptor_set.dstSet = VK_NULL_HANDLE;
     write_descriptor_set.dstBinding = binding;
     write_descriptor_set.dstArrayElement = 0;
     write_descriptor_set.descriptorType = VkDescriptorType(DescriptorType::UNIFORM_BUFFER);

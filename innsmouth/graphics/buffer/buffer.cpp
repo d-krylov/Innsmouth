@@ -21,7 +21,7 @@ Buffer::Buffer(BufferUsage buffer_usage, VkDeviceSize size, VmaMemoryUsage memor
     vma_allocation_ci.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
   }
 
-  vmaCreateBuffer(Allocator(), &buffer_ci, &vma_allocation_ci, &buffer_, &allocation_, nullptr);
+  VK_CHECK(vmaCreateBuffer(Allocator(), &buffer_ci, &vma_allocation_ci, &buffer_, &allocation_, nullptr));
 }
 
 Buffer::~Buffer() { vmaDestroyBuffer(Allocator(), buffer_, allocation_); }
