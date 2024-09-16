@@ -7,11 +7,13 @@ public:
   Test()
     : graphics_pipeline_({SHADER_DIR / "test.vert.spv", SHADER_DIR / "test.frag.spv"},
                          {Application::Get().GetSwapchain().GetSurfaceFormat()}, Format::D32_SFLOAT_S8_UINT),
-      vertex_buffer_(BufferUsage::VERTEX_BUFFER, 100_MiB){};
+      vertex_buffer_(BufferUsage::VERTEX_BUFFER, 100_MiB),
+      uniform_buffer_(BufferUsage::UNIFORM_BUFFER, sizeof(Scene)) {}
 
   void OnImGui() override {
     transform_.OnImGui();
     camera_.OnImGui();
+    light_.OnImGui();
   }
 
   void OnSwapchain() override {
@@ -36,6 +38,15 @@ public:
 
     auto &extent = swapchain.GetSurfaceExtent();
 
+    auto light = light_.GetPointLight();
+
+    scene_.light_position_ = Vector4f(light.position_, 0.0f);
+    scene_.light_color_ = Vector4f(light.color_, 0.0f);
+    scene_.light_attenuation_ = Vector4f(light.attenuation_, 0.0f);
+    scene_.camera_position_ = Vector4f(camera_.GetCamera().GetPosition(), 0.0f);
+
+    uniform_buffer_.SetData(std::vector{scene_});
+
     command_buffer.CommandBeginRendering(
       extent, attachments,
       RenderingAttachment{LoadOperation::CLEAR, StoreOperation::STORE, depth_image_->GetImageView()});
@@ -49,6 +60,8 @@ public:
     command_buffer.CommandSetViewport(0.0f, 0.0f, float(extent.width), float(extent.height));
     command_buffer.CommandSetScissor(0, 0, extent.width, extent.height);
     command_buffer.CommandPushConstants(graphics_pipeline_, ShaderStage::VERTEX, push_constants_);
+
+    command_buffer.CommandPushDescriptorSet(graphics_pipeline_, 0, 0, uniform_buffer_, 0, sizeof(Scene));
 
     command_buffer.CommandDraw(model_.vertices_.size(), 1, 0, 0);
 
@@ -73,13 +86,23 @@ private:
     Matrix4f model_{1.0f};
   };
 
+  struct Scene {
+    Vector4f light_position_;
+    Vector4f light_color_;
+    Vector4f light_attenuation_;
+    Vector4f camera_position_;
+  };
+
 private:
   GraphicsPipeline graphics_pipeline_;
   Buffer vertex_buffer_;
+  Buffer uniform_buffer_;
   std::unique_ptr<DepthImage> depth_image_;
   PushConstants push_constants_;
   TransformWidget transform_;
+  LightWidget light_;
   CameraWidget camera_;
+  Scene scene_;
   Model model_;
 };
 

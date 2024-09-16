@@ -10,12 +10,10 @@ class LightWidget {
 public:
   void OnImGui();
 
-  void AddPointLight() { point_lights_.emplace_back(); }
-
-  [[nodiscard]] const std::vector<PointLight> &GetPointLights() const { return point_lights_; }
+  [[nodiscard]] const PointLight &GetPointLight() const { return point_light_; }
 
 private:
-  std::vector<PointLight> point_lights_;
+  PointLight point_light_;
 };
 
 } // namespace Innsmouth

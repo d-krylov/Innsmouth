@@ -24,7 +24,7 @@ public:
   void OnUpdate(CommandBuffer &command_buffer) override {
     camera_.OnUpdate();
 
-    renderer_.Begin(command_buffer, light_.GetPointLights().front(), camera_.GetCamera());
+    renderer_.Begin(command_buffer, light_.GetPointLight(), camera_.GetCamera());
 
     renderer_.DrawModel(command_buffer, model_);
 
@@ -32,7 +32,6 @@ public:
   }
 
   void OnAttach() override {
-    light_.AddPointLight();
     model_.LoadWavefront(ROOT / "assets" / "wavefront" / "sponza1" / "sponza.obj");
     renderer_.PushModel(model_);
   }
