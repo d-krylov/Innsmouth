@@ -2,16 +2,16 @@
 #define COMMON_SHADER
 
 struct Material {
+  vec4 ambient;
+  vec4 diffuse;
+  vec4 specular;
   float shininess;
-  vec3 ambient;
-  vec3 diffuse;
-  vec3 specular;
 };
 
 struct PointLight {
-  vec3 position;
-  vec3 color;
-  vec3 attenuation;
+  vec4 position;
+  vec4 color;
+  vec4 attenuation;
 };
 
 #endif // COMMON_SHADER

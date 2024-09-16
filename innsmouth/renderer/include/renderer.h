@@ -33,12 +33,10 @@ private:
   };
 
   struct UniformBufferData {
-    float shininess{0.0f};
-    Vector3f ambient_{0.0f, 0.0f, 0.0f};
-    Vector3f diffuse_{0.0f, 0.0f, 0.0f};
-    Vector3f specular_{0.0f, 0.0f, 0.0f};
-    Vector3f camera_position_;
-    PointLight light_;
+    Vector4f light_position_{0.0f, 0.0f, 0.0f, 0.0f};
+    Vector4f light_color_{0.0f, 0.0f, 0.0f, 0.0f};
+    Vector4f light_attenuation_{0.0f, 0.0f, 1.0f, 0.0f};
+    Vector4f camera_position_;
   };
 
 private:
