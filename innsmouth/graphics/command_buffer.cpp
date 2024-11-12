@@ -1,4 +1,4 @@
-#include "innsmouth/graphics/include/graphics_common.h"
+#include "graphics/include/graphics_common.h"
 
 namespace Innsmouth {
 

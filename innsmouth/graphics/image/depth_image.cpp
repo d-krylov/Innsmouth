@@ -1,6 +1,6 @@
 #include "depth_image.h"
-#include "innsmouth/graphics/include/graphics.h"
-#include "innsmouth/graphics/include/graphics_helpers.h"
+#include "graphics/include/graphics.h"
+#include "graphics/include/graphics_tools.h"
 
 namespace Innsmouth {
 

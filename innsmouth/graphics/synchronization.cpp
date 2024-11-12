@@ -1,5 +1,5 @@
-#include "innsmouth/graphics/include/synchronization.h"
-#include "innsmouth/graphics/include/graphics.h"
+#include "graphics/include/synchronization.h"
+#include "graphics/include/graphics.h"
 
 namespace Innsmouth {
 

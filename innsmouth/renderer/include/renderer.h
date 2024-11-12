@@ -1,8 +1,8 @@
 #ifndef INNSMOUTH_RENDERER_H
 #define INNSMOUTH_RENDERER_H
 
-#include "innsmouth/graphics/include/graphics_common.h"
-#include "innsmouth/scene/include/light.h"
+#include "graphics/include/graphics_common.h"
+#include "scene/include/light.h"
 
 namespace Innsmouth {
 

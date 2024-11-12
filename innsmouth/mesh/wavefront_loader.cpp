@@ -1,4 +1,4 @@
-#include "innsmouth/mesh/include/model.h"
+#include "mesh/include/model.h"
 #include "tinyobjloader/tiny_obj_loader.h"
 
 namespace Innsmouth {

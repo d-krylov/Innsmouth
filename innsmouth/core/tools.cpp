@@ -1,4 +1,4 @@
-#include "innsmouth/core/include/tools.h"
+#include "core/include/tools.h"
 #include <fstream>
 #include <iostream>
 

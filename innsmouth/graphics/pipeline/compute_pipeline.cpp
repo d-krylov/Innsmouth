@@ -1,5 +1,5 @@
 #include "compute_pipeline.h"
-#include "innsmouth/graphics/include/graphics.h"
+#include "graphics/include/graphics.h"
 #include "shader_module.h"
 
 namespace Innsmouth {

@@ -1,10 +1,10 @@
 #ifndef INNSMOUTH_APPLICATION_H
 #define INNSMOUTH_APPLICATION_H
 
-#include "innsmouth/graphics/include/graphics.h"
-#include "innsmouth/gui/imgui/imgui_layer.h"
-#include "innsmouth/gui/imgui/imgui_renderer.h"
-#include "innsmouth/gui/include/window.h"
+#include "graphics/include/graphics.h"
+#include "gui/imgui/imgui_layer.h"
+#include "gui/imgui/imgui_renderer.h"
+#include "gui/include/window.h"
 
 namespace Innsmouth {
 

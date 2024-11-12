@@ -1,4 +1,4 @@
-#include "innsmouth/scene/include/camera.h"
+#include "scene/include/camera.h"
 
 namespace Innsmouth {
 

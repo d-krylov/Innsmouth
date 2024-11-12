@@ -1,4 +1,4 @@
-#include "innsmouth/widgets/include/camera_widget.h"
+#include "widgets/include/camera_widget.h"
 #include "imgui.h"
 
 namespace Innsmouth {

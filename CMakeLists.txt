@@ -10,6 +10,10 @@ include(cmake/ClangFormat.cmake)
 include(cmake/Libraries.cmake)
 
 FetchContent_MakeAvailable(glm)
+FetchContent_MakeAvailable(volk)
+FetchContent_MakeAvailable(imgui)
+FetchContent_MakeAvailable(vulkan_memory_allocator)
+FetchContent_MakeAvailable(spirv_reflect)
 
 add_definitions(-DGLM_ENABLE_EXPERIMENTAL)
 
@@ -20,8 +24,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-volatile")
 set(CMAKE_BUILD_TYPE Debug)
 
 add_definitions(-DPROJECT_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
-
-add_subdirectory(${PROJECT_SOURCE_DIR}/external/volk)
 
 add_subdirectory(innsmouth)
 

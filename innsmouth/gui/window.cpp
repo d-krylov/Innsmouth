@@ -1,5 +1,5 @@
-#include "innsmouth/gui/include/window.h"
-#include "innsmouth/graphics/include/graphics.h"
+#include "gui/include/window.h"
+#include "graphics/include/graphics.h"
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 

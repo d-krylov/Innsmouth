@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_LIGHT_WIDGET_H
 #define INNSMOUTH_LIGHT_WIDGET_H
 
-#include "innsmouth/scene/include/light.h"
+#include "scene/include/light.h"
 #include <vector>
 
 namespace Innsmouth {

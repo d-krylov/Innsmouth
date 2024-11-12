@@ -1,8 +1,8 @@
+#include "application/include/application.h"
+#include "core/include/tools.h"
 #include "imgui.h"
-#include "innsmouth/application/include/application.h"
-#include "innsmouth/core/include/tools.h"
-#include "innsmouth/mesh/include/primitives.h"
-#include "innsmouth/scene/include/camera.h"
+#include "mesh/include/primitives.h"
+#include "scene/include/camera.h"
 
 using namespace Innsmouth;
 

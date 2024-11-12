@@ -1,12 +1,13 @@
-#include "innsmouth/application/include/innsmouth.h"
+#include "application/include/innsmouth.h"
 
 using namespace Innsmouth;
 
 class Test : public Layer {
 public:
   Test()
-    : graphics_pipeline_({SHADER_DIR / "test.vert.spv", SHADER_DIR / "test.frag.spv"},
-                         {Application::Get().GetSwapchain().GetSurfaceFormat()}, Format::D32_SFLOAT_S8_UINT),
+    : graphics_pipeline_(std::vector{SHADER_DIR / "test.vert.spv", SHADER_DIR / "test.frag.spv"},
+                         std::vector{Application::Get().GetSwapchain().GetSurfaceFormat()},
+                         Format::D32_SFLOAT_S8_UINT),
       vertex_buffer_(BufferUsage::VERTEX_BUFFER, 100_MiB),
       uniform_buffer_(BufferUsage::UNIFORM_BUFFER, sizeof(Scene)) {}
 

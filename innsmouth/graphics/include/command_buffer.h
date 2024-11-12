@@ -1,8 +1,8 @@
 #ifndef INNSMOUTH_COMMAND_BUFFER_H
 #define INNSMOUTH_COMMAND_BUFFER_H
 
-#include "innsmouth/core/include/concepts.h"
-#include "innsmouth/graphics/pipeline/graphics_pipeline.h"
+#include "core/include/concepts.h"
+#include "graphics/pipeline/graphics_pipeline.h"
 #include <span>
 
 namespace Innsmouth {

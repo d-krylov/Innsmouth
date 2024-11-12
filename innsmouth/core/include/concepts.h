@@ -11,7 +11,8 @@ template <typename T> struct is_allowed_enum : std::false_type {};
 #define ALLOW_BITMASK_ENUM(EnumType)                                                                         \
   template <> struct is_allowed_enum<EnumType> : std::true_type {};
 
-template <typename T> concept AllowedBitmaskEnum = is_allowed_enum<T>::value;
+template <typename T>
+concept AllowedBitmaskEnum = is_allowed_enum<T>::value;
 
 template <AllowedBitmaskEnum Enum> Enum operator|(Enum LHS, Enum RHS) {
   using underlying = std::underlying_type_t<Enum>;
@@ -19,11 +20,11 @@ template <AllowedBitmaskEnum Enum> Enum operator|(Enum LHS, Enum RHS) {
 }
 
 template <typename R, typename U>
-concept Range = std::ranges::contiguous_range<R> &&std::same_as<std::ranges::range_value_t<R>, U>;
+concept Range = std::ranges::contiguous_range<R> && std::same_as<std::ranges::range_value_t<R>, U>;
 
 template <typename T>
 concept PlainType =
-  std::is_trivial_v<std::remove_cvref_t<T>> &&std::is_standard_layout_v<std::remove_cvref_t<T>>;
+  std::is_trivial_v<std::remove_cvref_t<T>> && std::is_standard_layout_v<std::remove_cvref_t<T>>;
 
 } // namespace Innsmouth
 

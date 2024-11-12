@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_MODEL_H
 #define INNSMOUTH_MODEL_H
 
-#include "innsmouth/graphics/image/image_2d.h"
+#include "graphics/image/image_2d.h"
 #include "material.h"
 #include "vertex.h"
 #include <filesystem>

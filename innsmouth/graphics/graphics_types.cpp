@@ -1,4 +1,4 @@
-#include "innsmouth/graphics/include/graphics_types.h"
+#include "graphics/include/graphics_types.h"
 #include <cmath>
 #include <iostream>
 #include <unordered_map>
@@ -7,7 +7,7 @@ namespace Innsmouth {
 
 void VK_CHECK(VkResult result) {
   if (result != VK_SUCCESS) {
-    std::cout << string_VkResult(result);
+    std::cout << string_VkResult(result) << std::endl;
   }
 }
 
@@ -51,11 +51,5 @@ VkImageSubresourceRange CreateImageSubresourceRange(ImageAspect aspect, uint32_t
   };
 }
 // clang-format on
-
-std::vector<VkDynamicState> GetDynamicStates() {
-  return std::vector<VkDynamicState>{VK_DYNAMIC_STATE_VIEWPORT,          VK_DYNAMIC_STATE_SCISSOR,
-                                     VK_DYNAMIC_STATE_CULL_MODE,         VK_DYNAMIC_STATE_FRONT_FACE,
-                                     VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE, VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE};
-}
 
 } // namespace Innsmouth

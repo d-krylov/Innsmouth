@@ -1,8 +1,8 @@
 #ifndef INNSMOUTH_BUFFER_H
 #define INNSMOUTH_BUFFER_H
 
-#include "innsmouth/core/include/concepts.h"
-#include "innsmouth/graphics/include/graphics_types.h"
+#include "core/include/concepts.h"
+#include "graphics/include/graphics_types.h"
 #include <cstring>
 #include <span>
 
@@ -24,7 +24,8 @@ public:
   [[nodiscard]] BufferUsage GetUsage() const { return buffer_usage_; }
 
   template <typename R>
-  requires std::ranges::contiguous_range<R> &&std::ranges::sized_range<R> void SetData(R &&source) {
+    requires std::ranges::contiguous_range<R> && std::ranges::sized_range<R>
+  void SetData(R &&source) {
     Map();
     auto size = std::ranges::size(source) * sizeof(std::ranges::range_value_t<R>);
     std::memcpy(mapped_.data(), std::ranges::data(source), size);

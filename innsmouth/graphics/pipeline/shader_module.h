@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_SHADER_MODULE_H
 #define INNSMOUTH_SHADER_MODULE_H
 
-#include "innsmouth/graphics/include/graphics_types.h"
+#include "graphics/include/graphics_types.h"
 #include <filesystem>
 #include <unordered_map>
 

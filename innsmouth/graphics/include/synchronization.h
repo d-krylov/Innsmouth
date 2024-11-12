@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_SYNCHRONIZATION_H
 #define INNSMOUTH_SYNCHRONIZATION_H
 
-#include "innsmouth/graphics/include/graphics_types.h"
+#include "graphics/include/graphics_types.h"
 
 namespace Innsmouth {
 

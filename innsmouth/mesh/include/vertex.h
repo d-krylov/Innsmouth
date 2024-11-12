@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_VERTEX_H
 #define INNSMOUTH_VERTEX_H
 
-#include "innsmouth/core/include/core_types.h"
+#include "core/include/core_types.h"
 
 namespace Innsmouth {
 

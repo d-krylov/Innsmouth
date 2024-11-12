@@ -1,9 +1,9 @@
-#include "innsmouth/graphics/include/swapchain.h"
-#include "innsmouth/graphics/image/image.h"
-#include "innsmouth/graphics/include/graphics.h"
-#include "innsmouth/graphics/include/graphics_helpers.h"
-#include "innsmouth/graphics/include/synchronization.h"
-#include "innsmouth/gui/include/window.h"
+#include "graphics/include/swapchain.h"
+#include "graphics/image/image.h"
+#include "graphics/include/graphics.h"
+#include "graphics/include/graphics_tools.h"
+#include "graphics/include/synchronization.h"
+#include "gui/include/window.h"
 #include <algorithm>
 
 namespace Innsmouth {

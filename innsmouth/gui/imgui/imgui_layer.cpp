@@ -1,7 +1,7 @@
 #include "imgui_layer.h"
 #include "GLFW/glfw3.h"
+#include "gui/include/window.h"
 #include "imgui.h"
-#include "innsmouth/gui/include/window.h"
 
 namespace Innsmouth {
 
@@ -10,7 +10,7 @@ ImGuiKey ToImGuiKey(Key key) {
 #define KEY(X, Y)                                                                                            \
   case Key::K_##X:                                                                                           \
     return ImGuiKey::ImGuiKey_##Y;
-#include "innsmouth/gui/include/key.def"
+#include "gui/include/key.def"
   default:
     CORE_UNREACHABLE();
     break;

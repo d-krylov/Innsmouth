@@ -1,4 +1,4 @@
-#include "innsmouth/application/include/application.h"
+#include "application/include/application.h"
 
 namespace Innsmouth {
 

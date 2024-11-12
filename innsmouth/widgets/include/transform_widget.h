@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_TRANSFORM_WIDGET_H
 #define INNSMOUTH_TRANSFORM_WIDGET_H
 
-#include "innsmouth/mesh/include/transform.h"
+#include "mesh/include/transform.h"
 
 namespace Innsmouth {
 

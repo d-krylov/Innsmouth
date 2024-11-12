@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_IMAGE_H
 #define INNSMOUTH_IMAGE_H
 
-#include "innsmouth/graphics/include/graphics_types.h"
+#include "graphics/include/graphics_types.h"
 
 namespace Innsmouth {
 

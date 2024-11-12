@@ -1,5 +1,5 @@
-#include "innsmouth/gui/include/key.h"
-#include "innsmouth/core/include/macros.h"
+#include "gui/include/key.h"
+#include "core/include/macros.h"
 #include <GLFW/glfw3.h>
 
 namespace Innsmouth {
@@ -9,7 +9,7 @@ Key ToKey(int32_t key) {
 #define KEY(X, Y)                                                                                            \
   case GLFW_KEY_##X:                                                                                         \
     return Key::K_##X;
-#include "innsmouth/gui/include/key.def"
+#include "gui/include/key.def"
   default:
     CORE_UNREACHABLE();
     break;
@@ -21,7 +21,7 @@ int32_t ToNativeKey(Key key) {
 #define KEY(X, Y)                                                                                            \
   case Key::K_##X:                                                                                           \
     return GLFW_KEY_##X;
-#include "innsmouth/gui/include/key.def"
+#include "gui/include/key.def"
   default:
     CORE_UNREACHABLE();
     break;

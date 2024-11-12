@@ -1,5 +1,5 @@
-#include "innsmouth/gui/include/event.h"
-#include "innsmouth/gui/include/window.h"
+#include "gui/include/event.h"
+#include "gui/include/window.h"
 #include <GLFW/glfw3.h>
 
 namespace Innsmouth {

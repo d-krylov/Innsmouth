@@ -1,10 +1,16 @@
 #include "graphics_pipeline.h"
-#include "innsmouth/graphics/include/graphics.h"
+#include "graphics/include/graphics.h"
 #include "shader_module.h"
 #include <algorithm>
 #include <iostream>
 
 namespace Innsmouth {
+
+std::vector<VkDynamicState> GetDynamicStates() {
+  return std::vector{VK_DYNAMIC_STATE_VIEWPORT,          VK_DYNAMIC_STATE_SCISSOR,
+                     VK_DYNAMIC_STATE_CULL_MODE,         VK_DYNAMIC_STATE_FRONT_FACE,
+                     VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE, VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE};
+}
 
 void GraphicsPipeline::ProcessDescriptorSets(const std::vector<ShaderModule> &modules) {
   std::unordered_map<uint32_t, std::vector<VkDescriptorSetLayoutBinding>> merged_descriptor;
@@ -33,11 +39,12 @@ void GraphicsPipeline::ProcessDescriptorSets(const std::vector<ShaderModule> &mo
   }
 }
 
-GraphicsPipeline::GraphicsPipeline(const std::vector<std::filesystem::path> &paths,
-                                   const std::vector<Format> &color_formats, Format depth_format,
+void GraphicsPipeline::CreateGraphicsPipeline() {}
+
+GraphicsPipeline::GraphicsPipeline(std::span<const std::filesystem::path> paths,
+                                   std::span<const Format> color_formats, Format depth_format,
                                    const std::vector<VkVertexInputAttributeDescription> &vertex_attributes,
-                                   const std::vector<VkVertexInputBindingDescription> &vertex_bindings,
-                                   const std::vector<VkDynamicState> dynamic_states) {
+                                   const std::vector<VkVertexInputBindingDescription> &vertex_bindings) {
 
   std::vector<ShaderModule> shader_modules(paths.begin(), paths.end());
 
@@ -100,6 +107,8 @@ GraphicsPipeline::GraphicsPipeline(const std::vector<std::filesystem::path> &pat
     input_assembly_state_ci.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     input_assembly_state_ci.primitiveRestartEnable = VK_FALSE;
   }
+
+  auto dynamic_states = GetDynamicStates();
 
   VkPipelineDynamicStateCreateInfo dynamic_state_ci{};
   {

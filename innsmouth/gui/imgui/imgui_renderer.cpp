@@ -1,8 +1,8 @@
-#include "innsmouth/gui/imgui/imgui_renderer.h"
+#include "gui/imgui/imgui_renderer.h"
+#include "application/include/application.h"
+#include "core/include/core_types.h"
+#include "core/include/tools.h"
 #include "imgui.h"
-#include "innsmouth/application/include/application.h"
-#include "innsmouth/core/include/core_types.h"
-#include "innsmouth/core/include/tools.h"
 #include <cstring>
 
 namespace Innsmouth {
@@ -19,8 +19,9 @@ std::vector<VkVertexInputAttributeDescription> GetAttributes() {
 }
 
 ImGuiRenderer::ImGuiRenderer(const Swapchain &swapchain)
-  : graphics_pipeline_({SHADER_DIR / "gui.vert.spv", SHADER_DIR / "gui.frag.spv"},
-                       {swapchain.GetSurfaceFormat()}, Format::UNDEFINED, GetAttributes(), GetBinding()),
+  : graphics_pipeline_(std::initializer_list{SHADER_DIR / "gui.vert.spv", SHADER_DIR / "gui.frag.spv"},
+                       std::initializer_list{swapchain.GetSurfaceFormat()}, Format::UNDEFINED,
+                       GetAttributes(), GetBinding()),
     vertex_buffer_(BufferUsage::VERTEX_BUFFER, 20_MiB), index_buffer_(BufferUsage::INDEX_BUFFER, 20_MiB) {
   CreateFontsTexture();
 }

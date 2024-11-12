@@ -1,9 +1,9 @@
 #ifndef INNSMOUTH_WINDOW_H
 #define INNSMOUTH_WINDOW_H
 
+#include "core/include/core_types.h"
 #include "event.h"
-#include "innsmouth/core/include/core_types.h"
-#include "innsmouth/graphics/include/graphics_types.h"
+#include "graphics/include/graphics_types.h"
 #include <cstdint>
 #include <functional>
 #include <string_view>

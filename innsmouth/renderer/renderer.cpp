@@ -1,8 +1,8 @@
-#include "innsmouth/renderer/include/renderer.h"
-#include "innsmouth/application/include/application.h"
-#include "innsmouth/core/include/tools.h"
-#include "innsmouth/mesh/include/model.h"
-#include "innsmouth/scene/include/camera.h"
+#include "renderer/include/renderer.h"
+#include "application/include/application.h"
+#include "core/include/tools.h"
+#include "mesh/include/model.h"
+#include "scene/include/camera.h"
 #include <iostream>
 
 namespace Innsmouth {

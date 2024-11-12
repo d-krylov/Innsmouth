@@ -2,10 +2,10 @@
 #define INNSMOUTH_GRAPHICS_TYPES_H
 
 #define VK_NO_PROTOTYPES
-#include "innsmouth/core/include/asserts.h"
-#include "innsmouth/core/include/concepts.h"
-#include "innsmouth/core/include/macros.h"
-#include "volk/volk.h"
+#include "core/include/asserts.h"
+#include "core/include/concepts.h"
+#include "core/include/macros.h"
+#include "volk.h"
 #include <vector>
 #include <vma/vk_mem_alloc.h>
 #include <vulkan/utility/vk_format_utils.h>
@@ -21,15 +21,11 @@ enum class CommandBufferUsage {
   SIMULTANEOUS_USE = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,
 };
 
-enum class FrontFace {
-  COUNTER_CLOCKWISE = VK_FRONT_FACE_COUNTER_CLOCKWISE,
-  CLOCKWISE = VK_FRONT_FACE_CLOCKWISE
-};
-
 enum class Filter { NEAREST = VK_FILTER_NEAREST, LINEAR = VK_FILTER_LINEAR, CUBIC = VK_FILTER_CUBIC_EXT };
 
-enum class ImageAspect {
-#define VULKAN_IMAGE_ASPECT(X) X = VK_IMAGE_ASPECT_##X##_BIT,
+// MESH
+enum class FrontFace {
+#define VULKAN_FRONT_FACE(X) X = VK_FRONT_FACE_##X,
 #include "graphics_types.def"
 };
 
@@ -37,6 +33,26 @@ enum class CullMode {
 #define VULKAN_CULL_MODE(X) X = VK_CULL_MODE_##X,
 #include "graphics_types.def"
 };
+
+enum class Access {
+  NONE = VK_ACCESS_NONE,
+#define VULKAN_ACCESS(X) X = VK_ACCESS_##X##_BIT,
+#include "graphics_types.def"
+};
+
+enum class ImageAspect {
+#define VULKAN_IMAGE_ASPECT(X) X = VK_IMAGE_ASPECT_##X##_BIT,
+#include "graphics_types.def"
+};
+
+// QUEUE
+
+enum class QueueFlags {
+#define VULKAN_QUEUE_FLAGS(X) X = VK_QUEUE_##X##_BIT,
+#include "graphics_types.def"
+};
+
+// DEBUG
 
 enum class DebugMessageType {
 #define VULKAN_DEBUG_MESSAGE_TYPE(X) X = VK_DEBUG_UTILS_MESSAGE_TYPE_##X##_BIT_EXT,
@@ -48,8 +64,22 @@ enum class DebugMessageSeverity {
 #include "graphics_types.def"
 };
 
+// BUFFER
+
 enum class BufferUsage {
 #define VULKAN_BUFFER_USAGE(X) X = VK_BUFFER_USAGE_##X##_BIT,
+#include "graphics_types.def"
+};
+
+// PIPELINE
+
+enum class ShaderStage {
+#define VULKAN_SHADER_STAGE(X) X = VK_SHADER_STAGE_##X##_BIT,
+#include "graphics_types.def"
+};
+
+enum class PipelineStage {
+#define VULKAN_PIPELINE_STAGE(X) X = VK_PIPELINE_STAGE_##X##_BIT,
 #include "graphics_types.def"
 };
 
@@ -63,18 +93,24 @@ enum class BlendOperation {
 #include "graphics_types.def"
 };
 
+enum class PrimitiveTopology {
+#define VULKAN_PRIMITIVE_TOPOLOGY(X) X = VK_PRIMITIVE_TOPOLOGY_##X,
+#include "graphics_types.def"
+};
+
+// IMAGE
 enum class ImageUsage {
 #define VULKAN_IMAGE_USAGE(X) X = VK_IMAGE_USAGE_##X##_BIT,
 #include "graphics_types.def"
 };
 
-enum class ImageTiling {
-#define VULKAN_IMAGE_TILING(X) X = VK_IMAGE_TILING_##X,
+enum class ImageType {
+#define VULKAN_IMAGE_TYPE(X) _##X = VK_IMAGE_TYPE_##X,
 #include "graphics_types.def"
 };
 
-enum class ShaderStage {
-#define VULKAN_SHADER_STAGE(X) X = VK_SHADER_STAGE_##X##_BIT,
+enum class ImageTiling {
+#define VULKAN_IMAGE_TILING(X) X = VK_IMAGE_TILING_##X,
 #include "graphics_types.def"
 };
 
@@ -90,11 +126,6 @@ enum class FormatFeature {
 
 enum class SampleCount {
 #define VULKAN_SAMPLE_COUNT(X) BIT##X = VK_SAMPLE_COUNT_##X##_BIT,
-#include "graphics_types.def"
-};
-
-enum class PipelineStage {
-#define VULKAN_PIPELINE_STAGE(X) X = VK_PIPELINE_STAGE_##X##_BIT,
 #include "graphics_types.def"
 };
 
@@ -133,10 +164,7 @@ enum class ImageViewType {
 #include "graphics_types.def"
 };
 
-enum class ImageType {
-#define VULKAN_IMAGE_TYPE(X) _##X = VK_IMAGE_TYPE_##X,
-#include "graphics_types.def"
-};
+// LOAD AND STORE
 
 enum class LoadOperation {
 #define VULKAN_LOAD_OPERATION(X) X = VK_ATTACHMENT_LOAD_OP_##X,
@@ -145,11 +173,6 @@ enum class LoadOperation {
 
 enum class StoreOperation {
 #define VULKAN_STORE_OPERATION(X) X = VK_ATTACHMENT_STORE_OP_##X,
-#include "graphics_types.def"
-};
-
-enum class PrimitiveTopology {
-#define VULKAN_PRIMITIVE_TOPOLOGY(X) X = VK_PRIMITIVE_TOPOLOGY_##X,
 #include "graphics_types.def"
 };
 
@@ -168,8 +191,6 @@ ALLOW_BITMASK_ENUM(FormatFeature)
 ALLOW_BITMASK_ENUM(PipelineStage)
 ALLOW_BITMASK_ENUM(ColorComponent)
 ALLOW_BITMASK_ENUM(BufferUsage)
-
-std::vector<VkDynamicState> GetDynamicStates();
 
 [[nodiscard]] VkAccessFlags GetAccessMask(VkImageLayout layout);
 [[nodiscard]] uint32_t GetMipLevels(const VkExtent3D &e);

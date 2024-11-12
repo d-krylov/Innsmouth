@@ -1,8 +1,8 @@
 #include "shader_module.h"
-#include "innsmouth/core/include/tools.h"
-#include "innsmouth/graphics/include/graphics.h"
-#include "innsmouth/graphics/include/graphics_helpers.h"
-#include "spirv_reflect/spirv_reflect.h"
+#include "core/include/tools.h"
+#include "graphics/include/graphics.h"
+#include "graphics/include/graphics_tools.h"
+#include "spirv_reflect.h"
 #include <iostream>
 
 namespace Innsmouth {

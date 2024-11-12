@@ -1,6 +1,6 @@
-#include "innsmouth/graphics/buffer/buffer.h"
-#include "innsmouth/core/include/core_types.h"
-#include "innsmouth/graphics/include/graphics.h"
+#include "graphics/buffer/buffer.h"
+#include "core/include/core_types.h"
+#include "graphics/include/graphics.h"
 
 namespace Innsmouth {
 

@@ -1,8 +1,8 @@
 #ifndef INNSMOUTH_IMAGE_2D_H
 #define INNSMOUTH_IMAGE_2D_H
 
-#include "innsmouth/core/include/core_image.h"
-#include "innsmouth/graphics/image/image.h"
+#include "core/include/core_image.h"
+#include "graphics/image/image.h"
 #include <span>
 
 namespace Innsmouth {

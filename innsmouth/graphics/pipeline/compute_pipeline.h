@@ -1,11 +1,12 @@
 #ifndef INNSMOUTH_COMPUTE_PIPELINE_H
 #define INNSMOUTH_COMPUTE_PIPELINE_H
 
-#include "pipeline.h"
+#include "graphics/include/graphics_types.h"
+#include <filesystem>
 
 namespace Innsmouth {
 
-class ComputePipeline : public Pipeline {
+class ComputePipeline {
 public:
   ComputePipeline(const std::filesystem::path &path);
 

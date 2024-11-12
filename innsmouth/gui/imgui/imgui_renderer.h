@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_IMGUI_RENDERER_H
 #define INNSMOUTH_IMGUI_RENDERER_H
 
-#include "innsmouth/graphics/include/graphics_common.h"
+#include "graphics/include/graphics_common.h"
 
 struct ImDrawData;
 

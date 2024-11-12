@@ -1,4 +1,4 @@
-#include "innsmouth/widgets/include/light_widget.h"
+#include "widgets/include/light_widget.h"
 #include "imgui.h"
 #include <string>
 

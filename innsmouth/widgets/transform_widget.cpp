@@ -1,4 +1,4 @@
-#include "innsmouth/widgets/include/transform_widget.h"
+#include "widgets/include/transform_widget.h"
 #include "imgui.h"
 
 namespace Innsmouth {

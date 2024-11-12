@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_IMGUI_LAYER_H
 #define INNSMOUTH_IMGUI_LAYER_H
 
-#include "innsmouth/application/include/layer.h"
+#include "application/include/layer.h"
 
 namespace Innsmouth {
 

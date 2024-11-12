@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_CAMERA_H
 #define INNSMOUTH_CAMERA_H
 
-#include "innsmouth/core/include/core_types.h"
+#include "core/include/core_types.h"
 
 namespace Innsmouth {
 

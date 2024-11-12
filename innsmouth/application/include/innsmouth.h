@@ -1,14 +1,14 @@
 #ifndef INNSMOUTH_H
 #define INNSMOUTH_H
 
+#include "application/include/application.h"
+#include "core/include/tools.h"
 #include "imgui.h"
-#include "innsmouth/application/include/application.h"
-#include "innsmouth/core/include/tools.h"
-#include "innsmouth/mesh/include/model.h"
-#include "innsmouth/mesh/include/primitives.h"
-#include "innsmouth/renderer/include/renderer.h"
-#include "innsmouth/widgets/include/camera_widget.h"
-#include "innsmouth/widgets/include/light_widget.h"
-#include "innsmouth/widgets/include/transform_widget.h"
+#include "mesh/include/model.h"
+#include "mesh/include/primitives.h"
+#include "renderer/include/renderer.h"
+#include "widgets/include/camera_widget.h"
+#include "widgets/include/light_widget.h"
+#include "widgets/include/transform_widget.h"
 
 #endif // INNSMOUTH_H

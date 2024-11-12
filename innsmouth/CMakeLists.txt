@@ -1,10 +1,11 @@
 set(INNSMOUTH_SOURCE_DIR ${PROJECT_SOURCE_DIR}/innsmouth)
 
 set(EXTERNAL_SOURCES
-  ${PROJECT_SOURCE_DIR}/external/imgui/sources/imgui_draw.cpp
-  ${PROJECT_SOURCE_DIR}/external/imgui/sources/imgui_tables.cpp
-  ${PROJECT_SOURCE_DIR}/external/imgui/sources/imgui_widgets.cpp
-  ${PROJECT_SOURCE_DIR}/external/imgui/sources/imgui.cpp
+  ${imgui_SOURCE_DIR}/imgui_draw.cpp
+  ${imgui_SOURCE_DIR}/imgui_tables.cpp
+  ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+  ${imgui_SOURCE_DIR}/imgui.cpp
+  ${spirv_reflect_SOURCE_DIR}/spirv_reflect.cpp
   ${PROJECT_SOURCE_DIR}/external/tinyobjloader/tiny_obj_loader.cc
 )
 
@@ -25,12 +26,11 @@ set(WIDGET_SOURCES
 set(GRAPHICS_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_types.cpp
-  ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_helpers.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_tools.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_constants.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/graphics_pipeline.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/compute_pipeline.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/shader_module.cpp
-  ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/pipeline.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/buffer/buffer.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/swapchain.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/command_buffer.cpp
@@ -66,13 +66,10 @@ set(INNSMOUTH_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/core/tools.cpp
   ${INNSMOUTH_SOURCE_DIR}/core/core_image.cpp
   ${INNSMOUTH_SOURCE_DIR}/application/application.cpp
-  ${PROJECT_SOURCE_DIR}/external/spirv_reflect/spirv_reflect.c
 )
 
 set(INNSMOUTH_INCLUDES
-  ${PROJECT_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/external
-  ${PROJECT_SOURCE_DIR}/external/imgui/include
+
 )
 
 add_library(${PROJECT_NAME} STATIC
@@ -82,12 +79,14 @@ add_library(${PROJECT_NAME} STATIC
 add_dependencies(${PROJECT_NAME} shaders)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-  ${INNSMOUTH_INCLUDES}
+  ${spirv_reflect_SOURCE_DIR}
+  ${imgui_SOURCE_DIR}
+  ${INNSMOUTH_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/external
 )
 
 target_link_libraries(${PROJECT_NAME} 
   glfw
   glm::glm
   volk
-  $ENV{VULKAN_SDK}/lib/libVulkanLayerSettings.a
 )

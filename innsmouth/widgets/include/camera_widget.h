@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_CAMERA_WIDGET_H
 #define INNSMOUTH_CAMERA_WIDGET_H
 
-#include "innsmouth/scene/include/camera.h"
+#include "scene/include/camera.h"
 
 namespace Innsmouth {
 

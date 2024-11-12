@@ -3,10 +3,10 @@
 
 #include "command_buffer.ipp"
 #include "graphics.h"
-#include "innsmouth/graphics/buffer/buffer.h"
-#include "innsmouth/graphics/image/depth_image.h"
-#include "innsmouth/graphics/image/image_2d.h"
-#include "innsmouth/graphics/pipeline/graphics_pipeline.h"
+#include "graphics/buffer/buffer.h"
+#include "graphics/image/depth_image.h"
+#include "graphics/image/image_2d.h"
+#include "graphics/pipeline/graphics_pipeline.h"
 #include "swapchain.h"
 #include "synchronization.h"
 

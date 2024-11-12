@@ -1,4 +1,4 @@
-#include "innsmouth/mesh/include/primitives.h"
+#include "mesh/include/primitives.h"
 
 namespace Innsmouth {
 

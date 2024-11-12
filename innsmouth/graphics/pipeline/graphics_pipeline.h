@@ -1,9 +1,9 @@
 #ifndef INNSMOUTH_GRAPHICS_PIPELINE_H
 #define INNSMOUTH_GRAPHICS_PIPELINE_H
 
-#include "innsmouth/core/include/concepts.h"
-#include "innsmouth/core/include/macros.h"
-#include "pipeline.h"
+#include "graphics/include/graphics_types.h"
+#include <filesystem>
+#include <span>
 
 namespace Innsmouth {
 
@@ -11,11 +11,10 @@ class ShaderModule;
 
 class GraphicsPipeline {
 public:
-  GraphicsPipeline(const std::vector<std::filesystem::path> &paths, const std::vector<Format> &color_formats,
+  GraphicsPipeline(std::span<const std::filesystem::path> paths, std::span<const Format> color_formats,
                    Format depth_format = Format::UNDEFINED,
                    const std::vector<VkVertexInputAttributeDescription> &vertex_attributes = {},
-                   const std::vector<VkVertexInputBindingDescription> &vertex_bindings = {},
-                   const std::vector<VkDynamicState> dynamic_states = GetDynamicStates());
+                   const std::vector<VkVertexInputBindingDescription> &vertex_bindings = {});
 
   ~GraphicsPipeline();
 
@@ -26,6 +25,8 @@ public:
   [[nodiscard]] const VkPipelineLayout GetPipelineLayout() const { return pipeline_layout_; }
 
 protected:
+  void CreateGraphicsPipeline();
+
   void ProcessDescriptorSets(const std::vector<ShaderModule> &modules);
 
 private:

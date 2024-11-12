@@ -1,6 +1,6 @@
 #include "image.h"
-#include "innsmouth/graphics/include/command_buffer.h"
-#include "innsmouth/graphics/include/graphics.h"
+#include "graphics/include/command_buffer.h"
+#include "graphics/include/graphics.h"
 #include <iostream>
 
 namespace Innsmouth {

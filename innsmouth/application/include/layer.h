@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_LAYER_H
 #define INNSMOUTH_LAYER_H
 
-#include "innsmouth/gui/include/event.h"
+#include "gui/include/event.h"
 
 namespace Innsmouth {
 

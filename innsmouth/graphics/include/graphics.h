@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_GRAPHICS_H
 #define INNSMOUTH_GRAPHICS_H
 
-#include "innsmouth/graphics/include/graphics_description.h"
+#include "graphics/include/graphics_description.h"
 #include <optional>
 
 namespace Innsmouth {

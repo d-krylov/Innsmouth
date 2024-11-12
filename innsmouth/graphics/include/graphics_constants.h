@@ -5,7 +5,6 @@
 
 namespace Innsmouth {
 
-[[nodiscard]] std::vector<const char *> GetDeviceExtensions();
 [[nodiscard]] std::vector<Format> GetDepthFormats();
 
 } // namespace Innsmouth
