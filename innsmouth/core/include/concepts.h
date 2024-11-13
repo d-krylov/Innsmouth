@@ -19,8 +19,18 @@ template <AllowedBitmaskEnum Enum> Enum operator|(Enum LHS, Enum RHS) {
   return static_cast<Enum>(static_cast<underlying>(LHS) | static_cast<underlying>(RHS));
 }
 
-template <typename R, typename U>
-concept Range = std::ranges::contiguous_range<R> && std::same_as<std::ranges::range_value_t<R>, U>;
+template <AllowedBitmaskEnum Enum> Enum operator&(Enum LHS, Enum RHS) {
+  using underlying = std::underlying_type_t<Enum>;
+  return static_cast<Enum>(static_cast<underlying>(LHS) & static_cast<underlying>(RHS));
+}
+
+template <AllowedBitmaskEnum Enum, std::integral T> T operator&(T LHS, Enum RHS) {
+  return LHS & static_cast<T>(RHS);
+}
+
+template <typename R, typename T>
+concept ContiguousSizedRange = std::ranges::contiguous_range<R> && std::ranges::sized_range<R> &&
+                               std::same_as<std::ranges::range_value_t<R>, T>;
 
 template <typename T>
 concept PlainType =

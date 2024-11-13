@@ -43,7 +43,8 @@ public:
   void CommandDepthCompareOperation(CompareOperation compare_operation);
   void CommandDepthBounds(float min, float max);
 
-  void CommandBeginRendering(const VkExtent2D &extent, Range<RenderingAttachment> auto &&colors,
+  template <ContiguousSizedRange<RenderingAttachment> R>
+  void CommandBeginRendering(const VkExtent2D &extent, R &&colors,
                              std::optional<RenderingAttachment> depth = std::nullopt,
                              std::optional<RenderingAttachment> stencil = std::nullopt);
 

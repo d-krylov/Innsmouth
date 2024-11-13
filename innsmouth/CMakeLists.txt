@@ -27,7 +27,6 @@ set(GRAPHICS_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_types.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_tools.cpp
-  ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_constants.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/graphics_pipeline.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/compute_pipeline.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/shader_module.cpp

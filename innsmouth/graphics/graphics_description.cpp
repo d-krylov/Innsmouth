@@ -15,23 +15,11 @@ namespace Innsmouth {
 }
 
 // clang-format off
-static VKAPI_ATTR VkBool32 VKAPI_CALL DebugMessageCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT severity, 
-    VkDebugUtilsMessageTypeFlagsEXT type,
-    const VkDebugUtilsMessengerCallbackDataEXT *data, 
-    void *user_data) {
-  std::printf("Validation Layer: %s\n", data->pMessage);
-  return VK_FALSE;
-}
-// clang-format on
-
-// clang-format off
 GraphicsDescription GraphicsDescription::CreateDefault() {
   return GraphicsDescription{
     .message_type_ = DebugMessageType::GENERAL | DebugMessageType::PERFORMANCE | DebugMessageType::VALIDATION,
     .message_severity_ = DebugMessageSeverity::ERROR | DebugMessageSeverity::VERBOSE | DebugMessageSeverity::WARNING,
-    .instance_extensions_ = GetInstanceExtensions(),
-    .debug_function_ = DebugMessageCallback
+    .instance_extensions_ = GetInstanceExtensions()
   };
 }
 // clang-format on

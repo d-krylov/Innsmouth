@@ -5,7 +5,8 @@
 
 namespace Innsmouth {
 
-void CommandBuffer::CommandBeginRendering(const VkExtent2D &extent, Range<RenderingAttachment> auto &&colors,
+template <ContiguousSizedRange<RenderingAttachment> R>
+void CommandBuffer::CommandBeginRendering(const VkExtent2D &extent, R &&colors,
                                           std::optional<RenderingAttachment> depth,
                                           std::optional<RenderingAttachment> stencil) {
 

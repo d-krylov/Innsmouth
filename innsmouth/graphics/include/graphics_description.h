@@ -14,7 +14,6 @@ struct GraphicsDescription {
   std::optional<DebugMessageType> message_type_;
   DebugMessageSeverity message_severity_;
   std::vector<const char *> instance_extensions_;
-  PFN_vkDebugUtilsMessengerCallbackEXT debug_function_;
 };
 
 } // namespace Innsmouth

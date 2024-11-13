@@ -1,5 +1,4 @@
 #include "graphics/include/graphics.h"
-#include "graphics/include/graphics_constants.h"
 #include "graphics/include/graphics_tools.h"
 #define VMA_IMPLEMENTATION
 #include <vma/vk_mem_alloc.h>
@@ -21,6 +20,8 @@ VkQueue transfer_queue_{VK_NULL_HANDLE};
 VkQueue compute_queue_{VK_NULL_HANDLE};
 VmaAllocator vma_allocator_{VK_NULL_HANDLE};
 VkCommandPool command_pool_{VK_NULL_HANDLE};
+
+// GETTERS
 
 const VkInstance Instance() {
   assert(instance_ != VK_NULL_HANDLE);
@@ -58,6 +59,17 @@ void WaitIdle() {
 }
 
 uint32_t GraphicsIndex() { return graphics_queue_index_; }
+
+// clang-format off
+static VKAPI_ATTR VkBool32 VKAPI_CALL DebugMessageCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT severity, 
+    VkDebugUtilsMessageTypeFlagsEXT type,
+    const VkDebugUtilsMessengerCallbackDataEXT *data, 
+    void *user_data) {
+  std::printf("Validation Layer: %s\n", data->pMessage);
+  return VK_FALSE;
+}
+// clang-format on
 
 void CreateInstance(const GraphicsDescription &gd) {
   VK_CHECK(volkInitialize());
@@ -100,7 +112,7 @@ void CreateInstance(const GraphicsDescription &gd) {
     debug_ci.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
     debug_ci.messageType = static_cast<VkFlags>(gd.message_type_.value());
     debug_ci.messageSeverity = static_cast<VkFlags>(gd.message_severity_);
-    debug_ci.pfnUserCallback = gd.debug_function_;
+    debug_ci.pfnUserCallback = DebugMessageCallback;
     debug_ci.pUserData = nullptr;
 
     instance_ci.pNext = &debug_ci;
