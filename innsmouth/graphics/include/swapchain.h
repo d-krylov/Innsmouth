@@ -24,6 +24,7 @@ public:
   uint32_t GetCurrentImageIndex() const { return current_image_; }
 
   uint32_t GetImageCount() const { return images_.size(); }
+  Format GetSurfaceFormat() const { return surface_format_; };
 
   void Recreate();
 

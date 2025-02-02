@@ -3,7 +3,7 @@
 #define VMA_IMPLEMENTATION
 #include "vma/vk_mem_alloc.h"
 // #define NDEBUG
-#include <assert.h>
+#include <cassert>
 #include <print>
 
 namespace Innsmouth {

@@ -126,11 +126,27 @@ enum class StoreOperation {
 #include "graphics_types.def"
 };
 
+enum class CullMode {
+#define VULKAN_CULL_MODE(X) X = VK_CULL_MODE_##X,
+#include "graphics_types.def"
+};
+
+enum class FrontFace {
+#define VULKAN_FRONT_FACE(X) X = VK_FRONT_FACE_##X,
+#include "graphics_types.def"
+};
+
+enum class CompareOperation {
+#define VULKAN_COMPARE_OPERATION(X) X = VK_COMPARE_OP_##X,
+#include "graphics_types.def"
+};
+
 ALLOW_BITMASK_ENUM(QueueMask);
 ALLOW_BITMASK_ENUM(DebugMessageType);
 ALLOW_BITMASK_ENUM(DebugMessageSeverity);
 ALLOW_BITMASK_ENUM(MemoryProperty);
 ALLOW_BITMASK_ENUM(ColorComponent);
+ALLOW_BITMASK_ENUM(CullMode);
 
 // FUNCTIONS
 void VK_CHECK(VkResult result, std::source_location = std::source_location::current());

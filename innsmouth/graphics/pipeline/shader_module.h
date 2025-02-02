@@ -19,6 +19,8 @@ public:
   VkShaderStageFlagBits GetShaderStage() const { return shader_stage_; }
 
   std::span<const std::vector<VkDescriptorSetLayoutBinding>> GetDescriptorSetLayoutBindings() const { return descriptor_set_bindings_; }
+  std::span<const VkVertexInputAttributeDescription> GetVertexInputAttributes() const { return input_attribute_descriptions_; }
+  std::span<const VkVertexInputBindingDescription> GetVertexInputBinding() const { return input_binding_description_; }
 
 protected:
   void ParseShader(std::span<const std::byte> data);
@@ -27,7 +29,7 @@ private:
   VkShaderStageFlagBits shader_stage_;
   VkShaderModule shader_module_{VK_NULL_HANDLE};
   std::vector<VkPushConstantRange> push_constant_ranges_;
-  std::optional<VkVertexInputBindingDescription> input_binding_description_;
+  std::vector<VkVertexInputBindingDescription> input_binding_description_;
   std::vector<VkVertexInputAttributeDescription> input_attribute_descriptions_;
   std::vector<std::vector<VkDescriptorSetLayoutBinding>> descriptor_set_bindings_;
 };

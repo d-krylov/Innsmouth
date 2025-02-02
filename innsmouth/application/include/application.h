@@ -10,11 +10,21 @@
 
 namespace Innsmouth {
 
+class Layer;
+
 class Application {
 public:
   Application(std::string_view name, uint32_t width, uint32_t height);
 
+  void AddLayer(Layer *layer);
+
   void Run();
+
+  void OnEvent(Event &event);
+
+  static Application &Get();
+
+  const Swapchain &GetSwapchain() const { return swapchain_; }
 
 protected:
   void Initialize();
@@ -28,6 +38,9 @@ private:
   std::vector<Semaphore> render_finished_semaphores;
   std::vector<Fence> fences_;
   uint32_t current_frame_{0};
+  std::vector<Layer *> layers_;
+
+  static Application *application_instance_;
 };
 
 } // namespace Innsmouth

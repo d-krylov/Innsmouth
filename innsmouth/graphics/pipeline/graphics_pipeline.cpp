@@ -1,5 +1,6 @@
 #include "graphics_pipeline.h"
 #include "graphics/include/graphics.h"
+#include "graphics/include/structure_tools.h"
 #include <ranges>
 #include <unordered_map>
 #include <algorithm>
@@ -19,7 +20,19 @@ std::vector<VkDynamicState> GetDynamicStates() {
 }
 // clang-format on
 
-GraphicsPipeline::GraphicsPipeline(const std::filesystem::path &vertex_shader, const std::filesystem::path &fragment_shader) {}
+GraphicsPipeline::GraphicsPipeline(const std::filesystem::path &vertex_shader, const std::filesystem::path &fragment_shader,
+                                   Format color_format) {
+  std::vector<ShaderModule> shader_modules{vertex_shader, fragment_shader};
+
+  auto vertex_attributes = shader_modules[0].GetVertexInputAttributes();
+  auto vertex_binding = shader_modules[0].GetVertexInputBinding();
+
+  auto color_blend_attachment = CreateColorBlendAttachmentState(false);
+
+  CreateGraphicsPipeline(shader_modules, std::views::single(color_format), color_blend_attachment, vertex_attributes, vertex_binding);
+}
+
+GraphicsPipeline::~GraphicsPipeline() {}
 
 std::vector<VkDescriptorSetLayout> CreateDescriptorSetLayouts(std::span<const ShaderModule> shader_modules) {
   std::unordered_map<uint32_t, std::vector<VkDescriptorSetLayoutBinding>> all_descriptors;
@@ -50,6 +63,7 @@ std::vector<VkDescriptorSetLayout> CreateDescriptorSetLayouts(std::span<const Sh
 }
 
 void GraphicsPipeline::CreateGraphicsPipeline(std::span<const ShaderModule> shader_modules, std::span<const Format> color_formats,
+                                              const VkPipelineColorBlendAttachmentState &color_blend_attachment_state,
                                               std::span<const VkVertexInputAttributeDescription> vertex_input_attributes,
                                               std::span<const VkVertexInputBindingDescription> vertex_input_bindings) {
   auto total_push_constants = std::views::transform(shader_modules, [](auto &&x) { return x.GetPushConstantRanges(); });
@@ -93,6 +107,8 @@ void GraphicsPipeline::CreateGraphicsPipeline(std::span<const ShaderModule> shad
     pipeline_layout_ci.pushConstantRangeCount = push_constant_ranges.size();
   }
 
+  VK_CHECK(vkCreatePipelineLayout(Device(), &pipeline_layout_ci, nullptr, &pipeline_layout_));
+
   // VIEWPORT STATE
   VkPipelineViewportStateCreateInfo viewport_state_ci{};
   {
@@ -133,7 +149,7 @@ void GraphicsPipeline::CreateGraphicsPipeline(std::span<const ShaderModule> shad
   {
     color_blending_state_ci.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     color_blending_state_ci.attachmentCount = 1;
-    // color_blending_state_ci.pAttachments = &color_blend_attachment_state;
+    color_blending_state_ci.pAttachments = &color_blend_attachment_state;
   }
 
   // DYNAMIC STATES

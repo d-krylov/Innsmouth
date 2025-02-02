@@ -1,14 +1,30 @@
 #include "application/include/application.h"
+#include "application/include/layer.h"
 #include "graphics/include/structure_tools.h"
+#include "gui/include/event.h"
 #include <ranges>
+// #define NDEBUG
+#include <cassert>
 #include <GLFW/glfw3.h>
 
 namespace Innsmouth {
+
+Application *Application::application_instance_ = nullptr;
+
+Application &Application::Get() {
+  assert(application_instance_ != nullptr);
+  return *application_instance_;
+}
 
 std::vector<const char *> GetExtensions() {
   uint32_t extensions_count = 0;
   auto extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
   return std::vector(extensions, extensions + extensions_count);
+}
+
+void Application::AddLayer(Layer *layer) {
+  auto &new_layer = layers_.emplace_back(layer);
+  new_layer->OnAttach();
 }
 
 Application::Application(std::string_view name, uint32_t width, uint32_t height)
@@ -17,6 +33,7 @@ Application::Application(std::string_view name, uint32_t width, uint32_t height)
                                             DebugMessageSeverity::ERROR | DebugMessageSeverity::VERBOSE | DebugMessageSeverity::INFO)),
     swapchain_(window_) {
   Initialize();
+  application_instance_ = this;
 }
 
 void Application::Initialize() {
@@ -25,6 +42,12 @@ void Application::Initialize() {
     command_buffers_.emplace_back(GraphicsCommandPool());
     image_available_semaphores.emplace_back();
     render_finished_semaphores.emplace_back();
+  }
+}
+
+void Application::OnEvent(Event &event) {
+  for (auto &layer : layers_) {
+    layer->OnEvent(event);
   }
 }
 
@@ -59,14 +82,9 @@ void Application::Run() {
     command_buffer.Reset();
     command_buffer.Begin();
 
-    VkRenderingAttachmentInfo rendering_attachment_info{};
-
-    rendering_attachment_info = CreateRenderingAttachmentInfo(swapchain_.GetCurrentImageView(), LoadOperation::CLEAR, StoreOperation::STORE,
-                                                              ImageLayout::COLOR_ATTACHMENT_OPTIMAL);
-
-    command_buffer.CommandBeginRendering(swapchain_.GetSurfaceExtent(), std::views::single(rendering_attachment_info));
-
-    command_buffer.CommandEndRendering();
+    for (auto &layer : layers_) {
+      layer->OnUpdate(command_buffer);
+    }
 
     command_buffer.End();
 

@@ -36,6 +36,13 @@ public:
   // OPTIONS
   void CommandSetViewport(float x, float y, float w, float h, float min_depth = 0.0f, float max_depth = 1.0f);
   void CommandSetScissor(int32_t x, int32_t y, uint32_t width, uint32_t height);
+  void CommandDepthBounds(float min, float max);
+  void CommandEnableStencilTest(bool b);
+  void CommandEnableDepthWrite(bool b);
+  void CommandEnableDepthTest(bool b);
+  void CommandSetCullMode(CullMode mode);
+  void CommandSetFrontFace(FrontFace front_face);
+  void CommandDepthCompareOperation(CompareOperation compare_operation);
 
   // DRAW
   void CommandDraw(uint32_t vertex_count, uint32_t instance_count = 1, uint32_t first_vertex = 0, uint32_t first_instance = 0);

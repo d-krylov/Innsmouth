@@ -69,13 +69,7 @@ void ShaderModule::ParseShader(std::span<const std::byte> data) {
   auto stride = std::ranges::fold_left(offsets, 0, std::plus<>());
 
   if (input_attribute_descriptions_.size() > 0) {
-    input_binding_description_ = VkVertexInputBindingDescription{0, stride, VK_VERTEX_INPUT_RATE_VERTEX};
-  }
-
-  for (auto set : descriptor_set_bindings_) {
-    for (auto bin : set) {
-      Print(bin);
-    }
+    input_binding_description_.emplace_back(0, stride, VK_VERTEX_INPUT_RATE_VERTEX);
   }
 }
 
@@ -91,7 +85,7 @@ ShaderModule::ShaderModule(const std::filesystem::path &path) {
     shader_module_ci.pCode = reinterpret_cast<const uint32_t *>(shader_bin.data());
   }
 
-  // VK_CHECK(vkCreateShaderModule(Device(), &shader_module_ci, nullptr, &shader_module_));
+  VK_CHECK(vkCreateShaderModule(Device(), &shader_module_ci, nullptr, &shader_module_));
 }
 
 ShaderModule::~ShaderModule() {

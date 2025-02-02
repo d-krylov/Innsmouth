@@ -68,6 +68,8 @@ void CommandBuffer::CommandBeginRendering(const VkExtent2D &extent, std::span<co
   vkCmdBeginRendering(command_buffer_, &rendering_info);
 }
 
+// OPTIONS
+
 void CommandBuffer::CommandSetViewport(float x, float y, float w, float h, float min_depth, float max_depth) {
   VkViewport viewport{};
   {
@@ -92,8 +94,29 @@ void CommandBuffer::CommandSetScissor(int32_t x, int32_t y, uint32_t width, uint
   vkCmdSetScissor(command_buffer_, 0, 1, &scissor);
 }
 
+void CommandBuffer::CommandSetCullMode(CullMode mode) { vkCmdSetCullMode(command_buffer_, VkCullModeFlags(mode)); }
+
+void CommandBuffer::CommandSetFrontFace(FrontFace front_face) { vkCmdSetFrontFace(command_buffer_, VkFrontFace(front_face)); }
+
+void CommandBuffer::CommandEnableDepthTest(bool b) { vkCmdSetDepthTestEnable(command_buffer_, uint32_t(b)); }
+
+void CommandBuffer::CommandEnableDepthWrite(bool b) { vkCmdSetDepthWriteEnable(command_buffer_, uint32_t(b)); }
+
+void CommandBuffer::CommandEnableStencilTest(bool b) { vkCmdSetStencilTestEnable(command_buffer_, uint32_t(b)); }
+
+void CommandBuffer::CommandDepthCompareOperation(CompareOperation compare_operation) {
+  vkCmdSetDepthCompareOp(command_buffer_, VkCompareOp(compare_operation));
+}
+
+void CommandBuffer::CommandDepthBounds(float min, float max) { vkCmdSetDepthBounds(command_buffer_, min, max); }
+
+// DRAW
 void CommandBuffer::CommandDraw(uint32_t vertex_count, uint32_t instance_count, uint32_t first_vertex, uint32_t first_instance) {
   vkCmdDraw(command_buffer_, vertex_count, instance_count, first_vertex, first_instance);
+}
+
+void CommandBuffer::CommandBindPipeline(const GraphicsPipeline &graphics_pipeline) {
+  vkCmdBindPipeline(command_buffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline);
 }
 
 void CommandBuffer::CommandPushDescriptorSet(const GraphicsPipeline &graphics_pipeline, uint32_t set_number, uint32_t binding,
