@@ -12,12 +12,15 @@ set(INNSMOUTH_GRAPHICS_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/graphics/buffer/buffer.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/buffer/command_buffer.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/synchronization/semaphore.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/synchronization/fence.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/structure_tools.cpp
   ${spirv_reflect_SOURCE_DIR}/spirv_reflect.cpp
 )
 
 set(INNSMOUTH_GUI_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/gui/window.cpp
+  ${INNSMOUTH_SOURCE_DIR}/gui/imgui/imgui_layer.cpp
+  ${INNSMOUTH_SOURCE_DIR}/gui/imgui/imgui_renderer.cpp
 )
 
 set(INNSMOUTH_SOURCES

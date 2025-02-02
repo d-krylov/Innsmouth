@@ -41,4 +41,6 @@ int32_t Window::GetHeight() const {
   return size.height;
 }
 
+void Window::PollEvents() { glfwPollEvents(); }
+
 } // namespace Innsmouth

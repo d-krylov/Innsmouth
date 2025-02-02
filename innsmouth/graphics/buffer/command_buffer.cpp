@@ -1,8 +1,24 @@
 #include "command_buffer.h"
 #include "graphics/include/graphics.h"
+#include "graphics/include/structure_tools.h"
+#include "graphics/synchronization/fence.h"
+#include "buffer.h"
 #include <ranges>
 
 namespace Innsmouth {
+
+CommandBuffer::CommandBuffer(const VkCommandPool command_pool) {
+  VkCommandBufferAllocateInfo command_buffer_ai{};
+  {
+    command_buffer_ai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    command_buffer_ai.commandPool = command_pool;
+    command_buffer_ai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    command_buffer_ai.commandBufferCount = 1;
+  }
+  VK_CHECK(vkAllocateCommandBuffers(Device(), &command_buffer_ai, &command_buffer_));
+}
+
+CommandBuffer::~CommandBuffer() {}
 
 void CommandBuffer::Begin(CommandBufferUsage usage) {
   VkCommandBufferBeginInfo command_buffer_bi{};
@@ -14,6 +30,43 @@ void CommandBuffer::Begin(CommandBufferUsage usage) {
 }
 
 void CommandBuffer::End() { VK_CHECK(vkEndCommandBuffer(command_buffer_)); }
+
+void CommandBuffer::Reset() { vkResetCommandBuffer(command_buffer_, 0); }
+
+void CommandBuffer::CommandEndRendering() { vkCmdEndRenderingKHR(command_buffer_); }
+
+void CommandBuffer::Submit() {
+  VkSubmitInfo submit_info{};
+  {
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &command_buffer_;
+  }
+
+  Fence fence(false);
+
+  VK_CHECK(vkQueueSubmit(GraphicsQueue(), 1, &submit_info, fence));
+
+  fence.Wait();
+}
+
+void CommandBuffer::CommandBeginRendering(const VkExtent2D &extent, std::span<const VkRenderingAttachmentInfo> colors,
+                                          const std::optional<VkRenderingAttachmentInfo> &depth,
+                                          const std::optional<VkRenderingAttachmentInfo> &stencil) {
+  VkRenderingInfo rendering_info{};
+  {
+    rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
+    rendering_info.renderArea.offset = {0, 0};
+    rendering_info.renderArea.extent = extent;
+    rendering_info.layerCount = 1;
+    rendering_info.colorAttachmentCount = std::ranges::size(colors);
+    rendering_info.pColorAttachments = std::ranges::data(colors);
+    rendering_info.pDepthAttachment = depth.has_value() ? &depth.value() : nullptr;
+    rendering_info.pStencilAttachment = stencil.has_value() ? &stencil.value() : nullptr;
+  }
+
+  vkCmdBeginRendering(command_buffer_, &rendering_info);
+}
 
 void CommandBuffer::CommandSetViewport(float x, float y, float w, float h, float min_depth, float max_depth) {
   VkViewport viewport{};
@@ -48,7 +101,7 @@ void CommandBuffer::CommandPushDescriptorSet(const GraphicsPipeline &graphics_pi
 
   VkDescriptorBufferInfo descriptor_bi{};
   {
-    // descriptor_bi.buffer = buffer;
+    descriptor_bi.buffer = buffer.GetBuffer();
     descriptor_bi.offset = offset;
     descriptor_bi.range = size;
   }
@@ -63,8 +116,8 @@ void CommandBuffer::CommandPushDescriptorSet(const GraphicsPipeline &graphics_pi
     write_descriptor_set.pBufferInfo = &descriptor_bi;
   }
 
-  // vkCmdPushDescriptorSetKHR(command_buffer_, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline.GetPipelineLayout(),
-  //                           set_number, 1, &write_descriptor_set);
+  vkCmdPushDescriptorSetKHR(command_buffer_, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline.GetPipelineLayout(),
+                            set_number, 1, &write_descriptor_set);
 }
 
 void CommandBuffer::CommandPipelineBarrier(std::span<const VkImageMemoryBarrier2> image_barriers,
@@ -85,16 +138,16 @@ void CommandBuffer::CommandPipelineBarrier(std::span<const VkImageMemoryBarrier2
 void CommandBuffer::ImageMemoryBarrier(const VkImage &image, ImageLayout from_layout, ImageLayout to_layout, PipelineStage from_stage,
                                        PipelineStage to_stage, const VkImageSubresourceRange &range) {
 
-  // auto from_access_mask = GetAccessMask(from_layout);
-  // auto to_access_mask = GetAccessMask(to_layout);
+  auto from_access_mask = GetAccessMask(from_layout);
+  auto to_access_mask = GetAccessMask(to_layout);
 
   VkImageMemoryBarrier2 image_memory_barrier{};
   {
     image_memory_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
     image_memory_barrier.srcStageMask = std::to_underlying(from_stage);
-    // image_memory_barrier.srcAccessMask = VkAccessFlags2(from_access_mask);
+    image_memory_barrier.srcAccessMask = std::to_underlying(from_access_mask);
     image_memory_barrier.dstStageMask = std::to_underlying(to_stage);
-    // image_memory_barrier.dstAccessMask = VkAccessFlags2(to_access_mask);
+    image_memory_barrier.dstAccessMask = std::to_underlying(to_access_mask);
     image_memory_barrier.oldLayout = VkImageLayout(from_layout);
     image_memory_barrier.newLayout = VkImageLayout(to_layout);
     image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;

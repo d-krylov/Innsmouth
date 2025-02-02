@@ -3,6 +3,7 @@
 
 #include "graphics/include/graphics_types.h"
 #include <span>
+#include <bit>
 
 namespace Innsmouth {
 
@@ -14,6 +15,13 @@ public:
 
   void Flush(uint64_t size, uint64_t offset);
 
+  void Map();
+  void Unmap();
+
+  const VkBuffer GetBuffer() const { return buffer_; }
+
+  std::span<std::byte> GetMappedData() { return mapped_data_; }
+
 private:
   VkBuffer buffer_{VK_NULL_HANDLE};
   VmaAllocation vma_allocation_{VK_NULL_HANDLE};
@@ -23,5 +31,7 @@ private:
 };
 
 } // namespace Innsmouth
+
+#include "buffer.ipp"
 
 #endif // INNSMOUTH_BUFFER_H

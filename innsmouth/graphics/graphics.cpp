@@ -15,6 +15,12 @@ VkDevice device_{VK_NULL_HANDLE};
 int32_t graphics_queue_index_{-1};
 int32_t transfer_queue_index_{-1};
 int32_t compute_queue_index_{-1};
+VkQueue graphics_queue_{VK_NULL_HANDLE};
+VkQueue transfer_queue_{VK_NULL_HANDLE};
+VkQueue compute_queue_{VK_NULL_HANDLE};
+VkCommandPool graphics_command_pool_{VK_NULL_HANDLE};
+VkCommandPool compute_command_pool_{VK_NULL_HANDLE};
+VkCommandPool transfer_command_pool_{VK_NULL_HANDLE};
 VmaAllocator vma_allocator_{VK_NULL_HANDLE};
 
 // GETTERS
@@ -34,9 +40,44 @@ const VkDevice Device() {
   return device_;
 }
 
+const VkQueue GraphicsQueue() {
+  assert(graphics_queue_ != VK_NULL_HANDLE);
+  return graphics_queue_;
+}
+
+const VkQueue TransferQueue() {
+  assert(transfer_queue_ != VK_NULL_HANDLE);
+  return transfer_queue_;
+}
+
+const VkQueue ComputeQueue() {
+  assert(compute_queue_ != VK_NULL_HANDLE);
+  return compute_queue_;
+}
+
+const VkCommandPool GraphicsCommandPool() {
+  assert(graphics_command_pool_ != VK_NULL_HANDLE);
+  return graphics_command_pool_;
+}
+
+const VkCommandPool TransferCommandPool() {
+  assert(transfer_command_pool_ != VK_NULL_HANDLE);
+  return transfer_command_pool_;
+}
+
+const VkCommandPool ComputeCommandPool() {
+  assert(compute_command_pool_ != VK_NULL_HANDLE);
+  return compute_command_pool_;
+}
+
 const VmaAllocator Allocator() {
   assert(vma_allocator_ != VK_NULL_HANDLE);
   return vma_allocator_;
+}
+
+void WaitIdle() {
+  assert(device_ != VK_NULL_HANDLE);
+  vkDeviceWaitIdle(device_);
 }
 
 // clang-format off
@@ -50,7 +91,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityF
 // clang-format on
 
 // INSTANCE
-void CreateInstance(const std::optional<DebugOptions> debug_options = std::nullopt) {
+void CreateInstance(const std::vector<const char *> &instance_extensions, const std::optional<DebugOptions> debug_options = std::nullopt) {
 
   VK_CHECK(volkInitialize());
 
@@ -66,6 +107,8 @@ void CreateInstance(const std::optional<DebugOptions> debug_options = std::nullo
 
   std::vector<const char *> required_layers;
   std::vector<const char *> required_extensions{VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME};
+
+  required_extensions.insert(required_extensions.end(), instance_extensions.begin(), instance_extensions.end());
 
   VkDebugUtilsMessengerCreateInfoEXT debug_ci{};
 
@@ -111,15 +154,18 @@ void CreateDevice() {
 
   std::vector<VkDeviceQueueCreateInfo> device_queue_ci;
 
-  VkDeviceQueueCreateInfo graphics_queue_ci{};
-  {
-    graphics_queue_ci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    graphics_queue_ci.queueFamilyIndex = graphics_queue_index_;
-    graphics_queue_ci.pQueuePriorities = queue_priorities;
-    graphics_queue_ci.queueCount = 1;
+  for (auto &index : {graphics_queue_index_, compute_queue_index_, transfer_queue_index_}) {
+    if (index != -1) {
+      VkDeviceQueueCreateInfo queue_ci{};
+      {
+        queue_ci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queue_ci.queueFamilyIndex = index;
+        queue_ci.pQueuePriorities = queue_priorities;
+        queue_ci.queueCount = 1;
+      }
+      device_queue_ci.emplace_back(queue_ci);
+    }
   }
-
-  device_queue_ci.emplace_back(graphics_queue_ci);
 
   VkDeviceCreateInfo device_ci{};
   {
@@ -134,17 +180,21 @@ void CreateDevice() {
   VK_CHECK(vkCreateDevice(PhysicalDevice(), &device_ci, nullptr, &device_));
 
   volkLoadDevice(device_);
+
+  vkGetDeviceQueue(device_, graphics_queue_index_, 0, &graphics_queue_);
+  vkGetDeviceQueue(device_, compute_queue_index_, 0, &compute_queue_);
+  vkGetDeviceQueue(device_, transfer_queue_index_, 0, &transfer_queue_);
 }
 
 // COMMAND POOL
-void CreateCommandPool(uint32_t queue_index, VkCommandPool *command_pool) {
+void CreateCommandPool(uint32_t queue_index, VkCommandPool &command_pool) {
   VkCommandPoolCreateInfo command_pool_ci{};
   {
     command_pool_ci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     command_pool_ci.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     command_pool_ci.queueFamilyIndex = queue_index;
   }
-  VK_CHECK(vkCreateCommandPool(Device(), &command_pool_ci, nullptr, command_pool));
+  VK_CHECK(vkCreateCommandPool(Device(), &command_pool_ci, nullptr, &command_pool));
 }
 
 // ALLOCATOR
@@ -168,12 +218,26 @@ void CreateAllocator() {
   VK_CHECK(vmaCreateAllocator(&allocator_ci, &vma_allocator_));
 }
 
-void CreateGraphics(const std::optional<DebugOptions> &debug_options) {
-  CreateInstance(debug_options);
+Graphics::Graphics(const std::vector<const char *> &extensions, const std::optional<DebugOptions> &debug_options) {
+  CreateInstance(extensions, debug_options);
 
   auto v = Enumerate(vkEnumeratePhysicalDevices, instance_);
 
   physical_device_ = PickPhysicalDevice(v);
+
+  auto queue_indices = GetPhysicalDeviceQueueIndices(physical_device_);
+
+  graphics_queue_index_ = queue_indices.graphics_.value_or(-1);
+  transfer_queue_index_ = queue_indices.transfer_.value_or(-1);
+  compute_queue_index_ = queue_indices.compute_.value_or(-1);
+
+  CreateDevice();
+
+  CreateCommandPool(graphics_queue_index_, graphics_command_pool_);
+
+  CreateAllocator();
 }
+
+Graphics::~Graphics() {}
 
 } // namespace Innsmouth

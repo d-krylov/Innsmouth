@@ -1,22 +1,32 @@
 #ifndef INNSMOUTH_COMMAND_BUFFER_H
 #define INNSMOUTH_COMMAND_BUFFER_H
 
-#include "graphics/include/graphics_types.h"
-#include <span>
+#include "graphics/pipeline/graphics_pipeline.h"
 
 namespace Innsmouth {
 
-class GraphicsPipeline;
 class Buffer;
 class Image;
 
 class CommandBuffer {
 public:
-  CommandBuffer();
+  CommandBuffer(const VkCommandPool command_pool);
   ~CommandBuffer();
 
-  void Begin(CommandBufferUsage usage);
+  void Begin(CommandBufferUsage usage = CommandBufferUsage::ONE_TIME_SUBMIT);
   void End();
+  void Reset();
+  void Submit();
+
+  operator const VkCommandBuffer &() const { return command_buffer_; }
+
+  const VkCommandBuffer *get() const { return &command_buffer_; }
+
+  void CommandBeginRendering(const VkExtent2D &extent, std::span<const VkRenderingAttachmentInfo> colors,
+                             const std::optional<VkRenderingAttachmentInfo> &depth = std::nullopt,
+                             const std::optional<VkRenderingAttachmentInfo> &stencil = std::nullopt);
+
+  void CommandEndRendering();
 
   // BIND
   void CommandBindPipeline(const GraphicsPipeline &graphics_pipeline);
@@ -43,10 +53,15 @@ public:
   void CommandPushDescriptorSet(const GraphicsPipeline &graphics_pipeline, uint32_t set_number, uint32_t binding, const Buffer &buffer,
                                 uint64_t offset, uint64_t size);
 
+  template <typename T>
+  void CommandPushConstants(const GraphicsPipeline &graphics_pipeline, ShaderStage stage, const T &data, uint32_t offset = 0);
+
 private:
   VkCommandBuffer command_buffer_{VK_NULL_HANDLE};
 };
 
 } // namespace Innsmouth
+
+#include "command_buffer.ipp"
 
 #endif // INNSMOUTH_COMMAND_BUFFER_H

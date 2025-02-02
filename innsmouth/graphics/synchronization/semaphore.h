@@ -11,6 +11,10 @@ public:
 
   ~Semaphore();
 
+  operator const VkSemaphore &() const { return semaphore_; }
+
+  const VkSemaphore *get() const { return &semaphore_; }
+
 private:
   VkSemaphore semaphore_{VK_NULL_HANDLE};
 };

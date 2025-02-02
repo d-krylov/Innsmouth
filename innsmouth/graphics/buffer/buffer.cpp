@@ -27,6 +27,26 @@ Buffer::Buffer(std::size_t size, BufferUsage usage, MemoryProperty memory_proper
 
 Buffer::~Buffer() {}
 
+void Buffer::Map() {
+  std::byte *mapped_data{nullptr};
+
+  if (mapped_data_.empty()) {
+
+    VK_CHECK(vmaMapMemory(Allocator(), vma_allocation_, reinterpret_cast<void **>(&mapped_data)));
+
+    mapped_data_ = std::span(mapped_data, size_);
+  }
+}
+
+void Buffer::Unmap() {
+  if (mapped_data_.empty() == false) {
+
+    vmaUnmapMemory(Allocator(), vma_allocation_);
+
+    mapped_data_ = std::span<std::byte>();
+  }
+}
+
 void Buffer::Flush(uint64_t size, uint64_t offset) { vmaFlushAllocation(Allocator(), vma_allocation_, offset, size); }
 
 } // namespace Innsmouth

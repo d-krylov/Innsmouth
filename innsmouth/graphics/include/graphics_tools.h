@@ -5,6 +5,7 @@
 #include "graphics_types.h"
 #include <vector>
 #include <span>
+#include <optional>
 
 namespace Innsmouth {
 
@@ -18,12 +19,19 @@ template <typename F, typename... ARGS> inline auto Enumerate(F &&enumerate_func
   return ret;
 }
 
-std::vector<const char *> GetRequiredDeviceExtensions();
+struct QueueIndices {
+  std::optional<int32_t> graphics_;
+  std::optional<int32_t> compute_;
+  std::optional<int32_t> transfer_;
+};
+
+std::span<const char *> GetRequiredDeviceExtensions();
 
 VkPhysicalDeviceFeatures2 GetRequredDeviceFeatures();
 VkPhysicalDeviceVulkan11Features GetRequredDeviceFeatures11();
 VkPhysicalDeviceVulkan12Features GetRequredDeviceFeatures12();
 VkPhysicalDeviceVulkan13Features GetRequredDeviceFeatures13();
+QueueIndices GetPhysicalDeviceQueueIndices(const VkPhysicalDevice physical_device);
 
 VkPhysicalDevice PickPhysicalDevice(std::span<const VkPhysicalDevice> physical_devices);
 

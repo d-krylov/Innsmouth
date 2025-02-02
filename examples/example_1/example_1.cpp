@@ -1,13 +1,12 @@
-#include "graphics/include/graphics.h"
-#include "graphics/pipeline/shader_module.h"
+#include "application/include/application.h"
 
 using namespace Innsmouth;
 
 int main() {
 
-  // CreateGraphics(DebugOptions(DebugMessageType::GENERAL, DebugMessageSeverity::VERBOSE));
+  Application application("Example", 800, 600);
 
-  ShaderModule s("../shaders/spirv/gui.vert.spv");
+  application.Run();
 
   return 0;
 }

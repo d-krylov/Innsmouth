@@ -18,12 +18,12 @@ enum class Format {
 };
 
 // DEBUG
-enum class DebugMessageType : VkDebugUtilsMessageTypeFlagsEXT {
+enum class DebugMessageType {
 #define VULKAN_DEBUG_MESSAGE_TYPE(X) X = VK_DEBUG_UTILS_MESSAGE_TYPE_##X##_BIT_EXT,
 #include "graphics_types.def"
 };
 
-enum class DebugMessageSeverity : VkDebugUtilsMessageSeverityFlagsEXT {
+enum class DebugMessageSeverity {
 #define VULKAN_DEBUG_MESSAGE_SEVERITY(X) X = VK_DEBUG_UTILS_MESSAGE_SEVERITY_##X##_BIT_EXT,
 #include "graphics_types.def"
 };
@@ -36,7 +36,7 @@ enum class QueueMask {
 };
 
 // BUFFER
-enum class BufferUsage : VkBufferUsageFlags {
+enum class BufferUsage {
 #define VULKAN_BUFFER_USAGE(X) X = VK_BUFFER_USAGE_##X,
 #include "graphics_types.def"
 };
@@ -108,6 +108,21 @@ enum class BlendFactor {
 
 enum class BlendOperation {
 #define VULKAN_BLEND_OPERATION(X) X = VK_BLEND_OP_##X,
+#include "graphics_types.def"
+};
+
+enum class Filter {
+#define VULKAN_FILTER(X) X = VK_FILTER_##X,
+#include "graphics_types.def"
+};
+
+enum class LoadOperation {
+#define VULKAN_LOAD_OPERATION(X) X = VK_ATTACHMENT_LOAD_OP_##X,
+#include "graphics_types.def"
+};
+
+enum class StoreOperation {
+#define VULKAN_STORE_OPERATION(X) X = VK_ATTACHMENT_STORE_OP_##X,
 #include "graphics_types.def"
 };
 

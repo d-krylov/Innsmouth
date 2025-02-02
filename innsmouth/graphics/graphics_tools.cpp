@@ -5,15 +5,15 @@
 
 namespace Innsmouth {
 
-std::vector<const char *> GetRequiredDeviceExtensions() {
-  return std::vector{VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-                     VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
-                     VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
-                     VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
-                     VK_EXT_EXTENDED_DYNAMIC_STATE_2_EXTENSION_NAME,
-                     VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
-                     VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-}
+std::array required_device_extensions{VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+                                      VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
+                                      VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
+                                      VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
+                                      VK_EXT_EXTENDED_DYNAMIC_STATE_2_EXTENSION_NAME,
+                                      VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+                                      VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+
+std::span<const char *> GetRequiredDeviceExtensions() { return required_device_extensions; }
 
 VkPhysicalDeviceFeatures2 GetRequredDeviceFeatures() {
   VkPhysicalDeviceFeatures2 required{};
@@ -101,20 +101,21 @@ bool CheckPhysicalDevice(const VkPhysicalDevice physical_device) {
   return b;
 }
 
-void GetPhysicalDeviceQueueIndices(const VkPhysicalDevice physical_device) {
+QueueIndices GetPhysicalDeviceQueueIndices(const VkPhysicalDevice physical_device) {
+  QueueIndices queue_indices;
   auto properties = Enumerate(vkGetPhysicalDeviceQueueFamilyProperties, physical_device);
   auto cast_qbits = [](auto property) { return static_cast<QueueMask>(property.queueFlags); };
-  auto graphics = -1, compute = -1, transfer = -1;
   std::ranges::for_each(properties | std::views::transform(cast_qbits) | std::views::enumerate, [&](auto &&indexed_bits) {
     auto [i, bit] = indexed_bits;
     if (HasBits(bit, QueueMask::GRAPHICS)) {
-      graphics = i;
+      queue_indices.graphics_ = i;
     } else if (HasBits(bit, QueueMask::COMPUTE) && !HasBits(bit, QueueMask::GRAPHICS)) {
-      compute = i;
+      queue_indices.compute_ = i;
     } else if (HasBits(bit, QueueMask::TRANSFER) && !HasBits(bit, QueueMask::GRAPHICS | QueueMask::COMPUTE)) {
-      transfer = i;
+      queue_indices.transfer_ = i;
     }
   });
+  return queue_indices;
 }
 
 VkPhysicalDevice PickPhysicalDevice(std::span<const VkPhysicalDevice> physical_devices) {
