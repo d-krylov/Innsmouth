@@ -141,12 +141,47 @@ enum class CompareOperation {
 #include "graphics_types.def"
 };
 
+enum class ImageUsage {
+#define VULKAN_IMAGE_USAGE(X) X = VK_IMAGE_USAGE_##X,
+#include "graphics_types.def"
+};
+
+enum class ImageType {
+#define VULKAN_IMAGE_TYPE(X) _##X = VK_IMAGE_TYPE_##X,
+#include "graphics_types.def"
+};
+
+enum class ImageTiling {
+#define VULKAN_IMAGE_TILING(X) X = VK_IMAGE_TILING_##X,
+#include "graphics_types.def"
+};
+
+enum class SampleCount {
+#define VULKAN_SAMPLE_COUNT(X) BIT##X = VK_SAMPLE_COUNT_##X##_BIT,
+#include "graphics_types.def"
+};
+
+enum class SamplerAddressMode {
+#define VULKAN_SAMPLER_ADDRESS_MODE(X) X = VK_SAMPLER_ADDRESS_MODE_##X,
+#include "graphics_types.def"
+};
+
 ALLOW_BITMASK_ENUM(QueueMask);
 ALLOW_BITMASK_ENUM(DebugMessageType);
 ALLOW_BITMASK_ENUM(DebugMessageSeverity);
 ALLOW_BITMASK_ENUM(MemoryProperty);
 ALLOW_BITMASK_ENUM(ColorComponent);
 ALLOW_BITMASK_ENUM(CullMode);
+ALLOW_BITMASK_ENUM(ImageUsage);
+ALLOW_BITMASK_ENUM(SampleCount);
+
+struct SamplerAddress {
+  SamplerAddress(SamplerAddressMode x) : SamplerAddress(x, x, x) {}
+  SamplerAddress(SamplerAddressMode u, SamplerAddressMode v, SamplerAddressMode w) : u_(u), v_(v), w_(w) {}
+  SamplerAddressMode u_;
+  SamplerAddressMode v_;
+  SamplerAddressMode w_;
+};
 
 // FUNCTIONS
 void VK_CHECK(VkResult result, std::source_location = std::source_location::current());

@@ -30,7 +30,21 @@ VkRenderingAttachmentInfo CreateRenderingAttachmentInfo(
   LoadOperation load_operation = LoadOperation::CLEAR,
   StoreOperation store_operation = StoreOperation::STORE,
   ImageLayout image_layout = ImageLayout::COLOR_ATTACHMENT_OPTIMAL);
+
+VkImageCreateInfo CreateImageCreateInfo(
+  uint32_t width,
+  uint32_t height,
+  uint32_t depth,
+  uint32_t levels,
+  uint32_t layers,
+  Format format,
+  ImageType image_type,
+  ImageUsage usage,
+  ImageTiling tiling = ImageTiling::OPTIMAL,
+  SampleCount samples = SampleCount::BIT1);
 // clang-format on
+
+VkSamplerCreateInfo CreateSamplerCreateInfo(Filter min, Filter mag, const SamplerAddress &uvw);
 
 } // namespace Innsmouth
 

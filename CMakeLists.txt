@@ -42,6 +42,7 @@ file(GLOB SHADER_FILES
   "${PROJECT_SOURCE_DIR}/shaders/sources/gui/*"
   "${PROJECT_SOURCE_DIR}/shaders/sources/tracing/*"
   "${PROJECT_SOURCE_DIR}/shaders/sources/common/*"
+  "${PROJECT_SOURCE_DIR}/shaders/sources/mesh/*"
   ".vert" ".frag"
 )
 

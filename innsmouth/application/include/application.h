@@ -7,6 +7,8 @@
 #include "graphics/synchronization/semaphore.h"
 #include "graphics/synchronization/fence.h"
 #include "graphics/buffer/command_buffer.h"
+#include "gui/imgui/imgui_layer.h"
+#include "gui/imgui/imgui_renderer.h"
 
 namespace Innsmouth {
 
@@ -33,6 +35,8 @@ private:
   Window window_;
   Graphics graphics_;
   Swapchain swapchain_;
+  ImGuiLayer imgui_layer_;
+  ImGuiRenderer imgui_renderer_;
   std::vector<CommandBuffer> command_buffers_;
   std::vector<Semaphore> image_available_semaphores;
   std::vector<Semaphore> render_finished_semaphores;

@@ -47,6 +47,6 @@ void Buffer::Unmap() {
   }
 }
 
-void Buffer::Flush(uint64_t size, uint64_t offset) { vmaFlushAllocation(Allocator(), vma_allocation_, offset, size); }
+void Buffer::Flush() { vmaFlushAllocation(Allocator(), vma_allocation_, 0, size_); }
 
 } // namespace Innsmouth

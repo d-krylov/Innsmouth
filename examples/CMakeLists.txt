@@ -1,5 +1,6 @@
 set(EXECUTABLES
   example_1
+  example_2
 )
 
 foreach(exe ${EXECUTABLES})

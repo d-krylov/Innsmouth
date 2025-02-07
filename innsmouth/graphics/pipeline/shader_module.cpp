@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <fstream>
 #include <print>
+#include <iostream>
 
 void Print(const VkPushConstantRange &v) { std::print("Push Constant: offset - {0}, size - {1}\n", v.offset, v.size); }
 
@@ -27,13 +28,13 @@ std::vector<std::byte> ReadBinaryFile(const std::filesystem::path &path) {
   return buffer;
 }
 
-std::vector<VkVertexInputAttributeDescription> GetShaderInputs(const SpvReflectShaderModule &module) {
+std::vector<VkVertexInputAttributeDescription> GetShaderInputs(const SpvReflectShaderModule &module, uint32_t &offset) {
   auto inputs = Enumerate(spvReflectEnumerateInputVariables, &module);
   auto is_not_builtin = [](const auto *input) { return (input->decoration_flags & SPV_REFLECT_DECORATION_BUILT_IN) == 0; };
   auto to_attribute = [&](const auto &input) { return VkVertexInputAttributeDescription(input->location, 0, VkFormat(input->format), 0); };
   auto ret = inputs | std::views::filter(is_not_builtin) | std::views::transform(to_attribute) | std::ranges::to<std::vector>();
   std::ranges::sort(ret, [](auto &&a, auto &&b) { return a.location < b.location; });
-  std::ranges::for_each(ret, [offset = 0](auto &input) mutable { input.offset = offset, offset += vkuFormatElementSize(input.format); });
+  std::ranges::for_each(ret, [&](auto &input) mutable { input.offset = offset, offset += vkuFormatElementSize(input.format); });
   return ret;
 }
 
@@ -59,15 +60,12 @@ auto GetDescriptorSetBindings(const SpvReflectShaderModule &module, VkShaderStag
 
 void ShaderModule::ParseShader(std::span<const std::byte> data) {
   SpvReflectShaderModule spv_module;
+  uint32_t stride = 0;
   auto status = spvReflectCreateShaderModule(data.size(), data.data(), &spv_module);
   shader_stage_ = static_cast<VkShaderStageFlagBits>(spv_module.shader_stage);
-  input_attribute_descriptions_ = GetShaderInputs(spv_module);
   push_constant_ranges_ = GetPushConstants(spv_module, shader_stage_);
   descriptor_set_bindings_ = GetDescriptorSetBindings(spv_module, shader_stage_);
-
-  auto offsets = std::views::transform(input_attribute_descriptions_, [](auto &attribute) { return attribute.offset; });
-  auto stride = std::ranges::fold_left(offsets, 0, std::plus<>());
-
+  input_attribute_descriptions_ = GetShaderInputs(spv_module, stride);
   if (input_attribute_descriptions_.size() > 0) {
     input_binding_description_.emplace_back(0, stride, VK_VERTEX_INPUT_RATE_VERTEX);
   }

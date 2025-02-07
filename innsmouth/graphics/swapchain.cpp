@@ -26,6 +26,12 @@ VkPresentModeKHR SelectPresentMode(const VkSurfaceKHR surface, std::span<const V
   return (it != required_modes.end()) ? *it : VK_PRESENT_MODE_FIFO_KHR;
 }
 
+VkSurfaceCapabilitiesKHR GetSurfaceCapabilities(const VkSurfaceKHR surface) {
+  VkSurfaceCapabilitiesKHR surface_capabilities{};
+  VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(PhysicalDevice(), surface, &surface_capabilities));
+  return surface_capabilities;
+}
+
 uint32_t ComputeImageCount(const VkSurfaceCapabilitiesKHR &capabilities) {
   auto LIMIT = std::numeric_limits<uint32_t>::max();
   return std::min(capabilities.minImageCount + 1, capabilities.maxImageCount > 0 ? capabilities.maxImageCount : LIMIT);
@@ -34,33 +40,18 @@ uint32_t ComputeImageCount(const VkSurfaceCapabilitiesKHR &capabilities) {
 Swapchain::Swapchain(const Window &window) {
   auto native_window = window.GetNativeWindow();
   VK_CHECK(glfwCreateWindowSurface(Instance(), native_window, nullptr, &surface_));
-
+  std::vector<Format> required_formats{Format::B8G8R8A8_SRGB, Format::R8G8B8A8_SRGB};
+  auto surface_format = SelectSurfaceFormat(surface_, required_formats);
+  surface_format_ = static_cast<Format>(surface_format.format);
+  color_space_ = surface_format.colorSpace;
   CreateSwapchain();
   CreateImageViews();
 }
 
-VkExtent2D Swapchain::GetSurfaceExtent() const {
-  auto surface_capabilities = GetSurfaceCapabilities();
-  return surface_capabilities.currentExtent;
-}
-
-VkSurfaceCapabilitiesKHR Swapchain::GetSurfaceCapabilities() const {
-  VkSurfaceCapabilitiesKHR surface_capabilities{};
-  VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(PhysicalDevice(), surface_, &surface_capabilities));
-  return surface_capabilities;
-}
-
 void Swapchain::CreateSwapchain() {
-
-  auto surface_capabilities = GetSurfaceCapabilities();
-
+  auto surface_capabilities = GetSurfaceCapabilities(surface_);
   auto image_count = ComputeImageCount(surface_capabilities);
-
-  std::vector<Format> required_formats{Format::B8G8R8A8_SRGB, Format::R8G8B8A8_SRGB};
-
-  auto surface_format = SelectSurfaceFormat(surface_, required_formats);
-
-  surface_format_ = static_cast<Format>(surface_format.format);
+  surface_extent_ = surface_capabilities.currentExtent;
 
   VkSwapchainCreateInfoKHR swapchain_ci{};
   {
@@ -74,16 +65,15 @@ void Swapchain::CreateSwapchain() {
     swapchain_ci.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
     swapchain_ci.oldSwapchain = swapchain_previous_;
     swapchain_ci.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    swapchain_ci.imageFormat = surface_format.format;
-    swapchain_ci.imageColorSpace = surface_format.colorSpace;
+    swapchain_ci.imageFormat = VkFormat(surface_format_);
+    swapchain_ci.imageColorSpace = color_space_;
     swapchain_ci.minImageCount = ComputeImageCount(surface_capabilities);
     swapchain_ci.presentMode = SelectPresentMode(surface_, std::views::single(VkPresentModeKHR::VK_PRESENT_MODE_MAILBOX_KHR));
   }
 
-  VK_CHECK(vkCreateSwapchainKHR(Device(), &swapchain_ci, nullptr, &swapchain_));
-
   images_.resize(image_count);
 
+  VK_CHECK(vkCreateSwapchainKHR(Device(), &swapchain_ci, nullptr, &swapchain_));
   VK_CHECK(vkGetSwapchainImagesKHR(Device(), swapchain_, &image_count, images_.data()));
 }
 
@@ -93,13 +83,13 @@ void Swapchain::CreateImageViews() {
 
   auto range = CreateImageSubresourceRange();
 
-  for (uint32_t i = 0; i < image_views_.size(); i++) {
-    Image::CreateImageView(images_[i], image_views_[i], surface_format_, ImageViewType::_2D, range);
+  for (auto &&[image, image_view] : std::views::zip(images_, image_views_)) {
+    image_view = Image::CreateImageView(image, surface_format_, ImageViewType::_2D, range);
 
     CommandBuffer command_buffer(GraphicsCommandPool());
     command_buffer.Begin();
-    command_buffer.ImageMemoryBarrier(images_[i], ImageLayout::UNDEFINED, ImageLayout::PRESENT_SRC_KHR, PipelineStage::TOP_OF_PIPE_BIT,
-                                      PipelineStage::COLOR_ATTACHMENT_OUTPUT_BIT, range);
+    command_buffer.CommandImageMemoryBarrier(image, ImageLayout::UNDEFINED, ImageLayout::PRESENT_SRC_KHR, PipelineStage::TOP_OF_PIPE_BIT,
+                                             PipelineStage::COLOR_ATTACHMENT_OUTPUT_BIT, range);
     command_buffer.End();
     command_buffer.Submit();
   }

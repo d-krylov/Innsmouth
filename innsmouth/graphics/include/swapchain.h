@@ -13,10 +13,8 @@ class Swapchain {
 public:
   Swapchain(const Window &window);
 
-  VkSurfaceCapabilitiesKHR GetSurfaceCapabilities() const;
-  VkExtent2D GetSurfaceExtent() const;
-
   VkResult AcquireNextImage(const VkSemaphore semaphore);
+
   VkResult Present(const VkSemaphore *wait_semaphore);
 
   const VkImageView GetCurrentImageView() const { return image_views_[current_image_]; }
@@ -24,7 +22,10 @@ public:
   uint32_t GetCurrentImageIndex() const { return current_image_; }
 
   uint32_t GetImageCount() const { return images_.size(); }
-  Format GetSurfaceFormat() const { return surface_format_; };
+
+  Format GetSurfaceFormat() const { return surface_format_; }
+
+  const VkExtent2D &GetSurfaceExtent() const { return surface_extent_; }
 
   void Recreate();
 
@@ -43,7 +44,9 @@ private:
   VkSurfaceKHR surface_{VK_NULL_HANDLE};
   VkSwapchainKHR swapchain_{VK_NULL_HANDLE};
   VkSwapchainKHR swapchain_previous_{VK_NULL_HANDLE};
+  VkExtent2D surface_extent_;
   Format surface_format_;
+  VkColorSpaceKHR color_space_;
   std::vector<VkImage> images_;
   std::vector<VkImageView> image_views_;
   uint32_t current_image_{0};

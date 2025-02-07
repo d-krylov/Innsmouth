@@ -31,8 +31,13 @@ Application::Application(std::string_view name, uint32_t width, uint32_t height)
   : window_(name, width, height),
     graphics_(GetExtensions(), DebugOptions(DebugMessageType::GENERAL | DebugMessageType::VALIDATION,
                                             DebugMessageSeverity::ERROR | DebugMessageSeverity::VERBOSE | DebugMessageSeverity::INFO)),
-    swapchain_(window_) {
+    swapchain_(window_), imgui_layer_(window_), imgui_renderer_(swapchain_.GetSurfaceFormat()) {
   Initialize();
+
+  window_.SetEventCallback(BIND_FUNCTION(Application::OnEvent));
+
+  layers_.push_back(&imgui_layer_);
+
   application_instance_ = this;
 }
 
@@ -85,6 +90,15 @@ void Application::Run() {
     for (auto &layer : layers_) {
       layer->OnUpdate(command_buffer);
     }
+
+    imgui_layer_.NewFrame();
+    imgui_renderer_.Begin(command_buffer);
+
+    for (auto layer : layers_) {
+      layer->OnImGui();
+    }
+
+    imgui_renderer_.End(command_buffer);
 
     command_buffer.End();
 

@@ -2,6 +2,7 @@
 #include "graphics/include/graphics.h"
 #include "graphics/include/structure_tools.h"
 #include "graphics/synchronization/fence.h"
+#include "graphics/image/image.h"
 #include "buffer.h"
 #include <ranges>
 
@@ -115,12 +116,49 @@ void CommandBuffer::CommandDraw(uint32_t vertex_count, uint32_t instance_count, 
   vkCmdDraw(command_buffer_, vertex_count, instance_count, first_vertex, first_instance);
 }
 
+void CommandBuffer::CommandDrawIndexed(uint32_t index_count, uint32_t instance_count, uint32_t first_index, int32_t vertex_offset,
+                                       uint32_t first_instance) {
+  vkCmdDrawIndexed(command_buffer_, index_count, instance_count, first_index, vertex_offset, first_instance);
+}
+
+// BIND
 void CommandBuffer::CommandBindPipeline(const GraphicsPipeline &graphics_pipeline) {
   vkCmdBindPipeline(command_buffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline);
 }
 
-void CommandBuffer::CommandPushDescriptorSet(const GraphicsPipeline &graphics_pipeline, uint32_t set_number, uint32_t binding,
-                                             const Buffer &buffer, uint64_t offset, uint64_t size) {
+void CommandBuffer::CommandBindVertexBuffer(const Buffer &buffer, std::size_t offset) {
+  vkCmdBindVertexBuffers(command_buffer_, 0, 1, buffer.get(), &offset);
+}
+
+void CommandBuffer::CommandBindIndexBuffer(const Buffer &buffer, uint64_t offset, bool is_short_index) {
+  vkCmdBindIndexBuffer(command_buffer_, buffer, offset, is_short_index ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32);
+}
+
+void CommandBuffer::CommandPushDescriptorSet(const VkPipelineLayout layout, uint32_t set_number, uint32_t binding, const Image &image) {
+
+  VkDescriptorImageInfo descriptor_ii{};
+  {
+    descriptor_ii.sampler = image.GetSampler();
+    descriptor_ii.imageView = image.GetImageView();
+    descriptor_ii.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  }
+
+  VkWriteDescriptorSet write_descriptor_set{};
+  {
+    write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write_descriptor_set.dstBinding = binding;
+    write_descriptor_set.dstArrayElement = 0;
+    write_descriptor_set.descriptorType = VkDescriptorType(DescriptorType::COMBINED_IMAGE_SAMPLER);
+    write_descriptor_set.descriptorCount = 1;
+    write_descriptor_set.pImageInfo = &descriptor_ii;
+  }
+
+  vkCmdPushDescriptorSetKHR(command_buffer_, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, layout, set_number, 1,
+                            &write_descriptor_set);
+}
+
+void CommandBuffer::CommandPushDescriptorSet(const VkPipelineLayout layout, uint32_t set_number, uint32_t binding, const Buffer &buffer,
+                                             uint64_t offset, uint64_t size) {
 
   VkDescriptorBufferInfo descriptor_bi{};
   {
@@ -139,8 +177,8 @@ void CommandBuffer::CommandPushDescriptorSet(const GraphicsPipeline &graphics_pi
     write_descriptor_set.pBufferInfo = &descriptor_bi;
   }
 
-  vkCmdPushDescriptorSetKHR(command_buffer_, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline.GetPipelineLayout(),
-                            set_number, 1, &write_descriptor_set);
+  vkCmdPushDescriptorSetKHR(command_buffer_, VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, layout, set_number, 1,
+                            &write_descriptor_set);
 }
 
 void CommandBuffer::CommandPipelineBarrier(std::span<const VkImageMemoryBarrier2> image_barriers,
@@ -158,8 +196,8 @@ void CommandBuffer::CommandPipelineBarrier(std::span<const VkImageMemoryBarrier2
   vkCmdPipelineBarrier2(command_buffer_, &dependency_info);
 }
 
-void CommandBuffer::ImageMemoryBarrier(const VkImage &image, ImageLayout from_layout, ImageLayout to_layout, PipelineStage from_stage,
-                                       PipelineStage to_stage, const VkImageSubresourceRange &range) {
+void CommandBuffer::CommandImageMemoryBarrier(const VkImage &image, ImageLayout from_layout, ImageLayout to_layout,
+                                              PipelineStage from_stage, PipelineStage to_stage, const VkImageSubresourceRange &range) {
 
   auto from_access_mask = GetAccessMask(from_layout);
   auto to_access_mask = GetAccessMask(to_layout);
@@ -202,11 +240,11 @@ void CommandBuffer::CommandCopyBufferToImage(const Buffer &buffer, const Image &
     buffer_image_copy.bufferImageHeight = 0;
     buffer_image_copy.imageSubresource = subresource_layers;
     buffer_image_copy.imageOffset = VkOffset3D(image_offset_x, image_offset_y, image_offset_z);
-    // buffer_image_copy.imageExtent = image.GetExtent();
+    buffer_image_copy.imageExtent = image.GetExtent();
   }
 
   VkImageLayout destination = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-  // vkCmdCopyBufferToImage(command_buffer_, buffer, image, destination, 1, &buffer_image_copy);
+  vkCmdCopyBufferToImage(command_buffer_, buffer, image, destination, 1, &buffer_image_copy);
 }
 
 } // namespace Innsmouth

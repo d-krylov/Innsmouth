@@ -4,6 +4,7 @@
 #include <ranges>
 #include <unordered_map>
 #include <algorithm>
+#include <iostream>
 
 namespace Innsmouth {
 
@@ -21,13 +22,13 @@ std::vector<VkDynamicState> GetDynamicStates() {
 // clang-format on
 
 GraphicsPipeline::GraphicsPipeline(const std::filesystem::path &vertex_shader, const std::filesystem::path &fragment_shader,
-                                   Format color_format) {
+                                   Format color_format, const std::optional<VkPipelineColorBlendAttachmentState> &blend_attachment_state) {
   std::vector<ShaderModule> shader_modules{vertex_shader, fragment_shader};
 
   auto vertex_attributes = shader_modules[0].GetVertexInputAttributes();
   auto vertex_binding = shader_modules[0].GetVertexInputBinding();
 
-  auto color_blend_attachment = CreateColorBlendAttachmentState(false);
+  auto color_blend_attachment = blend_attachment_state.value_or(CreateColorBlendAttachmentState(false));
 
   CreateGraphicsPipeline(shader_modules, std::views::single(color_format), color_blend_attachment, vertex_attributes, vertex_binding);
 }

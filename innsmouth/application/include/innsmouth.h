@@ -7,5 +7,6 @@
 #include "graphics/buffer/command_buffer.h"
 #include "graphics/include/structure_tools.h"
 #include "gui/include/event.h"
+#include "mesh/include/mesh.h"
 
 #endif // INNSMOUTH_H

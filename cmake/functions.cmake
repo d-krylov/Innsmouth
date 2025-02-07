@@ -3,9 +3,13 @@ function(compile_shaders SHADER_FILES SHADER_SPIRV_DIR)
   message("${SHADER_SPIRV_DIR}")
 
   foreach(SHADER ${SHADER_FILES})
-    get_filename_component(SHADER_NAME ${SHADER} NAME)
 
-    set(SHADER_OUTPUT "${SHADER_SPIRV_DIR}/${SHADER_NAME}.spv")
+    file(RELATIVE_PATH RELATIVE_SHADER_PATH "${PROJECT_SOURCE_DIR}/shaders/sources" ${SHADER})
+
+    set(SHADER_OUTPUT "${SHADER_SPIRV_DIR}/${RELATIVE_SHADER_PATH}.spv")
+
+    get_filename_component(SHADER_OUTPUT_DIR ${SHADER_OUTPUT} DIRECTORY)
+    file(MAKE_DIRECTORY ${SHADER_OUTPUT_DIR})
 
     add_custom_command(
       OUTPUT ${SHADER_OUTPUT}

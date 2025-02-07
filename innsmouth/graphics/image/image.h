@@ -8,15 +8,18 @@ namespace Innsmouth {
 
 class Image {
 public:
+  operator const VkImage &() const { return image_; }
+
   const VkExtent3D &GetExtent() const { return extent_; }
+  const VkImageView GetImageView() const { return image_view_; }
+  const VkSampler GetSampler() const { return image_sampler_; }
 
   void SetData(std::span<const std::byte> data);
 
-  static void CreateImage(VkImage &image, VmaAllocation &allocation, const VkImageCreateInfo &image_ci);
-  static void CreateImageView(const VkImage &image, VkImageView &image_view, Format format, ImageViewType image_view_type,
-                              const VkImageSubresourceRange &range);
+  static VkImage CreateImage(VmaAllocation &allocation, const VkImageCreateInfo &image_ci);
+  static VkImageView CreateImageView(const VkImage image, Format format, ImageViewType type, const VkImageSubresourceRange &range);
 
-private:
+protected:
   VkImage image_{VK_NULL_HANDLE};
   VkImageView image_view_{VK_NULL_HANDLE};
   VkSampler image_sampler_{VK_NULL_HANDLE};

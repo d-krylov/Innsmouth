@@ -15,6 +15,10 @@ Window::Window(std::string_view name, uint32_t width, uint32_t height) {
 
   if (native_window_ == nullptr) {
   }
+
+  glfwSetWindowUserPointer(native_window_, this);
+
+  SetCallbacks();
 }
 
 bool Window::ShouldClose() const { return glfwWindowShouldClose(native_window_); }
@@ -42,5 +46,7 @@ int32_t Window::GetHeight() const {
 }
 
 void Window::PollEvents() { glfwPollEvents(); }
+
+Action Window::GetKey(Key key) const { return Action(glfwGetKey(native_window_, int32_t(key))); }
 
 } // namespace Innsmouth

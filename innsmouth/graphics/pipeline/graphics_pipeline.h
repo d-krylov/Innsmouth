@@ -7,7 +7,8 @@ namespace Innsmouth {
 
 class GraphicsPipeline {
 public:
-  GraphicsPipeline(const std::filesystem::path &vertex_shader, const std::filesystem::path &fragment_shader, Format color_format);
+  GraphicsPipeline(const std::filesystem::path &vertex_shader, const std::filesystem::path &fragment_shader, Format color_format,
+                   const std::optional<VkPipelineColorBlendAttachmentState> &color_blend_attachment_state = std::nullopt);
 
   ~GraphicsPipeline();
 

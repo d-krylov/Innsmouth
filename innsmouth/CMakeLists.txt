@@ -1,5 +1,17 @@
 set(INNSMOUTH_SOURCE_DIR ${PROJECT_SOURCE_DIR}/innsmouth)
 
+set(IMGUI_SOURCES
+  ${imgui_SOURCE_DIR}/imgui_draw.cpp
+  ${imgui_SOURCE_DIR}/imgui_tables.cpp
+  ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+  ${imgui_SOURCE_DIR}/imgui.cpp
+)
+
+set(EXTERNAL_SOURCES
+  ${IMGUI_SOURCES}
+  ${spirv_reflect_SOURCE_DIR}/spirv_reflect.cpp
+)
+
 set(INNSMOUTH_GRAPHICS_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_types.cpp
@@ -9,23 +21,31 @@ set(INNSMOUTH_GRAPHICS_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/shader_module.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/swapchain.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/image/image.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/image/image2D.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/image/image3D.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/buffer/buffer.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/buffer/command_buffer.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/synchronization/semaphore.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/synchronization/fence.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/structure_tools.cpp
-  ${spirv_reflect_SOURCE_DIR}/spirv_reflect.cpp
 )
 
 set(INNSMOUTH_GUI_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/gui/window.cpp
+  ${INNSMOUTH_SOURCE_DIR}/gui/window_callback.cpp
   ${INNSMOUTH_SOURCE_DIR}/gui/imgui/imgui_layer.cpp
   ${INNSMOUTH_SOURCE_DIR}/gui/imgui/imgui_renderer.cpp
 )
 
+set(INNSMOUTH_SCENE_SOURCES
+  ${INNSMOUTH_SOURCE_DIR}/scene/camera.cpp
+)
+
 set(INNSMOUTH_SOURCES
+  ${EXTERNAL_SOURCES}
   ${INNSMOUTH_GUI_SOURCES}
   ${INNSMOUTH_GRAPHICS_SOURCES}
+  ${INNSMOUTH_SCENE_SOURCES}
   ${INNSMOUTH_SOURCE_DIR}/application/application.cpp
 )
 
@@ -44,3 +64,5 @@ target_link_libraries(${PROJECT_NAME}
   glm::glm
   volk
 )
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC INNSMOUTH_ROOT="${PROJECT_SOURCE_DIR}")
