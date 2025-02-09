@@ -14,7 +14,12 @@ public:
     ImGui::End();
   }
 
-  void OnUpdate(CommandBuffer &command_buffer) override {}
+  void OnUpdate(CommandBuffer &command_buffer) override {
+    auto &swapchain = Application::Get().GetSwapchain();
+    std::array attachments{CreateRenderingAttachmentInfo(swapchain.GetCurrentImageView())};
+    command_buffer.CommandBeginRendering(swapchain.GetSurfaceExtent(), attachments);
+    command_buffer.CommandEndRendering();
+  }
 
   void OnAttach() override {}
 

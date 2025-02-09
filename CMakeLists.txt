@@ -16,6 +16,8 @@ FetchContent_MakeAvailable(
   imgui
   vulkan_memory_allocator
   spirv_reflect
+  tinyobjloader
+  stb
 )
 
 add_definitions(-DGLM_ENABLE_EXPERIMENTAL)
@@ -41,7 +43,6 @@ endif()
 file(GLOB SHADER_FILES 
   "${PROJECT_SOURCE_DIR}/shaders/sources/gui/*"
   "${PROJECT_SOURCE_DIR}/shaders/sources/tracing/*"
-  "${PROJECT_SOURCE_DIR}/shaders/sources/common/*"
   "${PROJECT_SOURCE_DIR}/shaders/sources/mesh/*"
   ".vert" ".frag"
 )

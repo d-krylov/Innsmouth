@@ -121,6 +121,10 @@ void CommandBuffer::CommandDrawIndexed(uint32_t index_count, uint32_t instance_c
   vkCmdDrawIndexed(command_buffer_, index_count, instance_count, first_index, vertex_offset, first_instance);
 }
 
+void CommandBuffer::CommandDrawIndirect(const VkBuffer buffer, uint64_t offset, uint32_t draw_count, uint32_t stride) {
+  vkCmdDrawIndirect(command_buffer_, buffer, offset, draw_count, stride);
+}
+
 // BIND
 void CommandBuffer::CommandBindPipeline(const GraphicsPipeline &graphics_pipeline) {
   vkCmdBindPipeline(command_buffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline);

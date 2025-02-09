@@ -1,6 +1,7 @@
 #include "application/include/innsmouth.h"
 #include "imgui.h"
 #include <ranges>
+#include <iostream>
 
 using namespace Innsmouth;
 
@@ -12,7 +13,7 @@ struct Push {
 
 class Example : public Layer {
 public:
-  Example() : buffer_(100_KiB, BufferUsage::VERTEX_BUFFER_BIT) {}
+  Example() : buffer_(100_MiB, BufferUsage::VERTEX_BUFFER_BIT), ubo_(10_KiB, BufferUsage::UNIFORM_BUFFER_BIT) {}
 
   void OnSwapchain() override {}
   void OnImGui() override {}
@@ -20,6 +21,9 @@ public:
   void OnUpdate(CommandBuffer &command_buffer) override {
 
     Push push;
+
+    push.v = camera_.GetLookAtMatrix();
+    push.p = camera_.GetProjectionMatrix();
 
     auto &swapchain = Application::Get().GetSwapchain();
 
@@ -29,10 +33,10 @@ public:
     auto extent = swapchain.GetSurfaceExtent();
 
     command_buffer.CommandBeginRendering(extent, std::views::single(rendering_attachment_info));
-
     command_buffer.CommandBindPipeline(*graphics_pipeline_);
-
     command_buffer.CommandPushConstants(graphics_pipeline_->GetPipelineLayout(), ShaderStage::VERTEX_BIT, push);
+
+    command_buffer.CommandPushDescriptorSet(graphics_pipeline_->GetPipelineLayout(), 0, 0, ubo_, 0, 1024);
 
     command_buffer.CommandBindVertexBuffer(buffer_);
 
@@ -40,13 +44,20 @@ public:
 
     command_buffer.CommandSetScissor(0, 0, extent.width, extent.height);
 
-    command_buffer.CommandEnableDepthTest(false);
+    command_buffer.CommandEnableDepthTest(true);
 
-    command_buffer.CommandEnableDepthWrite(false);
+    command_buffer.CommandEnableDepthWrite(true);
 
     command_buffer.CommandSetCullMode(CullMode::NONE);
 
-    command_buffer.CommandDraw(3);
+    for (auto &mesh : model_.meshes_) {
+      auto ambient = mesh.material_.texture_names_[std::to_underlying(TextureType::DIFFUSE)];
+
+      auto &image = model_.textures_.at(ambient);
+      command_buffer.CommandPushDescriptorSet(graphics_pipeline_->GetPipelineLayout(), 0, 1, image);
+
+      command_buffer.CommandDraw(mesh.size_, 1, mesh.offset_);
+    }
 
     command_buffer.CommandEndRendering();
   }
@@ -54,22 +65,33 @@ public:
   void OnAttach() override {
     auto &swapchain = Application::Get().GetSwapchain();
 
-    std::vector<float> v{
-      -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, +0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, +0.0f, +0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
-    };
+    std::filesystem::path mesh_path = "../../Models/sponza2/sponza.obj";
+
+    model_ = LoadWavefrontModel(mesh_path);
 
     buffer_.Map();
-    buffer_.Memcpy<float>(v);
+    buffer_.Memcpy<TexturedVertex>(model_.vertices_);
     buffer_.Unmap();
 
-    graphics_pipeline_ = std::make_unique<GraphicsPipeline>("../shaders/spirv/mesh/plain_mesh.vert.spv",
-                                                            "../shaders/spirv/mesh/plain_mesh.frag.spv", swapchain.GetSurfaceFormat());
+    camera_.SetPosition(Vector3f(0.0f, 5.0f, 0.0f));
+
+    std::vector<Vector3f> camera{camera_.GetPosition()};
+
+    ubo_.Map();
+    ubo_.Memcpy<Vector3f>(camera);
+    ubo_.Unmap();
+
+    graphics_pipeline_ = std::make_unique<GraphicsPipeline>("../shaders/spirv/mesh/textured_mesh.vert.spv",
+                                                            "../shaders/spirv/mesh/textured_mesh.frag.spv", swapchain.GetSurfaceFormat());
   }
 
   void OnEvent(Event &event) override {}
 
 private:
   Buffer buffer_;
+  Buffer ubo_;
+  Camera camera_;
+  Model model_;
   std::unique_ptr<GraphicsPipeline> graphics_pipeline_;
 };
 

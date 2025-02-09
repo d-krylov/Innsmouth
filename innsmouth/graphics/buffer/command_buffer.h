@@ -49,6 +49,8 @@ public:
   void CommandDrawIndexed(uint32_t index_count, uint32_t instance_count = 1, uint32_t first_index = 0, int32_t vertex_offset = 0,
                           uint32_t first_instance = 0);
 
+  void CommandDrawIndirect(const VkBuffer buffer, uint64_t offset, uint32_t draw_count, uint32_t stride);
+
   // BARRIER
   void CommandPipelineBarrier(std::span<const VkImageMemoryBarrier2> image_barriers,
                               std::span<const VkBufferMemoryBarrier2> buffer_barriers);

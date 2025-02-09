@@ -8,6 +8,8 @@ namespace Innsmouth {
 
 class Image {
 public:
+  Image(uint32_t width, uint32_t height, uint32_t depth);
+
   operator const VkImage &() const { return image_; }
 
   const VkExtent3D &GetExtent() const { return extent_; }

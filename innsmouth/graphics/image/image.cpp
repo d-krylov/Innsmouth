@@ -6,6 +6,8 @@
 
 namespace Innsmouth {
 
+Image::Image(uint32_t width, uint32_t height, uint32_t depth) : extent_(width, height, depth) {}
+
 VkImage Image::CreateImage(VmaAllocation &allocation, const VkImageCreateInfo &image_ci) {
   VmaAllocationCreateInfo allocation_ci{};
   {
@@ -46,7 +48,6 @@ void Image::SetData(std::span<const std::byte> data) {
   Buffer buffer(data.size(), BufferUsage::TRANSFER_SRC_BIT);
   buffer.Map();
   buffer.Memcpy<std::byte>(data);
-  buffer.Flush();
   buffer.Unmap();
 
   CommandBuffer command_buffer(GraphicsCommandPool());

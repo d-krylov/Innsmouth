@@ -29,3 +29,15 @@ FetchContent_Declare(
 	GIT_REPOSITORY https://github.com/ocornut/imgui.git
 	GIT_TAG v1.91.7
 )
+
+FetchContent_Declare(
+	stb
+	GIT_REPOSITORY https://github.com/nothings/stb
+	GIT_TAG master
+)
+
+FetchContent_Declare(
+	tinyobjloader
+	GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader
+	GIT_TAG release
+)

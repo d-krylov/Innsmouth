@@ -90,8 +90,7 @@ void ImGuiRenderer::RenderDrawData(CommandBuffer &command_buffer) {
         continue;
       }
 
-      command_buffer.CommandSetScissor(int32_t(clip_min.x), int32_t(clip_min.y), uint32_t(clip_max.x - clip_min.x),
-                                       uint32_t(clip_max.y - clip_min.y));
+      command_buffer.CommandSetScissor(clip_min.x, clip_min.y, clip_max.x - clip_min.x, clip_max.y - clip_min.y);
 
       Image *image = reinterpret_cast<Image *>(command.TextureId);
 
@@ -121,7 +120,7 @@ void ImGuiRenderer::CreateFontsTexture() {
 void ImGuiRenderer::Begin(CommandBuffer &command_buffer) {
   ImGui::NewFrame();
   auto &swapchain = Application::Get().GetSwapchain();
-  std::array attachments{CreateRenderingAttachmentInfo(swapchain.GetCurrentImageView())};
+  std::array attachments{CreateRenderingAttachmentInfo(swapchain.GetCurrentImageView(), LoadOperation::LOAD)};
   command_buffer.CommandBeginRendering(swapchain.GetSurfaceExtent(), attachments);
 }
 

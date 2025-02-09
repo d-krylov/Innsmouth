@@ -10,6 +10,11 @@ set(IMGUI_SOURCES
 set(EXTERNAL_SOURCES
   ${IMGUI_SOURCES}
   ${spirv_reflect_SOURCE_DIR}/spirv_reflect.cpp
+  ${PROJECT_SOURCE_DIR}/external/stb/stb.cpp
+)
+
+set(INNSMOUTH_CORE_SOURCES
+  ${INNSMOUTH_SOURCE_DIR}/core/core_image.cpp
 )
 
 set(INNSMOUTH_GRAPHICS_SOURCES
@@ -41,11 +46,17 @@ set(INNSMOUTH_SCENE_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/scene/camera.cpp
 )
 
+set(INNSMOUTH_MESH_SOURCES
+  ${INNSMOUTH_SOURCE_DIR}/mesh/wavefront_loader.cpp
+)
+
 set(INNSMOUTH_SOURCES
   ${EXTERNAL_SOURCES}
   ${INNSMOUTH_GUI_SOURCES}
   ${INNSMOUTH_GRAPHICS_SOURCES}
   ${INNSMOUTH_SCENE_SOURCES}
+  ${INNSMOUTH_CORE_SOURCES}
+  ${INNSMOUTH_MESH_SOURCES}
   ${INNSMOUTH_SOURCE_DIR}/application/application.cpp
 )
 
@@ -57,12 +68,14 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   ${spirv_reflect_SOURCE_DIR}
   ${imgui_SOURCE_DIR}
   ${INNSMOUTH_SOURCE_DIR}
+  ${stb_SOURCE_DIR}
 )
 
 target_link_libraries(${PROJECT_NAME} 
   glfw
   glm::glm
   volk
+  tinyobjloader
 )
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC INNSMOUTH_ROOT="${PROJECT_SOURCE_DIR}")
