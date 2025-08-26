@@ -23,10 +23,22 @@ set(INNSMOUTH_GUI_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/gui/imgui/imgui_renderer.cpp
 )
 
+set(INNSMOUTH_CORE_SOURCES
+  ${INNSMOUTH_SOURCE_DIR}/core/core.cpp
+)
+
 set(INNSMOUTH_SOURCES
   ${INNSMOUTH_GUI_SOURCES}
   ${INNSMOUTH_GRAPHICS_SOURCES}
+  ${INNSMOUTH_CORE_SOURCES}
   ${INNSMOUTH_SOURCE_DIR}/application/application.cpp
+)
+
+# CONFIG
+
+configure_file(
+  ${INNSMOUTH_SOURCE_DIR}/common/innsmouth_config.h.in
+  ${CMAKE_BINARY_DIR}/config/innsmouth_config.h
 )
 
 # IMGUI
@@ -58,10 +70,12 @@ target_include_directories(SPIRV-reflect PUBLIC
 
 add_library(${PROJECT_NAME} STATIC
   ${INNSMOUTH_SOURCES}
+  
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${PROJECT_SOURCE_DIR}
+  ${PROJECT_BINARY_DIR}
   ${Vulkan_INCLUDE_DIR}
 )
 
@@ -69,10 +83,11 @@ target_link_libraries(${PROJECT_NAME}
   volk
   imgui
   glfw
+  glm::glm
   SPIRV-reflect
 )
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC 
-  VK_NO_PROTOTYPES 
-  INNSMOUTH_ROOT="${PROJECT_SOURCE_DIR}"
+  VK_NO_PROTOTYPES
+  GLM_ENABLE_EXPERIMENTAL
 )

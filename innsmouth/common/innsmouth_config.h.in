@@ -1,0 +1,14 @@
+#ifndef INNSMOUTH_CONFIG_H
+#define INNSMOUTH_CONFIG_H
+
+#include <filesystem>
+
+namespace Innsmouth {
+
+std::filesystem::path INNSMOUH_PROJECT_ROOT_DIR = "@PROJECT_SOURCE_DIR@";
+
+std::filesystem::path INNSMOUH_PROJECT_BINARY_DIR = "@PROJECT_BINARY_DIR@";
+
+} // namespace Innsmouth
+
+#endif // INNSMOUTH_CONFIG_H

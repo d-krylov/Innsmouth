@@ -2,6 +2,7 @@
 #define INNSMOUTH_GRAPHICS_ALLOCATOR_H
 
 #include <vma/vk_mem_alloc.h>
+#include <cstddef>
 
 namespace Innsmouth {
 
@@ -15,7 +16,11 @@ public:
 
   VmaAllocation AllocateBuffer(const VkBufferCreateInfo &buffer_ci, VkBuffer *buffer);
 
-  static GraphicsAllocator &Get();
+  static GraphicsAllocator *Get();
+
+  std::byte *MapMemory(VmaAllocation allocation);
+
+  void UnmapMemory(VmaAllocation allocation);
 
 protected:
   void CreateAllocator();

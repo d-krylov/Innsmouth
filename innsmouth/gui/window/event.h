@@ -2,24 +2,38 @@
 #define INNSMOUTH_EVENT_H
 
 #include "key.h"
+#include <cstdint>
 #include <string_view>
 
 namespace Innsmouth {
 
-#define EVENT_CLASS_KIND(kind)                                                                                                                  \
-  static EventKind GetStaticKind() { return EventKind::kind; }                                                                                  \
-  EventKind GetEventKind() const override { return GetStaticKind(); }                                                                           \
-  std::string_view GetName() const override { return #kind; }
+#define BIND_FUNCTION(function) [this](auto &&...args) -> decltype(auto) { return this->function(std::forward<decltype(args)>(args)...); }
 
 class Event {
 public:
   virtual ~Event() = default;
 
-  virtual EventKind GetEventKind() const = 0;
-  virtual std::string_view GetName() const = 0;
+  virtual EventKind GetEventKind() = 0;
 
 public:
-  bool handled_{false};
+  bool handled{false};
+};
+
+class EventDispatcher {
+public:
+  EventDispatcher(Event &event) : event_(event) {
+  }
+
+  template <typename T, typename F> bool Dispatch(const F &function) {
+    if (event_.GetEventKind() == T::event_kind) {
+      event_.handled |= function(static_cast<T &>(event_));
+      return true;
+    }
+    return false;
+  }
+
+private:
+  Event &event_;
 };
 
 } // namespace Innsmouth

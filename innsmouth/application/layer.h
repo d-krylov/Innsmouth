@@ -1,10 +1,13 @@
 #ifndef INNSMOUTH_LAYER_H
 #define INNSMOUTH_LAYER_H
 
+#include "innsmouth/gui/window/key_events.h"
+#include "innsmouth/gui/window/mouse_events.h"
+#include "innsmouth/gui/window/window_events.h"
+
 namespace Innsmouth {
 
 class CommandBuffer;
-class Event;
 
 class Layer {
 public:
@@ -22,7 +25,8 @@ public:
   virtual void OnAttach() {
   }
 
-  // virtual void OnEvent(Event &event) {}
+  virtual void OnEvent(Event &event) {
+  }
 };
 
 } // namespace Innsmouth

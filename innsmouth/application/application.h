@@ -4,6 +4,7 @@
 #include "innsmouth/gui/window/window.h"
 #include "innsmouth/graphics/presentation/swapchain.h"
 #include "innsmouth/graphics/graphics_context/graphics_context.h"
+#include "innsmouth/graphics/graphics_context/graphics_allocator.h"
 #include "innsmouth/graphics/synchronization/fence.h"
 #include "innsmouth/graphics/synchronization/semaphore.h"
 #include "innsmouth/graphics/command/command_buffer.h"
@@ -36,6 +37,7 @@ protected:
 private:
   Window main_window_;
   GraphicsContext graphics_context_;
+  GraphicsAllocator graphics_allocator_;
   Swapchain swapchain_;
   std::vector<Fence> fences_;
   std::vector<Semaphore> image_available_semaphores;

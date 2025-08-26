@@ -1,51 +1,50 @@
 #include "window.h"
+#include "mouse_events.h"
+#include "key_events.h"
+#include "window_events.h"
 #include <GLFW/glfw3.h>
 
 namespace Innsmouth {
 
-#if 0
+Window *GetWindow(GLFWwindow *native_window) {
+  return reinterpret_cast<Window *>(glfwGetWindowUserPointer(native_window));
+}
+
 void KeyCallback(GLFWwindow *native_window, int32_t key, int32_t scan, int32_t action, int32_t m) {
   auto *window = GetWindow(native_window);
-  auto &handler = window->GetEventCallback();
-  KeyEvent event(Key(key), scan, Action(action));
-  handler(event);
+  auto event = KeyEvent(Key(key), scan, Action(action));
+  window->Invoke(event);
 }
 
 void CharCallback(GLFWwindow *native_window, uint32_t character) {
   auto *window = GetWindow(native_window);
-  auto &handler = window->GetEventCallback();
-  CharEvent event(character);
-  handler(event);
+  auto event = CharEvent(character);
+  window->Invoke(event);
 }
 
 void CursorPositionCallback(GLFWwindow *native_window, double x, double y) {
   auto *window = GetWindow(native_window);
-  auto &handler = window->GetEventCallback();
-  MouseMoveEvent event((float)x, (float)y);
-  handler(event);
+  auto event = MouseMoveEvent((float)x, (float)y);
+  window->Invoke(event);
 }
 
 void ScrollCallback(GLFWwindow *native_window, double x, double y) {
   auto *window = GetWindow(native_window);
-  auto &handler = window->GetEventCallback();
-  MouseScrollEvent event((float)x, (float)y);
-  handler(event);
+  auto event = MouseScrollEvent((float)x, (float)y);
+  window->Invoke(event);
 }
 
 void MouseButtonCallback(GLFWwindow *native_window, int32_t button, int32_t action, int32_t mods) {
   auto *window = GetWindow(native_window);
-  auto &handler = window->GetEventCallback();
   auto event = MouseButtonEvent(MouseButton(button), Action(action));
-  handler(event);
+  window->Invoke(event);
 }
 
 void WindowSizeCallback(GLFWwindow *native_window, int32_t width, int32_t height) {
   auto *window = GetWindow(native_window);
-  auto &handler = window->GetEventCallback();
-  WindowResizeEvent event(width, height);
-  handler(event);
+  auto event = WindowResizeEvent(width, height);
+  window->Invoke(event);
 }
-#endif
 
 void WindowCloseCallback(GLFWwindow *native_window) {
 }
@@ -65,18 +64,18 @@ void MonitorCallback(GLFWmonitor *, int32_t) {
 void WindowPosCallback(GLFWwindow *window, int32_t, int32_t) {
 }
 
-void Window::SetCallbacks() {
-  glfwSetWindowPosCallback(native_window_, WindowPosCallback);
-  glfwSetWindowFocusCallback(native_window_, WindowFocusCallback);
-  // glfwSetKeyCallback(native_window_, KeyCallback);
-  // glfwSetWindowSizeCallback(native_window_, WindowSizeCallback);
-  glfwSetWindowCloseCallback(native_window_, WindowCloseCallback);
-  glfwSetWindowRefreshCallback(native_window_, WindowRefreshCallback);
-  // glfwSetCursorPosCallback(native_window_, CursorPositionCallback);
-  glfwSetCursorEnterCallback(native_window_, CursorEnterCallback);
-  // glfwSetMouseButtonCallback(native_window_, MouseButtonCallback);
-  // glfwSetScrollCallback(native_window_, ScrollCallback);
-  // glfwSetCharCallback(native_window_, CharCallback);
+void SetCallbacks(GLFWwindow *native_window) {
+  glfwSetWindowPosCallback(native_window, WindowPosCallback);
+  glfwSetWindowFocusCallback(native_window, WindowFocusCallback);
+  glfwSetKeyCallback(native_window, KeyCallback);
+  glfwSetWindowSizeCallback(native_window, WindowSizeCallback);
+  glfwSetWindowCloseCallback(native_window, WindowCloseCallback);
+  glfwSetWindowRefreshCallback(native_window, WindowRefreshCallback);
+  glfwSetCursorPosCallback(native_window, CursorPositionCallback);
+  glfwSetCursorEnterCallback(native_window, CursorEnterCallback);
+  glfwSetMouseButtonCallback(native_window, MouseButtonCallback);
+  glfwSetScrollCallback(native_window, ScrollCallback);
+  glfwSetCharCallback(native_window, CharCallback);
   glfwSetMonitorCallback(MonitorCallback);
 }
 
@@ -95,17 +94,17 @@ Window::Window(std::string_view name, int32_t width, int32_t height) {
 
   glfwSetWindowUserPointer(native_window_, this);
 
-  SetCallbacks();
+  SetCallbacks(GetNativeWindow());
 }
 
-Window::Extent2i Window::GetSize() const {
-  Extent2i size;
+Extent2D Window::GetSize() const {
+  Extent2D size;
   glfwGetWindowSize(native_window_, &size.width, &size.height);
   return size;
 }
 
-Window::Extent2i Window::GetFramebufferSize() const {
-  Extent2i size;
+Extent2D Window::GetFramebufferSize() const {
+  Extent2D size;
   glfwGetFramebufferSize(native_window_, &size.width, &size.height);
   return size;
 }
@@ -126,6 +125,27 @@ bool Window::ShouldClose() const {
 
 void Window::PollEvents() {
   glfwPollEvents();
+}
+
+int32_t Window::GetKey(int32_t key) const {
+  return glfwGetKey(native_window_, key);
+}
+
+float Window::GetAspect() const {
+  auto size = GetSize();
+  auto width = static_cast<float>(size.width);
+  auto height = static_cast<float>(size.height);
+  return width / height;
+}
+
+void Window::Invoke(Event &event) {
+  if (event_handler_) {
+    event_handler_(event);
+  }
+}
+
+void Window::SetEventHandler(const EventHandler &handler) {
+  event_handler_ = handler;
 }
 
 } // namespace Innsmouth

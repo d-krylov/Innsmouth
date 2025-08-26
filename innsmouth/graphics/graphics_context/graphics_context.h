@@ -18,7 +18,7 @@ public:
   const VkQueue GetGeneralQueue() const;
   const VkCommandPool GetGeneralCommandPool() const;
 
-  static GraphicsContext &Get();
+  static GraphicsContext *Get();
 
 protected:
   void CreateInstance();

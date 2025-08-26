@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_WINDOW_H
 #define INNSMOUTH_WINDOW_H
 
-#include <cstdint>
+#include "innsmouth/core/include/core.h"
 #include <functional>
 #include <string_view>
 
@@ -9,12 +9,11 @@ struct GLFWwindow;
 
 namespace Innsmouth {
 
+class Event;
+
 class Window {
 public:
-  struct Extent2i {
-    int32_t width;
-    int32_t height;
-  };
+  using EventHandler = std::function<void(Event &)>;
 
   Window(std::string_view name, int32_t width, int32_t height);
 
@@ -22,22 +21,26 @@ public:
     return native_window_;
   }
 
-  Extent2i GetFramebufferSize() const;
-  Extent2i GetSize() const;
+  Extent2D GetFramebufferSize() const;
+  Extent2D GetSize() const;
   int32_t GetWidth() const;
   int32_t GetHeight() const;
 
-  float GetAspectRatio() const;
+  int32_t GetKey(int32_t key) const;
+
+  float GetAspect() const;
 
   bool ShouldClose() const;
 
   void PollEvents();
 
-protected:
-  void SetCallbacks();
+  void Invoke(Event &event);
+
+  void SetEventHandler(const EventHandler &handler);
 
 private:
   GLFWwindow *native_window_;
+  EventHandler event_handler_;
 };
 
 } // namespace Innsmouth

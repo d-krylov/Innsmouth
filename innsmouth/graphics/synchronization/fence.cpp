@@ -9,7 +9,7 @@ Fence::Fence(bool signaled) {
     fence_ci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fence_ci.flags = signaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
   }
-  VK_CHECK(vkCreateFence(GraphicsContext::Get().GetDevice(), &fence_ci, nullptr, &fence_));
+  VK_CHECK(vkCreateFence(GraphicsContext::Get()->GetDevice(), &fence_ci, nullptr, &fence_));
 }
 
 Fence::Fence(Fence &&other) noexcept {
@@ -21,11 +21,15 @@ Fence::~Fence() {
 }
 
 void Fence::Wait() {
-  VK_CHECK(vkWaitForFences(GraphicsContext::Get().GetDevice(), 1, &fence_, VK_TRUE, UINT64_MAX));
+  VK_CHECK(vkWaitForFences(GraphicsContext::Get()->GetDevice(), 1, &fence_, VK_TRUE, UINT64_MAX));
 }
 
 void Fence::Reset() {
-  VK_CHECK(vkResetFences(GraphicsContext::Get().GetDevice(), 1, &fence_));
+  VK_CHECK(vkResetFences(GraphicsContext::Get()->GetDevice(), 1, &fence_));
+}
+
+const VkFence Fence::GetHandle() const {
+  return fence_;
 }
 
 } // namespace Innsmouth

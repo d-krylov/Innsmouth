@@ -48,11 +48,18 @@ public:
   // BIND
   void CommandBindGraphicsPipeline(const VkPipeline graphics_pipeline);
   void CommandBindComputePipeline(const VkPipeline graphics_pipeline);
+  void CommandBindVertexBuffer(const VkBuffer buffer, std::size_t offset);
+  void CommandBindIndexBuffer(const VkBuffer buffer, std::size_t offset, VkIndexType index_type = VkIndexType::VK_INDEX_TYPE_UINT32);
 
   // BARRIER
   void CommandPipelineBarrier(std::span<const VkImageMemoryBarrier2> image_barriers, std::span<const VkBufferMemoryBarrier2> buffer_barriers);
   void CommandImageMemoryBarrier(const VkImage &image, VkImageLayout from_layout, VkImageLayout to_layout, VkPipelineStageFlags from_stage,
                                  VkPipelineStageFlags to_stage, const VkImageSubresourceRange &range);
+
+  void CommandPushDescriptorSet(const VkPipelineLayout layout, uint32_t set_number, uint32_t binding, const VkImageView image_view,
+                                const VkSampler sampler);
+
+  void CommandCopyBufferToImage(const VkBuffer buffer, const VkImage image, const VkExtent3D &extent);
 
 private:
   VkCommandBuffer command_buffer_{VK_NULL_HANDLE};

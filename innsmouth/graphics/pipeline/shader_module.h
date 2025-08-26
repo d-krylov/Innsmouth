@@ -12,25 +12,13 @@ public:
 
   ~ShaderModule();
 
-  const VkShaderModule GetShaderModule() const {
-    return shader_module_;
-  }
+  const VkShaderModule GetShaderModule() const;
+  VkShaderStageFlagBits GetShaderStage() const;
 
-  VkShaderStageFlagBits GetShaderStage() const {
-    return shader_stage_;
-  }
-
-  std::span<const VkPushConstantRange> GetPushConstantRanges() const {
-    return push_constant_ranges_;
-  }
-
-  std::span<const VkVertexInputAttributeDescription> GetVertexInputAttributes() const {
-    return input_attribute_descriptions_;
-  }
-
-  std::span<const VkVertexInputBindingDescription> GetVertexInputBinding() const {
-    return input_binding_description_;
-  }
+  std::span<const VkPushConstantRange> GetPushConstantRanges() const;
+  std::span<const VkVertexInputAttributeDescription> GetVertexInputAttributes() const;
+  std::span<const VkVertexInputBindingDescription> GetVertexInputBinding() const;
+  std::span<const std::vector<VkDescriptorSetLayoutBinding>> GetDescriptorSetLayoutBindings() const;
 
 protected:
   void ParseShader(std::span<const std::byte> shader_binary_data);
@@ -41,6 +29,7 @@ private:
   std::vector<VkPushConstantRange> push_constant_ranges_;
   std::vector<VkVertexInputBindingDescription> input_binding_description_;
   std::vector<VkVertexInputAttributeDescription> input_attribute_descriptions_;
+  std::vector<std::vector<VkDescriptorSetLayoutBinding>> descriptor_set_bindings_;
 };
 
 } // namespace Innsmouth

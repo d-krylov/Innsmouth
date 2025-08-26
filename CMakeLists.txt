@@ -15,6 +15,7 @@ find_package(Vulkan REQUIRED)
 FetchContent_MakeAvailable(
   imgui
   volk
+  glm
 )
 
 set(CMAKE_BUILD_TYPE Debug)
@@ -26,6 +27,7 @@ if(${PROJECT_IS_TOP_LEVEL})
   add_clang_format_target(format "build")
 
   add_subdirectory(examples)
+  add_subdirectory(tests)
 
 endif()
 
@@ -35,4 +37,4 @@ file(GLOB SHADER_FILES
   ".vert" ".frag"
 )
 
-compile_shaders("${SHADER_FILES}" "${PROJECT_SOURCE_DIR}/shaders/spirv")
+compile_shaders("${SHADER_FILES}" "${PROJECT_BINARY_DIR}/spirv")

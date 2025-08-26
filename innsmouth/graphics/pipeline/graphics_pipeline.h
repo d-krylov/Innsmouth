@@ -25,7 +25,7 @@ protected:
                               std::span<const VkVertexInputAttributeDescription> vertex_input_attributes,
                               std::span<const VkVertexInputBindingDescription> vertex_input_bindings);
 
-  void CreateDescriptorSetLayouts(std::span<const ShaderModule> shader_modules);
+  std::vector<VkDescriptorSetLayout> CreateDescriptorSetLayouts(std::span<const ShaderModule> shader_modules);
 
 private:
   VkPipeline graphics_pipeline_{VK_NULL_HANDLE};

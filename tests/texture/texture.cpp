@@ -1,9 +1,18 @@
-#include "innsmouth/application/application.h"
-#include "innsmouth/graphics/pipeline/graphics_pipeline.h"
+#include "innsmouth/common/innsmouth.h"
 
 using namespace Innsmouth;
 
-class MeshViewer : public Innsmouth::Layer {
+std::vector<int32_t> MakeTexture(uint32_t width, uint32_t height) {
+  std::vector<int32_t> ret(width * height);
+  for (auto x = 0; x < width; x++) {
+    for (auto y = 0; y < height; y++) {
+      ret[y * width + x] = ((x & 255) << 16) | ((y & 255) << 8);
+    }
+  }
+  return ret;
+}
+
+class Texture : public Innsmouth::Layer {
 public:
   void OnSwapchain() override {
   }
@@ -33,6 +42,7 @@ public:
     command_buffer.CommandSetCullMode(VK_CULL_MODE_NONE);
     command_buffer.CommandEnableDepthWrite(false);
     command_buffer.CommandBindGraphicsPipeline(graphics_pipeline_->GetPipeline());
+    command_buffer.CommandPushDescriptorSet(graphics_pipeline_->GetPipelineLayout(), 0, 0, image_->GetImageView(), image_->GetSampler());
     command_buffer.CommandDraw(3);
     command_buffer.CommandEndRendering();
   }
@@ -40,21 +50,29 @@ public:
   void OnAttach() override {
     auto format = Application::Get().GetSwapchain().GetFormat();
 
+    auto image_data = MakeTexture(800, 600);
+
+    image_ = std::make_unique<Image>(VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM,
+                                     ImageInformation(800, 600));
+
+    image_->SetData<int32_t>(image_data);
+
     graphics_pipeline_ = std::make_unique<GraphicsPipeline>(GetInnsmouthShadersDirectory() / "tests" / "square.vert.spv",
                                                             GetInnsmouthShadersDirectory() / "tests" / "square.frag.spv", format);
   }
 
 private:
   std::unique_ptr<GraphicsPipeline> graphics_pipeline_;
+  std::unique_ptr<Image> image_;
 };
 
 int main() {
 
   Application application;
 
-  MeshViewer mesh_viewer;
+  Texture texture;
 
-  application.AddLayer(&mesh_viewer);
+  application.AddLayer(&texture);
 
   application.Run();
 

@@ -16,7 +16,7 @@ Application::Application() : main_window_("Innsmouth", 800, 600), swapchain_(mai
 void Application::Initialize() {
   for (const auto &image_view : swapchain_.GetImageViews()) {
     fences_.emplace_back(true);
-    command_buffers_.emplace_back(GraphicsContext::Get().GetGeneralCommandPool());
+    command_buffers_.emplace_back(GraphicsContext::Get()->GetGeneralCommandPool());
     image_available_semaphores.emplace_back();
     render_finished_semaphores.emplace_back();
   }
@@ -70,7 +70,7 @@ void Application::Run() {
       submit_info.pSignalSemaphores = render_finished_semaphores[current_frame_].get();
     }
 
-    VK_CHECK(vkQueueSubmit(GraphicsContext::Get().GetGeneralQueue(), 1, &submit_info, fences_[current_frame_]));
+    VK_CHECK(vkQueueSubmit(GraphicsContext::Get()->GetGeneralQueue(), 1, &submit_info, fences_[current_frame_].GetHandle()));
 
     result = swapchain_.Present(render_finished_semaphores[current_frame_].get());
 

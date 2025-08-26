@@ -1,9 +1,8 @@
-#include "innsmouth/application/application.h"
-#include "innsmouth/graphics/pipeline/graphics_pipeline.h"
+#include "innsmouth/common/innsmouth.h"
 
 using namespace Innsmouth;
 
-class MeshViewer : public Innsmouth::Layer {
+class Triangle : public Innsmouth::Layer {
 public:
   void OnSwapchain() override {
   }
@@ -32,29 +31,46 @@ public:
     command_buffer.CommandEnableDepthTest(false);
     command_buffer.CommandSetCullMode(VK_CULL_MODE_NONE);
     command_buffer.CommandEnableDepthWrite(false);
+    command_buffer.CommandBindVertexBuffer(vertex_buffer_->GetHandle(), 0);
     command_buffer.CommandBindGraphicsPipeline(graphics_pipeline_->GetPipeline());
     command_buffer.CommandDraw(3);
     command_buffer.CommandEndRendering();
   }
 
   void OnAttach() override {
+    // clang-format off
+    std::array triangle{
+      -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+      +0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+      +0.0f, +0.5f, 0.0f, 0.0f, 1.0f,
+    };
+    // clang-format on
+
     auto format = Application::Get().GetSwapchain().GetFormat();
 
-    graphics_pipeline_ = std::make_unique<GraphicsPipeline>(GetInnsmouthShadersDirectory() / "tests" / "square.vert.spv",
-                                                            GetInnsmouthShadersDirectory() / "tests" / "square.frag.spv", format);
+    vertex_buffer_ = std::make_unique<Buffer>(10_KiB, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+
+    vertex_buffer_->Map();
+    auto mapped_data = vertex_buffer_->GetMappedData<float>();
+    std::copy(triangle.begin(), triangle.end(), mapped_data.begin());
+    vertex_buffer_->Unmap();
+
+    graphics_pipeline_ = std::make_unique<GraphicsPipeline>(GetInnsmouthShadersDirectory() / "tests" / "2d.vert.spv",
+                                                            GetInnsmouthShadersDirectory() / "tests" / "2d.frag.spv", format);
   }
 
 private:
   std::unique_ptr<GraphicsPipeline> graphics_pipeline_;
+  std::unique_ptr<Buffer> vertex_buffer_;
 };
 
 int main() {
 
   Application application;
 
-  MeshViewer mesh_viewer;
+  Triangle triangle;
 
-  application.AddLayer(&mesh_viewer);
+  application.AddLayer(&triangle);
 
   application.Run();
 

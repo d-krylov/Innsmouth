@@ -10,13 +10,13 @@ namespace Innsmouth {
 
 VkSurfaceFormatKHR SelectSurfaceFormat(const VkSurfaceKHR surface, std::span<const VkSurfaceFormatKHR> required_formats) {
   auto predicat = [](const VkSurfaceFormatKHR &a, const VkSurfaceFormatKHR &b) { return a.format == b.format && a.colorSpace == b.colorSpace; };
-  auto supported_formats = Enumerate(vkGetPhysicalDeviceSurfaceFormatsKHR, GraphicsContext::Get().GetPhysicalDevice(), surface);
+  auto supported_formats = Enumerate(vkGetPhysicalDeviceSurfaceFormatsKHR, GraphicsContext::Get()->GetPhysicalDevice(), surface);
   auto it = std::ranges::find_first_of(supported_formats, required_formats, predicat);
   return (it != supported_formats.end()) ? *it : supported_formats[0];
 }
 
 VkPresentModeKHR SelectPresentMode(const VkSurfaceKHR surface, std::span<const VkPresentModeKHR> required_modes) {
-  auto supported_modes = Enumerate(vkGetPhysicalDeviceSurfacePresentModesKHR, GraphicsContext::Get().GetPhysicalDevice(), surface);
+  auto supported_modes = Enumerate(vkGetPhysicalDeviceSurfacePresentModesKHR, GraphicsContext::Get()->GetPhysicalDevice(), surface);
   auto it = std::ranges::find_first_of(required_modes, supported_modes);
   return (it != required_modes.end()) ? *it : VK_PRESENT_MODE_FIFO_KHR;
 }
@@ -28,7 +28,7 @@ uint32_t ComputeImageCount(const VkSurfaceCapabilitiesKHR &capabilities) {
 
 VkSurfaceCapabilitiesKHR GetSurfaceCapabilities(const VkSurfaceKHR surface) {
   VkSurfaceCapabilitiesKHR surface_capabilities{};
-  VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(GraphicsContext::Get().GetPhysicalDevice(), surface, &surface_capabilities));
+  VK_CHECK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(GraphicsContext::Get()->GetPhysicalDevice(), surface, &surface_capabilities));
   return surface_capabilities;
 }
 
@@ -60,8 +60,8 @@ void Swapchain::CreateSwapchain() {
 
   images_.resize(image_count);
 
-  VK_CHECK(vkCreateSwapchainKHR(GraphicsContext::Get().GetDevice(), &swapchain_ci, nullptr, &swapchain_current_));
-  VK_CHECK(vkGetSwapchainImagesKHR(GraphicsContext::Get().GetDevice(), swapchain_current_, &image_count, images_.data()));
+  VK_CHECK(vkCreateSwapchainKHR(GraphicsContext::Get()->GetDevice(), &swapchain_ci, nullptr, &swapchain_current_));
+  VK_CHECK(vkGetSwapchainImagesKHR(GraphicsContext::Get()->GetDevice(), swapchain_current_, &image_count, images_.data()));
 }
 
 void Swapchain::CreateImageViews() {
@@ -86,9 +86,9 @@ void Swapchain::CreateImageViews() {
       image_view_ci.subresourceRange = subresource_range;
     }
 
-    VK_CHECK(vkCreateImageView(GraphicsContext::Get().GetDevice(), &image_view_ci, nullptr, &image_views_[i]));
+    VK_CHECK(vkCreateImageView(GraphicsContext::Get()->GetDevice(), &image_view_ci, nullptr, &image_views_[i]));
 
-    CommandBuffer command_buffer(GraphicsContext::Get().GetGeneralCommandPool());
+    CommandBuffer command_buffer(GraphicsContext::Get()->GetGeneralCommandPool());
     command_buffer.Begin();
     command_buffer.CommandImageMemoryBarrier(images_[i], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
                                              VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
@@ -104,14 +104,14 @@ void Swapchain::CreateImageViews() {
 
     Fence fence(false);
 
-    VK_CHECK(vkQueueSubmit(GraphicsContext::Get().GetGeneralQueue(), 1, &submit_info, fence));
+    VK_CHECK(vkQueueSubmit(GraphicsContext::Get()->GetGeneralQueue(), 1, &submit_info, fence.GetHandle()));
 
     fence.Wait();
   }
 }
 
 void Swapchain::CreateSurface(GLFWwindow *native_window) {
-  VK_CHECK(glfwCreateWindowSurface(GraphicsContext::Get().GetInstance(), native_window, nullptr, &surface_));
+  VK_CHECK(glfwCreateWindowSurface(GraphicsContext::Get()->GetInstance(), native_window, nullptr, &surface_));
 
   std::vector<VkSurfaceFormatKHR> required_formats{{VK_FORMAT_B8G8R8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR},
                                                    {VK_FORMAT_R8G8B8A8_SRGB, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR}};
@@ -141,13 +141,13 @@ const VkImageView Swapchain::GetCurrentImageView() const {
 
 void Swapchain::Cleanup() {
   for (const auto &image_view : image_views_) {
-    vkDestroyImageView(GraphicsContext::Get().GetDevice(), image_view, nullptr);
+    vkDestroyImageView(GraphicsContext::Get()->GetDevice(), image_view, nullptr);
   }
-  vkDestroySwapchainKHR(GraphicsContext::Get().GetDevice(), swapchain_current_, nullptr);
+  vkDestroySwapchainKHR(GraphicsContext::Get()->GetDevice(), swapchain_current_, nullptr);
 }
 
 void Swapchain::Recreate() {
-  vkDeviceWaitIdle(GraphicsContext::Get().GetDevice());
+  vkDeviceWaitIdle(GraphicsContext::Get()->GetDevice());
   Cleanup();
   CreateSwapchain();
   CreateImageViews();
@@ -169,11 +169,11 @@ VkResult Swapchain::Present(const VkSemaphore *wait_semaphore) {
     present_info.pSwapchains = &swapchain_current_;
     present_info.pImageIndices = &current_image_;
   }
-  return vkQueuePresentKHR(GraphicsContext::Get().GetGeneralQueue(), &present_info);
+  return vkQueuePresentKHR(GraphicsContext::Get()->GetGeneralQueue(), &present_info);
 }
 
 VkResult Swapchain::AcquireNextImage(const VkSemaphore semaphore) {
-  auto ret = vkAcquireNextImageKHR(GraphicsContext::Get().GetDevice(), swapchain_current_, UINT64_MAX, semaphore, nullptr, &current_image_);
+  auto ret = vkAcquireNextImageKHR(GraphicsContext::Get()->GetDevice(), swapchain_current_, UINT64_MAX, semaphore, nullptr, &current_image_);
   return ret;
 }
 

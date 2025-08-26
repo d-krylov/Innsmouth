@@ -8,8 +8,8 @@ namespace Innsmouth {
 
 GraphicsContext *GraphicsContext::graphics_context_instance_ = nullptr;
 
-GraphicsContext &GraphicsContext::Get() {
-  return *graphics_context_instance_;
+GraphicsContext *GraphicsContext::Get() {
+  return graphics_context_instance_;
 }
 
 const VkInstance GraphicsContext::GetInstance() const {

@@ -14,11 +14,10 @@ public:
   Fence(Fence &&) noexcept;
 
   void Wait();
+
   void Reset();
 
-  operator const VkFence &() const {
-    return fence_;
-  }
+  const VkFence GetHandle() const;
 
 private:
   VkFence fence_{VK_NULL_HANDLE};

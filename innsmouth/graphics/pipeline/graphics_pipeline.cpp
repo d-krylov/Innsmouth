@@ -1,5 +1,8 @@
 #include "graphics_pipeline.h"
 #include <print>
+#include <ranges>
+#include <algorithm>
+#include <map>
 
 namespace Innsmouth {
 
@@ -16,7 +19,33 @@ std::vector<VkDynamicState> GetDynamicStates() {
 }
 // clang-format on
 
-void GraphicsPipeline::CreateDescriptorSetLayouts(std::span<const ShaderModule> shader_modules) {
+std::vector<VkDescriptorSetLayout> GraphicsPipeline::CreateDescriptorSetLayouts(std::span<const ShaderModule> shader_modules) {
+  std::map<uint32_t, std::vector<VkDescriptorSetLayoutBinding>> all_descriptors;
+  for (const auto &shader_module : shader_modules) {
+    auto descriptor_set_bindings = shader_module.GetDescriptorSetLayoutBindings();
+    for (const auto &[index, bindings] : std::views::enumerate(descriptor_set_bindings)) {
+      all_descriptors[index].insert(all_descriptors[index].end(), bindings.begin(), bindings.end());
+    }
+  }
+
+  std::vector<VkDescriptorSetLayout> descriptor_set_layouts(all_descriptors.size());
+
+  for (auto &[set_number, set_bindings] : all_descriptors) {
+    std::ranges::sort(set_bindings, [](const auto &a, const auto &b) { return a.binding < b.binding; });
+
+    VkDescriptorSetLayoutCreateInfo descriptor_set_layout_ci{};
+    {
+      descriptor_set_layout_ci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+      descriptor_set_layout_ci.bindingCount = set_bindings.size();
+      descriptor_set_layout_ci.pBindings = set_bindings.data();
+      descriptor_set_layout_ci.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR;
+    }
+
+    VK_CHECK(
+      vkCreateDescriptorSetLayout(GraphicsContext::Get()->GetDevice(), &descriptor_set_layout_ci, nullptr, &descriptor_set_layouts[set_number]));
+  }
+
+  return descriptor_set_layouts;
 }
 
 GraphicsPipeline::GraphicsPipeline(const std::filesystem::path &vertex_shader, const std::filesystem::path &fragment_shader,
@@ -137,17 +166,19 @@ void GraphicsPipeline::CreateGraphicsPipeline(std::span<const ShaderModule> shad
     dynamic_state_ci.pDynamicStates = dynamic_states.data();
   }
 
+  descriptor_set_layouts_ = CreateDescriptorSetLayouts(shader_modules);
+
   // PIPELINE LAYOUT
   VkPipelineLayoutCreateInfo pipeline_layout_ci{};
   {
     pipeline_layout_ci.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipeline_layout_ci.setLayoutCount = 0;    // descriptor_set_layouts_.size();
-    pipeline_layout_ci.pSetLayouts = nullptr; // descriptor_set_layouts_.data();
+    pipeline_layout_ci.setLayoutCount = descriptor_set_layouts_.size();
+    pipeline_layout_ci.pSetLayouts = descriptor_set_layouts_.data();
     pipeline_layout_ci.pushConstantRangeCount = 0;
     pipeline_layout_ci.pPushConstantRanges = nullptr; // push_constant_ranges.data();
   }
 
-  VK_CHECK(vkCreatePipelineLayout(GraphicsContext::Get().GetDevice(), &pipeline_layout_ci, nullptr, &pipeline_layout_));
+  VK_CHECK(vkCreatePipelineLayout(GraphicsContext::Get()->GetDevice(), &pipeline_layout_ci, nullptr, &pipeline_layout_));
 
   // RENDERING CREATE INFO
   VkPipelineRenderingCreateInfo pipeline_rendering_ci{};
@@ -166,7 +197,7 @@ void GraphicsPipeline::CreateGraphicsPipeline(std::span<const ShaderModule> shad
     graphics_pipeline_ci.pStages = shader_stages_cis.data();
     graphics_pipeline_ci.pVertexInputState = &vertex_input_state_ci;
     graphics_pipeline_ci.pInputAssemblyState = &input_assembly_state_ci;
-    // graphics_pipeline_ci.pTessellationState = nullptr;
+    graphics_pipeline_ci.pTessellationState = nullptr;
     graphics_pipeline_ci.pViewportState = &viewport_state_ci;
     graphics_pipeline_ci.pRasterizationState = &rasterization_state_ci;
     graphics_pipeline_ci.pMultisampleState = &multisample_state_ci;
@@ -177,7 +208,7 @@ void GraphicsPipeline::CreateGraphicsPipeline(std::span<const ShaderModule> shad
     graphics_pipeline_ci.pNext = &pipeline_rendering_ci;
   }
 
-  VK_CHECK(vkCreateGraphicsPipelines(GraphicsContext::Get().GetDevice(), nullptr, 1, &graphics_pipeline_ci, nullptr, &graphics_pipeline_));
+  VK_CHECK(vkCreateGraphicsPipelines(GraphicsContext::Get()->GetDevice(), nullptr, 1, &graphics_pipeline_ci, nullptr, &graphics_pipeline_));
 }
 
 } // namespace Innsmouth

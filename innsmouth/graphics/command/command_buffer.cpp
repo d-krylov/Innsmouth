@@ -10,7 +10,7 @@ CommandBuffer::CommandBuffer(const VkCommandPool command_pool) {
     command_buffer_ai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     command_buffer_ai.commandBufferCount = 1;
   }
-  VK_CHECK(vkAllocateCommandBuffers(GraphicsContext::Get().GetDevice(), &command_buffer_ai, &command_buffer_));
+  VK_CHECK(vkAllocateCommandBuffers(GraphicsContext::Get()->GetDevice(), &command_buffer_ai, &command_buffer_));
 }
 
 CommandBuffer::~CommandBuffer() {
@@ -143,12 +143,22 @@ void CommandBuffer::CommandImageMemoryBarrier(const VkImage &image, VkImageLayou
   CommandPipelineBarrier(image_memory_barrier, buffer_memory_barrier);
 }
 
+// BIND
+
 void CommandBuffer::CommandBindGraphicsPipeline(const VkPipeline graphics_pipeline) {
   vkCmdBindPipeline(command_buffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline);
 }
 
 void CommandBuffer::CommandBindComputePipeline(const VkPipeline graphics_pipeline) {
   vkCmdBindPipeline(command_buffer_, VK_PIPELINE_BIND_POINT_COMPUTE, graphics_pipeline);
+}
+
+void CommandBuffer::CommandBindVertexBuffer(const VkBuffer buffer, std::size_t offset) {
+  vkCmdBindVertexBuffers(command_buffer_, 0, 1, &buffer, &offset);
+}
+
+void CommandBuffer::CommandBindIndexBuffer(const VkBuffer buffer, std::size_t offset, VkIndexType index_type) {
+  vkCmdBindIndexBuffer(command_buffer_, buffer, offset, index_type);
 }
 
 // DRAW
@@ -163,6 +173,49 @@ void CommandBuffer::CommandDrawIndexed(uint32_t index_count, uint32_t instance_c
 
 void CommandBuffer::CommandDrawIndirect(const VkBuffer buffer, uint64_t offset, uint32_t draw_count, uint32_t stride) {
   vkCmdDrawIndirect(command_buffer_, buffer, offset, draw_count, stride);
+}
+
+void CommandBuffer::CommandPushDescriptorSet(const VkPipelineLayout layout, uint32_t set_number, uint32_t binding, const VkImageView image_view,
+                                             const VkSampler sampler) {
+  VkDescriptorImageInfo descriptor_ii{};
+  {
+    descriptor_ii.sampler = sampler;
+    descriptor_ii.imageView = image_view;
+    descriptor_ii.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  }
+
+  VkWriteDescriptorSet write_descriptor_set{};
+  {
+    write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write_descriptor_set.dstBinding = binding;
+    write_descriptor_set.dstArrayElement = 0;
+    write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    write_descriptor_set.descriptorCount = 1;
+    write_descriptor_set.pImageInfo = &descriptor_ii;
+  }
+  vkCmdPushDescriptorSetKHR(command_buffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, set_number, 1, &write_descriptor_set);
+}
+
+void CommandBuffer::CommandCopyBufferToImage(const VkBuffer buffer, const VkImage image, const VkExtent3D &extent) {
+  VkImageSubresourceLayers subresource_layers{};
+  {
+    subresource_layers.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    subresource_layers.mipLevel = 0;
+    subresource_layers.baseArrayLayer = 0;
+    subresource_layers.layerCount = 1;
+  }
+
+  VkBufferImageCopy buffer_image_copy{};
+  {
+    buffer_image_copy.bufferOffset = 0;
+    buffer_image_copy.bufferRowLength = 0;
+    buffer_image_copy.bufferImageHeight = 0;
+    buffer_image_copy.imageSubresource = subresource_layers;
+    buffer_image_copy.imageOffset = VkOffset3D(0, 0, 0);
+    buffer_image_copy.imageExtent = extent;
+  }
+
+  vkCmdCopyBufferToImage(command_buffer_, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &buffer_image_copy);
 }
 
 } // namespace Innsmouth
