@@ -56,15 +56,20 @@ public:
   void CommandImageMemoryBarrier(const VkImage &image, VkImageLayout from_layout, VkImageLayout to_layout, VkPipelineStageFlags from_stage,
                                  VkPipelineStageFlags to_stage, const VkImageSubresourceRange &range);
 
+  void CommandCopyBufferToImage(const VkBuffer buffer, const VkImage image, const VkExtent3D &extent);
+
+  // PUSH
   void CommandPushDescriptorSet(const VkPipelineLayout layout, uint32_t set_number, uint32_t binding, const VkImageView image_view,
                                 const VkSampler sampler);
 
-  void CommandCopyBufferToImage(const VkBuffer buffer, const VkImage image, const VkExtent3D &extent);
+  template <typename T> void CommandPushConstants(const VkPipelineLayout layout, VkShaderStageFlags stage, const T &data, uint32_t offset = 0);
 
 private:
   VkCommandBuffer command_buffer_{VK_NULL_HANDLE};
 };
 
 } // namespace Innsmouth
+
+#include "command_buffer.ipp"
 
 #endif // INNSMOUTH_COMMAND_BUFFER_H

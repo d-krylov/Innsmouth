@@ -8,8 +8,14 @@ Application &Application::Get() {
   return *application_instance_;
 }
 
-Application::Application() : main_window_("Innsmouth", 800, 600), swapchain_(main_window_.GetNativeWindow()) {
+Application::Application()
+  : main_window_("Innsmouth", 800, 600), swapchain_(main_window_.GetNativeWindow()), imgui_layer_(&main_window_),
+    imgui_renderer_(swapchain_.GetFormat()) {
   Initialize();
+
+  main_window_.SetEventHandler(BIND_FUNCTION(Application::OnEvent));
+  layers_.push_back(&imgui_layer_);
+
   application_instance_ = this;
 }
 
@@ -25,6 +31,12 @@ void Application::Initialize() {
 void Application::AddLayer(Layer *layer) {
   auto &new_layer = layers_.emplace_back(layer);
   new_layer->OnAttach();
+}
+
+void Application::OnEvent(Event &event) {
+  for (auto &layer : layers_) {
+    layer->OnEvent(event);
+  }
 }
 
 void Application::Run() {
@@ -55,6 +67,15 @@ void Application::Run() {
     for (auto &layer : layers_) {
       layer->OnUpdate(command_buffers_[current_frame_]);
     }
+
+    imgui_layer_.NewFrame();
+    imgui_renderer_.Begin(command_buffers_[current_frame_], swapchain_);
+
+    for (auto layer : layers_) {
+      layer->OnImGui();
+    }
+
+    imgui_renderer_.End(command_buffers_[current_frame_]);
 
     command_buffers_[current_frame_].End();
 

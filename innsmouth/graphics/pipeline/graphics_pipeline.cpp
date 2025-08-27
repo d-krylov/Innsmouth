@@ -138,7 +138,7 @@ void GraphicsPipeline::CreateGraphicsPipeline(std::span<const ShaderModule> shad
   // COLOR BLENDING STATE
   VkPipelineColorBlendAttachmentState color_blend_attachment_state{};
   {
-    color_blend_attachment_state.blendEnable = VK_FALSE;
+    color_blend_attachment_state.blendEnable = VK_TRUE;
     color_blend_attachment_state.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
     color_blend_attachment_state.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     color_blend_attachment_state.colorBlendOp = VK_BLEND_OP_ADD;
@@ -168,14 +168,21 @@ void GraphicsPipeline::CreateGraphicsPipeline(std::span<const ShaderModule> shad
 
   descriptor_set_layouts_ = CreateDescriptorSetLayouts(shader_modules);
 
+  std::vector<VkPushConstantRange> push_constant_ranges;
+
+  for (const auto &shader_module : shader_modules) {
+    auto pcr = shader_module.GetPushConstantRanges();
+    push_constant_ranges.insert(push_constant_ranges.end(), pcr.begin(), pcr.end());
+  }
+
   // PIPELINE LAYOUT
   VkPipelineLayoutCreateInfo pipeline_layout_ci{};
   {
     pipeline_layout_ci.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipeline_layout_ci.setLayoutCount = descriptor_set_layouts_.size();
     pipeline_layout_ci.pSetLayouts = descriptor_set_layouts_.data();
-    pipeline_layout_ci.pushConstantRangeCount = 0;
-    pipeline_layout_ci.pPushConstantRanges = nullptr; // push_constant_ranges.data();
+    pipeline_layout_ci.pushConstantRangeCount = push_constant_ranges.size();
+    pipeline_layout_ci.pPushConstantRanges = push_constant_ranges.data();
   }
 
   VK_CHECK(vkCreatePipelineLayout(GraphicsContext::Get()->GetDevice(), &pipeline_layout_ci, nullptr, &pipeline_layout_));

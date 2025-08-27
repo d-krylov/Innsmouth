@@ -18,6 +18,8 @@ public:
   }
 
   void OnImGui() override {
+    ImGui::Begin("hello");
+    ImGui::End();
   }
 
   void OnUpdate(CommandBuffer &command_buffer) override {
