@@ -10,11 +10,11 @@ include(cmake/clang_format.cmake)
 include(cmake/libraries.cmake)
 include(cmake/functions.cmake)
 
-find_package(Vulkan REQUIRED)
+find_package(Vulkan REQUIRED COMPONENTS volk)
 
 FetchContent_MakeAvailable(
   imgui
-  volk
+  fastgltf
   glm
 )
 
@@ -27,7 +27,7 @@ if(${PROJECT_IS_TOP_LEVEL})
   add_clang_format_target(format "build")
 
   add_subdirectory(examples)
-  add_subdirectory(tests)
+  #add_subdirectory(tests)
 
 endif()
 

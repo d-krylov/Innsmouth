@@ -3,13 +3,10 @@
 
 namespace Innsmouth {
 
-Fence::Fence(bool signaled) {
-  VkFenceCreateInfo fence_ci{};
-  {
-    fence_ci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-    fence_ci.flags = signaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0;
-  }
-  VK_CHECK(vkCreateFence(GraphicsContext::Get()->GetDevice(), &fence_ci, nullptr, &fence_));
+Fence::Fence(FenceCreateMask fence_create_mask) {
+  FenceCreateInfo fence_ci;
+  fence_ci.flags = fence_create_mask;
+  VK_CHECK(vkCreateFence(GraphicsContext::Get()->GetDevice(), fence_ci, nullptr, &fence_));
 }
 
 Fence::Fence(Fence &&other) noexcept {

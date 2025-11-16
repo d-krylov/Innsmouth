@@ -55,7 +55,7 @@ public:
     auto image_data = MakeTexture(800, 600);
 
     image_ = std::make_unique<Image>(VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM,
-                                     ImageInformation(800, 600));
+                                     ImageSpecification(800, 600));
 
     image_->SetData<int32_t>(image_data);
 

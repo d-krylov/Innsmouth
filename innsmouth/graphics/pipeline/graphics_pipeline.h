@@ -6,26 +6,30 @@
 
 namespace Innsmouth {
 
+struct PipelineSpecification {
+  std::vector<std::filesystem::path> shader_paths_;
+  std::vector<DynamicState> dynamic_states_{DynamicState::E_VIEWPORT, DynamicState::E_SCISSOR};
+  std::vector<Format> color_formats_;
+  Format depth_format_ = Format::E_UNDEFINED;
+  Format stencil_format_ = Format::E_UNDEFINED;
+};
+
 class GraphicsPipeline {
 public:
-  GraphicsPipeline(const std::filesystem::path &vertex_shader, const std::filesystem::path &fragment_shader, VkFormat color_format);
+  GraphicsPipeline() = default;
+
+  GraphicsPipeline(const PipelineSpecification &pipeline_specification);
 
   ~GraphicsPipeline();
 
-  const VkPipelineLayout GetPipelineLayout() const {
-    return pipeline_layout_;
-  }
+  GraphicsPipeline(const GraphicsPipeline &) = delete;
+  GraphicsPipeline &operator=(const GraphicsPipeline &) = delete;
 
-  const VkPipeline GetPipeline() const {
-    return graphics_pipeline_;
-  }
+  GraphicsPipeline(GraphicsPipeline &&other) noexcept;
+  GraphicsPipeline &operator=(GraphicsPipeline &&other) noexcept;
 
-protected:
-  void CreateGraphicsPipeline(std::span<const ShaderModule> shader_modules, std::span<const VkFormat> color_formats,
-                              std::span<const VkVertexInputAttributeDescription> vertex_input_attributes,
-                              std::span<const VkVertexInputBindingDescription> vertex_input_bindings);
-
-  std::vector<VkDescriptorSetLayout> CreateDescriptorSetLayouts(std::span<const ShaderModule> shader_modules);
+  VkPipelineLayout GetPipelineLayout() const;
+  VkPipeline GetPipeline() const;
 
 private:
   VkPipeline graphics_pipeline_{VK_NULL_HANDLE};

@@ -7,15 +7,9 @@
 
 namespace Innsmouth {
 
-struct Extent2D {
-  int32_t width{0};
-  int32_t height{0};
-};
-
-struct Extent3D {
-  int32_t width{0};
-  int32_t height{0};
-  int32_t depth{0};
+struct ViewportSize {
+  int32_t width;
+  int32_t height;
 };
 
 std::filesystem::path GetInnsmouthShadersDirectory();

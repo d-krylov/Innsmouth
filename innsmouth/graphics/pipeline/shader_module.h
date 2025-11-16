@@ -3,8 +3,11 @@
 
 #include "innsmouth/graphics/graphics_context/graphics_context.h"
 #include <filesystem>
+#include <map>
 
 namespace Innsmouth {
+
+using DescriptorSetLayoutBindingMap = std::map<uint32_t, std::vector<DescriptorSetLayoutBinding>>;
 
 class ShaderModule {
 public:
@@ -12,24 +15,25 @@ public:
 
   ~ShaderModule();
 
-  const VkShaderModule GetShaderModule() const;
-  VkShaderStageFlagBits GetShaderStage() const;
+  std::size_t GetSize() const;
+  std::span<const uint32_t> GetBinaryData() const;
+  ShaderStageMaskBits GetShaderStage() const;
 
-  std::span<const VkPushConstantRange> GetPushConstantRanges() const;
-  std::span<const VkVertexInputAttributeDescription> GetVertexInputAttributes() const;
-  std::span<const VkVertexInputBindingDescription> GetVertexInputBinding() const;
-  std::span<const std::vector<VkDescriptorSetLayoutBinding>> GetDescriptorSetLayoutBindings() const;
+  std::span<const PushConstantRange> GetPushConstantRanges() const;
+  std::span<const VertexInputAttributeDescription> GetVertexInputAttributes() const;
+  const DescriptorSetLayoutBindingMap &GetPushDescriptorSetLayoutBindings() const;
+  const DescriptorSetLayoutBindingMap &GetPullDescriptorSetLayoutBindings() const;
 
 protected:
-  void ParseShader(std::span<const std::byte> shader_binary_data);
+  void ParseShader(std::span<const uint32_t> shader_binary_data);
 
 private:
-  VkShaderStageFlagBits shader_stage_;
-  VkShaderModule shader_module_{VK_NULL_HANDLE};
-  std::vector<VkPushConstantRange> push_constant_ranges_;
-  std::vector<VkVertexInputBindingDescription> input_binding_description_;
-  std::vector<VkVertexInputAttributeDescription> input_attribute_descriptions_;
-  std::vector<std::vector<VkDescriptorSetLayoutBinding>> descriptor_set_bindings_;
+  std::vector<uint32_t> spirv_;
+  ShaderStageMaskBits shader_stage_;
+  std::vector<PushConstantRange> push_constant_ranges_;
+  std::vector<VertexInputAttributeDescription> input_attribute_descriptions_;
+  DescriptorSetLayoutBindingMap push_descriptor_set_bindings_;
+  DescriptorSetLayoutBindingMap pull_descriptor_set_bindings_;
 };
 
 } // namespace Innsmouth

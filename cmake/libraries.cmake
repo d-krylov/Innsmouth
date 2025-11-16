@@ -7,12 +7,6 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
-	volk
-	GIT_REPOSITORY https://github.com/zeux/volk.git
-	GIT_TAG 1.4.304
-)
-
-FetchContent_Declare(
 	imgui
 	GIT_REPOSITORY https://github.com/ocornut/imgui.git
 	GIT_TAG v1.91.7
@@ -28,4 +22,10 @@ FetchContent_Declare(
 	tinyobjloader
 	GIT_REPOSITORY https://github.com/tinyobjloader/tinyobjloader
 	GIT_TAG release
+)
+
+FetchContent_Declare(
+	fastgltf
+	GIT_REPOSITORY https://github.com/spnda/fastgltf
+	GIT_TAG v0.9.0
 )

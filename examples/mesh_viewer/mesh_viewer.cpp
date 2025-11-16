@@ -9,6 +9,11 @@ public:
   }
 
   void OnImGui() override {
+    ImGui::Begin("Window1");
+    ImGui::End();
+
+    ImGui::Begin("Window2");
+    ImGui::End();
   }
 
   void OnUpdate(CommandBuffer &command_buffer) override {
@@ -29,23 +34,15 @@ public:
     command_buffer.CommandBeginRendering(swapchain.GetExtent(), rendering_ai);
     command_buffer.CommandSetViewport(0.0f, 0.0f, extent.width, extent.height);
     command_buffer.CommandSetScissor(0, 0, extent.width, extent.height);
-    command_buffer.CommandEnableDepthTest(false);
-    command_buffer.CommandSetCullMode(VK_CULL_MODE_NONE);
-    command_buffer.CommandEnableDepthWrite(false);
-    command_buffer.CommandBindGraphicsPipeline(graphics_pipeline_->GetPipeline());
-    command_buffer.CommandDraw(3);
     command_buffer.CommandEndRendering();
   }
 
   void OnAttach() override {
-    auto format = Application::Get().GetSwapchain().GetFormat();
 
-    graphics_pipeline_ = std::make_unique<GraphicsPipeline>(GetInnsmouthShadersDirectory() / "tests" / "square.vert.spv",
-                                                            GetInnsmouthShadersDirectory() / "tests" / "square.frag.spv", format);
   }
 
 private:
-  std::unique_ptr<GraphicsPipeline> graphics_pipeline_;
+
 };
 
 int main() {

@@ -5,22 +5,22 @@
 
 namespace Innsmouth {
 
-ImageInformation::ImageInformation(uint32_t width, uint32_t height) : width_(width), height_(height) {
+ImageSpecification::ImageSpecification(uint32_t width, uint32_t height) : width_(width), height_(height) {
 }
 
-VkExtent3D ImageInformation::GetExtent3D() const {
+VkExtent3D ImageSpecification::GetExtent3D() const {
   return VkExtent3D(width_, height_, depth_);
 }
 
-uint32_t ImageInformation::GetLevels() const {
+uint32_t ImageSpecification::GetLevels() const {
   return levels_;
 }
 
-uint32_t ImageInformation::GetLayers() const {
+uint32_t ImageSpecification::GetLayers() const {
   return depth_;
 }
 
-Image::Image(VkImageUsageFlags image_usage, VkImageType image_type, VkFormat image_format, const ImageInformation &image_information)
+Image::Image(VkImageUsageFlags image_usage, VkImageType image_type, VkFormat image_format, const ImageSpecification &image_information)
   : image_usage_(image_usage), image_type_(image_type), image_format_(image_format), image_information_(image_information) {
   CreateImage();
   CreateImageView();
@@ -95,7 +95,7 @@ const VkSampler Image::GetSampler() const {
 }
 
 void Image::SetImageData(std::span<const std::byte> data) {
-  Buffer buffer(data.size(), VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+  Buffer buffer(data.size(), BufferUsageMaskBits::E_TRANSFER_SRC_BIT);
   buffer.Map();
   std::copy(data.begin(), data.end(), buffer.GetMappedData<std::byte>().begin());
   buffer.Unmap();
@@ -129,7 +129,7 @@ void Image::SetImageData(std::span<const std::byte> data) {
     submit_info.pCommandBuffers = command_buffer.get();
   }
 
-  Fence fence(false);
+  Fence fence({});
 
   VK_CHECK(vkQueueSubmit(GraphicsContext::Get()->GetGeneralQueue(), 1, &submit_info, fence.GetHandle()));
 

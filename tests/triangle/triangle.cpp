@@ -50,7 +50,7 @@ public:
 
     auto format = Application::Get().GetSwapchain().GetFormat();
 
-    vertex_buffer_ = std::make_unique<Buffer>(10_KiB, VkBufferUsageFlagBits::VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+    vertex_buffer_ = std::make_unique<Buffer>(10_KiB, BufferUsageMaskBits::E_VERTEX_BUFFER_BIT);
 
     vertex_buffer_->Map();
     auto mapped_data = vertex_buffer_->GetMappedData<float>();

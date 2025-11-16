@@ -21,7 +21,7 @@ Application::Application()
 
 void Application::Initialize() {
   for (const auto &image_view : swapchain_.GetImageViews()) {
-    fences_.emplace_back(true);
+    fences_.emplace_back(FenceCreateMaskBits::E_SIGNALED_BIT);
     command_buffers_.emplace_back(GraphicsContext::Get()->GetGeneralCommandPool());
     image_available_semaphores.emplace_back();
     render_finished_semaphores.emplace_back();

@@ -12,7 +12,7 @@ class Swapchain;
 
 class ImGuiRenderer {
 public:
-  ImGuiRenderer(VkFormat color_format);
+  ImGuiRenderer(Format color_format);
 
   void RenderDrawData(CommandBuffer &command_buffer);
 

@@ -2,7 +2,7 @@
 
 namespace Innsmouth {
 
-Buffer::Buffer(std::size_t buffer_size, VkBufferUsageFlags buffer_usage) : buffer_size_(buffer_size), buffer_usage_(buffer_usage) {
+Buffer::Buffer(std::size_t buffer_size, BufferUsageMask buffer_usage) : buffer_size_(buffer_size), buffer_usage_(buffer_usage) {
   CreateBuffer();
 }
 
@@ -10,15 +10,14 @@ Buffer::~Buffer() {
 }
 
 void Buffer::CreateBuffer() {
-  VkBufferCreateInfo buffer_ci{};
+  BufferCreateInfo buffer_ci;
   {
-    buffer_ci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     buffer_ci.size = buffer_size_;
     buffer_ci.usage = buffer_usage_;
-    buffer_ci.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    buffer_ci.sharingMode = SharingMode::E_EXCLUSIVE;
   }
 
-  vma_allocation_ = GraphicsAllocator::Get()->AllocateBuffer(buffer_ci, &buffer_);
+  vma_allocation_ = GraphicsAllocator::Get()->AllocateBuffer(buffer_ci, buffer_);
 }
 
 const VkBuffer Buffer::GetHandle() const {
@@ -31,6 +30,13 @@ void Buffer::Map() {
 
 void Buffer::Unmap() {
   GraphicsAllocator::Get()->UnmapMemory(vma_allocation_);
+}
+
+VkDeviceAddress Buffer::GetBufferAddress() const {
+  BufferDeviceAddressInfo buffer_device_ai;
+  buffer_device_ai.buffer = GetHandle();
+  auto address = vkGetBufferDeviceAddress(GraphicsContext::Get()->GetDevice(), buffer_device_ai);
+  return address;
 }
 
 } // namespace Innsmouth

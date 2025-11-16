@@ -16,6 +16,15 @@ CommandBuffer::CommandBuffer(const VkCommandPool command_pool) {
 CommandBuffer::~CommandBuffer() {
 }
 
+void CommandBuffer::Submit() {
+  SubmitInfo submit_info;
+  {
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &command_buffer_;
+  }
+  VK_CHECK(vkQueueSubmit(GraphicsContext::Get()->GetGeneralQueue(), 1, submit_info, VK_NULL_HANDLE));
+}
+
 void CommandBuffer::Begin(VkCommandBufferUsageFlags usage) {
   VkCommandBufferBeginInfo command_buffer_bi{};
   {

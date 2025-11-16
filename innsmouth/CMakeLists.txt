@@ -1,6 +1,8 @@
 set(INNSMOUTH_SOURCE_DIR ${PROJECT_SOURCE_DIR}/innsmouth)
 
 set(INNSMOUTH_GRAPHICS_SOURCES
+  ${INNSMOUTH_SOURCE_DIR}/graphics/core/graphics_structures.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/core/structure_tools.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_context/graphics_context.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_context/graphics_tools.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_context/graphics_allocator.cpp
@@ -13,6 +15,14 @@ set(INNSMOUTH_GRAPHICS_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/shader_module.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/synchronization/fence.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/synchronization/semaphore.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/descriptors/descriptor_pool.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/descriptors/descriptor_set.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/acceleration/acceleration_structure.cpp
+)
+
+set(INNSMOUTH_ASSET_SOURCES
+  ${INNSMOUTH_SOURCE_DIR}/asset/model.cpp
+  ${INNSMOUTH_SOURCE_DIR}/asset/khronos_loader.cpp
 )
 
 set(INNSMOUTH_GUI_SOURCES
@@ -31,6 +41,7 @@ set(INNSMOUTH_SOURCES
   ${INNSMOUTH_GUI_SOURCES}
   ${INNSMOUTH_GRAPHICS_SOURCES}
   ${INNSMOUTH_CORE_SOURCES}
+  ${INNSMOUTH_ASSET_SOURCES}
   ${INNSMOUTH_SOURCE_DIR}/application/application.cpp
 )
 
@@ -58,13 +69,7 @@ target_include_directories(imgui PUBLIC
 
 # SPIRV
 
-add_library(SPIRV-reflect 
-  STATIC ${Vulkan_INCLUDE_DIR}/SPIRV-Reflect/spirv_reflect.c
-)
-
-target_include_directories(SPIRV-reflect PUBLIC 
-  ${spirv-reflect_SOURCE_DIR}
-)
+add_library(SPIRV-reflect STATIC ${Vulkan_INCLUDE_DIR}/SPIRV-Reflect/spirv_reflect.c)
 
 # Innsmouth
 
@@ -80,9 +85,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME} 
-  volk
+  Vulkan::volk
   imgui
   glfw
+  fastgltf
   glm::glm
   SPIRV-reflect
 )

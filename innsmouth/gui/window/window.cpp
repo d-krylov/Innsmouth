@@ -97,14 +97,14 @@ Window::Window(std::string_view name, int32_t width, int32_t height) {
   SetCallbacks(GetNativeWindow());
 }
 
-Extent2D Window::GetSize() const {
-  Extent2D size;
+ViewportSize Window::GetSize() const {
+  ViewportSize size;
   glfwGetWindowSize(native_window_, &size.width, &size.height);
   return size;
 }
 
-Extent2D Window::GetFramebufferSize() const {
-  Extent2D size;
+ViewportSize Window::GetFramebufferSize() const {
+  ViewportSize size;
   glfwGetFramebufferSize(native_window_, &size.width, &size.height);
   return size;
 }

@@ -21,8 +21,8 @@ public:
     return native_window_;
   }
 
-  Extent2D GetFramebufferSize() const;
-  Extent2D GetSize() const;
+  ViewportSize GetFramebufferSize() const;
+  ViewportSize GetSize() const;
   int32_t GetWidth() const;
   int32_t GetHeight() const;
 

@@ -9,7 +9,7 @@ namespace Innsmouth {
 
 class Buffer {
 public:
-  Buffer(std::size_t buffer_size, VkBufferUsageFlags buffer_usage);
+  Buffer(std::size_t buffer_size, BufferUsageMask buffer_usage);
 
   ~Buffer();
 
@@ -21,6 +21,8 @@ public:
 
   const VkBuffer GetHandle() const;
 
+  VkDeviceAddress GetBufferAddress() const;
+
 protected:
   void CreateBuffer();
 
@@ -29,7 +31,7 @@ private:
   VmaAllocation vma_allocation_{VK_NULL_HANDLE};
   std::size_t buffer_size_{0};
   std::byte *mapped_data_{nullptr};
-  VkBufferUsageFlags buffer_usage_;
+  BufferUsageMask buffer_usage_;
 };
 
 } // namespace Innsmouth

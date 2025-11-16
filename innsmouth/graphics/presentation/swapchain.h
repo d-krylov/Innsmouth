@@ -13,7 +13,7 @@ public:
   Swapchain(GLFWwindow *native_window);
 
   const VkExtent2D &GetExtent() const;
-  VkFormat GetFormat() const;
+  Format GetFormat() const;
 
   std::span<const VkImageView> GetImageViews() const;
   std::size_t GetImageCount() const;

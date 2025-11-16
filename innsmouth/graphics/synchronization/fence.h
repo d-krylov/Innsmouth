@@ -7,7 +7,7 @@ namespace Innsmouth {
 
 class Fence {
 public:
-  Fence(bool signaled);
+  Fence(FenceCreateMask fence_create_mask);
 
   ~Fence();
 

@@ -102,7 +102,7 @@ void Swapchain::CreateImageViews() {
       submit_info.pCommandBuffers = command_buffer.get();
     }
 
-    Fence fence(false);
+    Fence fence({});
 
     VK_CHECK(vkQueueSubmit(GraphicsContext::Get()->GetGeneralQueue(), 1, &submit_info, fence.GetHandle()));
 
@@ -123,8 +123,8 @@ const VkExtent2D &Swapchain::GetExtent() const {
   return surface_extent_;
 }
 
-VkFormat Swapchain::GetFormat() const {
-  return surface_format_.format;
+Format Swapchain::GetFormat() const {
+  return Format(surface_format_.format);
 }
 
 std::span<const VkImageView> Swapchain::GetImageViews() const {

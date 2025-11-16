@@ -33,7 +33,7 @@ void GraphicsAllocator::CreateAllocator() {
     allocator_ci.device = GraphicsContext::Get()->GetDevice();
     allocator_ci.vulkanApiVersion = VK_API_VERSION_1_3;
     allocator_ci.pVulkanFunctions = &vulkan_functions;
-    allocator_ci.flags = 0;
+    allocator_ci.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
   }
 
   VK_CHECK(vmaCreateAllocator(&allocator_ci, &vma_allocator_));
@@ -59,7 +59,7 @@ VmaAllocation GraphicsAllocator::AllocateImage(const VkImageCreateInfo &image_ci
   return allocation;
 }
 
-VmaAllocation GraphicsAllocator::AllocateBuffer(const VkBufferCreateInfo &buffer_ci, VkBuffer *buffer) {
+VmaAllocation GraphicsAllocator::AllocateBuffer(const BufferCreateInfo &buffer_ci, VkBuffer &out_buffer) {
   VmaAllocationCreateInfo vma_allocation_ci{};
   {
     vma_allocation_ci.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
@@ -74,7 +74,7 @@ VmaAllocation GraphicsAllocator::AllocateBuffer(const VkBufferCreateInfo &buffer
   VmaAllocation allocation{VK_NULL_HANDLE};
   VmaAllocationInfo allocation_info{};
 
-  VK_CHECK(vmaCreateBuffer(vma_allocator_, &buffer_ci, &vma_allocation_ci, buffer, &allocation, &allocation_info));
+  VK_CHECK(vmaCreateBuffer(vma_allocator_, buffer_ci, &vma_allocation_ci, &out_buffer, &allocation, &allocation_info));
 
   return allocation;
 }

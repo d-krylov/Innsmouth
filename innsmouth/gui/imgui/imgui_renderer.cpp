@@ -7,10 +7,14 @@
 
 namespace Innsmouth {
 
-ImGuiRenderer::ImGuiRenderer(VkFormat color_format)
-  : graphics_pipeline_(GetInnsmouthShadersDirectory() / "gui" / "gui.vert.spv", GetInnsmouthShadersDirectory() / "gui" / "gui.frag.spv",
-                       color_format),
-    vertex_buffer_(20_MiB, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT), index_buffer_(20_MiB, VK_BUFFER_USAGE_INDEX_BUFFER_BIT) {
+ImGuiRenderer::ImGuiRenderer(Format color_format)
+  : vertex_buffer_(20_MiB, BufferUsageMaskBits::E_VERTEX_BUFFER_BIT), index_buffer_(20_MiB, BufferUsageMaskBits::E_INDEX_BUFFER_BIT) {
+
+  auto shader_directory = GetInnsmouthShadersDirectory();
+  PipelineSpecification specification;
+  specification.color_formats_ = {color_format};
+  specification.shader_paths_ = {shader_directory / "gui" / "gui.vert.spv", shader_directory / "gui" / "gui.frag.spv"};
+  graphics_pipeline_ = GraphicsPipeline(specification);
   CreateFontsTexture();
 }
 
@@ -22,8 +26,8 @@ void ImGuiRenderer::SetBuffers() {
   for (const auto &commands : draw_data->CmdLists) {
     std::span<ImDrawVert> vertices(commands->VtxBuffer.Data, commands->VtxBuffer.Size);
     std::span<ImDrawIdx> indices(commands->IdxBuffer.Data, commands->IdxBuffer.Size);
-    std::copy(vertices.begin(), vertices.end(), vertex_buffer_.GetMappedData<ImDrawVert>().begin());
-    std::copy(indices.begin(), indices.end(), index_buffer_.GetMappedData<ImDrawIdx>().begin());
+    std::ranges::copy(vertices, vertex_buffer_.GetMappedData<ImDrawVert>().begin() + vbo_offset);
+    std::ranges::copy(indices, index_buffer_.GetMappedData<ImDrawIdx>().begin() + ibo_offset);
     vbo_offset += vertices.size();
     ibo_offset += indices.size();
   }
@@ -35,11 +39,7 @@ void ImGuiRenderer::SetupRenderState(CommandBuffer &command_buffer) {
   auto &io = ImGui::GetIO();
   auto draw_data = ImGui::GetDrawData();
 
-  command_buffer.CommandSetCullMode(VK_CULL_MODE_NONE);
-  command_buffer.CommandSetFrontFace(VK_FRONT_FACE_COUNTER_CLOCKWISE);
   command_buffer.CommandBindGraphicsPipeline(graphics_pipeline_.GetPipeline());
-  command_buffer.CommandEnableDepthTest(false);
-  command_buffer.CommandEnableDepthWrite(false);
 
   auto index_type = sizeof(ImDrawIdx) == 2 ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32;
 
@@ -116,7 +116,7 @@ void ImGuiRenderer::CreateFontsTexture() {
   io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height, &channels);
   auto data = std::span(pixels, width * height * channels);
   font_image_ = std::make_unique<Image>(VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM,
-                                        ImageInformation(width, height));
+                                        ImageSpecification(width, height));
   font_image_->SetData<unsigned char>(data);
   io.Fonts->SetTexID((ImTextureID)(intptr_t)font_image_.get());
 }
@@ -129,7 +129,7 @@ void ImGuiRenderer::Begin(CommandBuffer &command_buffer, const Swapchain &swapch
     rendering_ai[0].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
     rendering_ai[0].imageView = swapchain.GetCurrentImageView();
     rendering_ai[0].imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    rendering_ai[0].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+    rendering_ai[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     rendering_ai[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     rendering_ai[0].clearValue.color = {0.0f, 0.0f, 0.0f, 1.0f};
   }

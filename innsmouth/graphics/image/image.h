@@ -7,9 +7,9 @@
 
 namespace Innsmouth {
 
-class ImageInformation {
+class ImageSpecification {
 public:
-  ImageInformation(uint32_t width, uint32_t height);
+  ImageSpecification(uint32_t width, uint32_t height);
 
   VkExtent3D GetExtent3D() const;
   uint32_t GetLevels() const;
@@ -24,7 +24,7 @@ public:
 
 class Image {
 public:
-  Image(VkImageUsageFlags image_usage, VkImageType image_type, VkFormat image_format, const ImageInformation &image_information);
+  Image(VkImageUsageFlags image_usage, VkImageType image_type, VkFormat image_format, const ImageSpecification &image_information);
 
   ~Image();
 
@@ -47,7 +47,7 @@ private:
   VkImageUsageFlags image_usage_;
   VkImageType image_type_;
   VkFormat image_format_;
-  ImageInformation image_information_;
+  ImageSpecification image_information_;
 };
 
 } // namespace Innsmouth

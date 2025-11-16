@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_GRAPHICS_TYPES_H
 #define INNSMOUTH_GRAPHICS_TYPES_H
 
-#include "volk.h"
+#include <volk/volk.h>
 
 namespace Innsmouth {
 

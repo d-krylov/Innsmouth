@@ -2,6 +2,7 @@
 #define INNSMOUTH_GRAPHICS_CONTEXT_H
 
 #include "graphics_tools.h"
+#include "innsmouth/graphics/core/graphics_structures.h"
 
 namespace Innsmouth {
 

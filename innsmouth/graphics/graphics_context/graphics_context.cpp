@@ -167,12 +167,21 @@ void GraphicsContext::CreateDevice() {
 
   auto required_device_extensions = GetRequiredDeviceExtensions();
 
+  VkPhysicalDeviceVulkan14Features physical_device_features_14{};
+  {
+    physical_device_features_14.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES;
+    physical_device_features_14.maintenance5 = true;
+    physical_device_features_14.maintenance6 = true;
+    physical_device_features_14.pushDescriptor = true;
+    physical_device_features_14.pNext = nullptr;
+  }
+
   VkPhysicalDeviceVulkan13Features physical_device_features_13{};
   {
     physical_device_features_13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
     physical_device_features_13.synchronization2 = VK_TRUE;
     physical_device_features_13.dynamicRendering = VK_TRUE;
-    physical_device_features_13.pNext = nullptr;
+    physical_device_features_13.pNext = &physical_device_features_14;
   }
 
   VkPhysicalDeviceFeatures2 physical_device_features_2{};

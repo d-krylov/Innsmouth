@@ -17,6 +17,8 @@ public:
   void Reset();
   void End();
 
+  void Submit();
+
   void BeginRendering();
 
   const VkCommandBuffer *get() const {
