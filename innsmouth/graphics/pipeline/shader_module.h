@@ -13,8 +13,6 @@ class ShaderModule {
 public:
   ShaderModule(const std::filesystem::path &shader_path);
 
-  ~ShaderModule();
-
   std::size_t GetSize() const;
   std::span<const uint32_t> GetBinaryData() const;
   ShaderStageMaskBits GetShaderStage() const;

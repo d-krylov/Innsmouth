@@ -113,6 +113,8 @@ VkPipeline CreateGraphicsPipeline(const PipelineSpecification &specification, st
   PipelineRasterizationStateCreateInfo rasterization_state_ci;
   rasterization_state_ci.polygonMode = PolygonMode::E_FILL;
   rasterization_state_ci.lineWidth = 1.0f;
+  rasterization_state_ci.cullMode = CullModeMaskBits::E_BACK_BIT;
+  rasterization_state_ci.frontFace = FrontFace::E_COUNTER_CLOCKWISE;
 
   // DYNAMIC STATES
   PipelineDynamicStateCreateInfo dynamic_state_ci;
@@ -148,7 +150,7 @@ VkPipeline CreateGraphicsPipeline(const PipelineSpecification &specification, st
 
   graphics_pipeline_ci.stageCount = shader_stages_cis.size();
   graphics_pipeline_ci.pStages = shader_stages_cis.data();
-  graphics_pipeline_ci.pVertexInputState = vertex_input_attributes.empty() ? nullptr : &vertex_input_state_ci;
+  graphics_pipeline_ci.pVertexInputState = &vertex_input_state_ci;
   graphics_pipeline_ci.pInputAssemblyState = &input_assembly_state_ci;
   graphics_pipeline_ci.pViewportState = &viewport_state_ci;
   graphics_pipeline_ci.pRasterizationState = &rasterization_state_ci;

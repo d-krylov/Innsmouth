@@ -83,9 +83,6 @@ ShaderModule::ShaderModule(const std::filesystem::path &shader_path) {
   ParseShader(spirv_);
 }
 
-ShaderModule::~ShaderModule() {
-}
-
 std::span<const uint32_t> ShaderModule::GetBinaryData() const {
   return spirv_;
 }

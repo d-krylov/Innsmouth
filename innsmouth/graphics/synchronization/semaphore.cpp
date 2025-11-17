@@ -11,4 +11,13 @@ Semaphore::~Semaphore() {
   // vkDestroySemaphore(Device(), semaphore_, nullptr);
 }
 
+Semaphore::Semaphore(Semaphore &&other) noexcept {
+  semaphore_ = std::exchange(other.semaphore_, VK_NULL_HANDLE);
+}
+
+Semaphore &Semaphore::operator=(Semaphore &&other) noexcept {
+  std::swap(semaphore_, other.semaphore_);
+  return *this;
+}
+
 } // namespace Innsmouth

@@ -42,12 +42,11 @@ void CommandBuffer::Reset() {
   vkResetCommandBuffer(command_buffer_, 0);
 }
 
-void CommandBuffer::CommandBeginRendering(const VkExtent2D &extent, std::span<const VkRenderingAttachmentInfo> colors,
-                                          const std::optional<VkRenderingAttachmentInfo> &depth,
-                                          const std::optional<VkRenderingAttachmentInfo> &stencil) {
-  VkRenderingInfo rendering_info{};
+void CommandBuffer::CommandBeginRendering(const Extent2D &extent, std::span<const RenderingAttachmentInfo> colors,
+                                          const std::optional<RenderingAttachmentInfo> &depth,
+                                          const std::optional<RenderingAttachmentInfo> &stencil) {
+  RenderingInfo rendering_info;
   {
-    rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
     rendering_info.renderArea.offset = {0, 0};
     rendering_info.renderArea.extent = extent;
     rendering_info.layerCount = 1;
@@ -57,7 +56,7 @@ void CommandBuffer::CommandBeginRendering(const VkExtent2D &extent, std::span<co
     rendering_info.pStencilAttachment = stencil.has_value() ? &stencil.value() : nullptr;
   }
 
-  vkCmdBeginRendering(command_buffer_, &rendering_info);
+  vkCmdBeginRendering(command_buffer_, rendering_info);
 }
 
 void CommandBuffer::CommandEndRendering() {
@@ -67,35 +66,31 @@ void CommandBuffer::CommandEndRendering() {
 // OPTIONS
 
 void CommandBuffer::CommandSetViewport(float x, float y, float w, float h, float min_depth, float max_depth) {
-  VkViewport viewport{};
-  {
-    viewport.x = x;
-    viewport.y = y;
-    viewport.width = w;
-    viewport.height = h;
-    viewport.minDepth = min_depth;
-    viewport.maxDepth = max_depth;
-  }
-  vkCmdSetViewport(command_buffer_, 0, 1, &viewport);
+  Viewport viewport;
+  viewport.x = x;
+  viewport.y = y;
+  viewport.width = w;
+  viewport.height = h;
+  viewport.minDepth = min_depth;
+  viewport.maxDepth = max_depth;
+  vkCmdSetViewport(command_buffer_, 0, 1, viewport);
 }
 
 void CommandBuffer::CommandSetScissor(int32_t x, int32_t y, uint32_t width, uint32_t height) {
-  VkRect2D scissor;
-  {
-    scissor.offset.x = x;
-    scissor.offset.y = y;
-    scissor.extent.width = width;
-    scissor.extent.height = height;
-  }
-  vkCmdSetScissor(command_buffer_, 0, 1, &scissor);
+  Rect2D scissor;
+  scissor.offset.x = x;
+  scissor.offset.y = y;
+  scissor.extent.width = width;
+  scissor.extent.height = height;
+  vkCmdSetScissor(command_buffer_, 0, 1, scissor);
 }
 
-void CommandBuffer::CommandSetCullMode(VkCullModeFlags mode) {
-  vkCmdSetCullMode(command_buffer_, mode);
+void CommandBuffer::CommandSetCullMode(CullModeMask mode) {
+  vkCmdSetCullMode(command_buffer_, mode.GetValue());
 }
 
-void CommandBuffer::CommandSetFrontFace(VkFrontFace front_face) {
-  vkCmdSetFrontFace(command_buffer_, front_face);
+void CommandBuffer::CommandSetFrontFace(FrontFace front_face) {
+  vkCmdSetFrontFace(command_buffer_, static_cast<VkFrontFace>(front_face));
 }
 
 void CommandBuffer::CommandEnableDepthTest(bool enabled) {
@@ -110,31 +105,27 @@ void CommandBuffer::CommandEnableStencilTest(bool enabled) {
   vkCmdSetStencilTestEnable(command_buffer_, enabled);
 }
 
-void CommandBuffer::CommandPipelineBarrier(std::span<const VkImageMemoryBarrier2> image_barriers,
-                                           std::span<const VkBufferMemoryBarrier2> buffer_barriers) {
-  VkDependencyInfo dependency_info{};
-  {
-    dependency_info.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
-    dependency_info.dependencyFlags = 0;
-    dependency_info.bufferMemoryBarrierCount = buffer_barriers.size();
-    dependency_info.pBufferMemoryBarriers = buffer_barriers.data();
-    dependency_info.imageMemoryBarrierCount = image_barriers.size();
-    dependency_info.pImageMemoryBarriers = image_barriers.data();
-  }
+void CommandBuffer::CommandPipelineBarrier(std::span<const ImageMemoryBarrier2> image_barriers,
+                                           std::span<const BufferMemoryBarrier2> buffer_barriers) {
+  DependencyInfo dependency_info{};
 
-  vkCmdPipelineBarrier2(command_buffer_, &dependency_info);
+  dependency_info.dependencyFlags = {};
+  dependency_info.bufferMemoryBarrierCount = buffer_barriers.size();
+  dependency_info.pBufferMemoryBarriers = buffer_barriers.data();
+  dependency_info.imageMemoryBarrierCount = image_barriers.size();
+  dependency_info.pImageMemoryBarriers = image_barriers.data();
+
+  vkCmdPipelineBarrier2(command_buffer_, dependency_info);
 }
 
-void CommandBuffer::CommandImageMemoryBarrier(const VkImage &image, VkImageLayout from_layout, VkImageLayout to_layout,
-                                              VkPipelineStageFlags from_stage, VkPipelineStageFlags to_stage,
-                                              const VkImageSubresourceRange &range) {
+void CommandBuffer::CommandImageMemoryBarrier(const VkImage &image, ImageLayout from_layout, ImageLayout to_layout,
+                                              PipelineStageMask2 from_stage, PipelineStageMask2 to_stage, const ImageSubresourceRange &range) {
 
   auto from_access_mask = GetAccessMask(from_layout);
   auto to_access_mask = GetAccessMask(to_layout);
 
-  std::array<VkImageMemoryBarrier2, 1> image_memory_barrier = {};
+  std::array<ImageMemoryBarrier2, 1> image_memory_barrier = {};
   {
-    image_memory_barrier[0].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
     image_memory_barrier[0].srcStageMask = from_stage;
     image_memory_barrier[0].srcAccessMask = from_access_mask;
     image_memory_barrier[0].dstStageMask = to_stage;
@@ -147,7 +138,7 @@ void CommandBuffer::CommandImageMemoryBarrier(const VkImage &image, VkImageLayou
     image_memory_barrier[0].subresourceRange = range;
   }
 
-  std::array<VkBufferMemoryBarrier2, 0> buffer_memory_barrier{};
+  std::array<BufferMemoryBarrier2, 0> buffer_memory_barrier{};
 
   CommandPipelineBarrier(image_memory_barrier, buffer_memory_barrier);
 }
@@ -203,6 +194,25 @@ void CommandBuffer::CommandPushDescriptorSet(const VkPipelineLayout layout, uint
     write_descriptor_set.pImageInfo = &descriptor_ii;
   }
   vkCmdPushDescriptorSetKHR(command_buffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, set_number, 1, &write_descriptor_set);
+}
+
+void CommandBuffer::CommandPushDescriptorSet(VkPipelineLayout layout, uint32_t set_number, uint32_t binding, VkBuffer buffer) {
+  DescriptorBufferInfo descriptor_bi;
+  {
+    descriptor_bi.buffer = buffer;
+    descriptor_bi.offset = 0;
+    descriptor_bi.range = VK_WHOLE_SIZE;
+  }
+
+  WriteDescriptorSet write_descriptor_set;
+  {
+    write_descriptor_set.dstBinding = binding;
+    write_descriptor_set.dstArrayElement = 0;
+    write_descriptor_set.descriptorType = DescriptorType::E_STORAGE_BUFFER;
+    write_descriptor_set.descriptorCount = 1;
+    write_descriptor_set.pBufferInfo = &descriptor_bi;
+  }
+  vkCmdPushDescriptorSetKHR(command_buffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, set_number, 1, write_descriptor_set);
 }
 
 void CommandBuffer::CommandCopyBufferToImage(const VkBuffer buffer, const VkImage image, const VkExtent3D &extent) {

@@ -9,12 +9,17 @@ Fence::Fence(FenceCreateMask fence_create_mask) {
   VK_CHECK(vkCreateFence(GraphicsContext::Get()->GetDevice(), fence_ci, nullptr, &fence_));
 }
 
-Fence::Fence(Fence &&other) noexcept {
-  fence_ = std::exchange(other.fence_, nullptr);
+Fence::~Fence() {
+  vkDestroyFence(GraphicsContext::Get()->GetDevice(), fence_, nullptr);
 }
 
-Fence::~Fence() {
-  // vkDestroyFence(Device(), fence_, nullptr);
+Fence::Fence(Fence &&other) noexcept {
+  fence_ = std::exchange(other.fence_, VK_NULL_HANDLE);
+}
+
+Fence &Fence::operator=(Fence &&other) noexcept {
+  std::swap(fence_, other.fence_);
+  return *this;
 }
 
 void Fence::Wait() {

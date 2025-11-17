@@ -2,10 +2,11 @@
 #define INNSMOUTH_GRAPHICS_TYPES_H
 
 #include <volk/volk.h>
+#include "innsmouth/graphics/core/graphics_enums.h"
 
 namespace Innsmouth {
 
-VkAccessFlags GetAccessMask(VkImageLayout layout);
+AccessMask2 GetAccessMask(ImageLayout layout);
 
 bool HasBits(VkFlags supported_mask, VkFlags requiered_mask);
 bool NotBits(VkFlags supported_mask, VkFlags requiered_mask);

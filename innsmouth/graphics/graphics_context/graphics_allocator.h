@@ -3,7 +3,7 @@
 
 #include <vma/vk_mem_alloc.h>
 #include "innsmouth/graphics/core/graphics_structures.h"
-#include <cstddef>
+#include <span>
 
 namespace Innsmouth {
 
@@ -19,7 +19,9 @@ public:
 
   static GraphicsAllocator *Get();
 
-  std::byte *MapMemory(VmaAllocation allocation);
+  void CopyMemoryToAllocation(std::span<const std::byte> source, VmaAllocation destination, std::size_t offset);
+
+  void MapMemory(VmaAllocation allocation, std::byte **mapped_memory);
 
   void UnmapMemory(VmaAllocation allocation);
 

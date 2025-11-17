@@ -79,14 +79,16 @@ VmaAllocation GraphicsAllocator::AllocateBuffer(const BufferCreateInfo &buffer_c
   return allocation;
 }
 
-std::byte *GraphicsAllocator::MapMemory(VmaAllocation allocation) {
-  void *mapped_memory;
-  VK_CHECK(vmaMapMemory(vma_allocator_, allocation, &mapped_memory));
-  return static_cast<std::byte *>(mapped_memory);
+void GraphicsAllocator::MapMemory(VmaAllocation allocation, std::byte **mapped_memory) {
+  VK_CHECK(vmaMapMemory(vma_allocator_, allocation, reinterpret_cast<void **>(mapped_memory)));
 }
 
 void GraphicsAllocator::UnmapMemory(VmaAllocation allocation) {
   vmaUnmapMemory(vma_allocator_, allocation);
+}
+
+void GraphicsAllocator::CopyMemoryToAllocation(std::span<const std::byte> source, VmaAllocation destination, std::size_t offset) {
+  vmaCopyMemoryToAllocation(vma_allocator_, source.data(), destination, offset, source.size());
 }
 
 } // namespace Innsmouth

@@ -12,12 +12,17 @@ class Swapchain {
 public:
   Swapchain(GLFWwindow *native_window);
 
-  const VkExtent2D &GetExtent() const;
+  Swapchain(const Swapchain &) = delete;
+  Swapchain &operator=(const Swapchain &) = delete;
+
+  const Extent2D &GetExtent() const;
   Format GetFormat() const;
 
   std::span<const VkImageView> GetImageViews() const;
-  std::size_t GetImageCount() const;
   const VkImageView GetCurrentImageView() const;
+
+  uint32_t GetCurrentImageIndex() const;
+  uint32_t GetImageCount() const;
 
   VkResult Present(const VkSemaphore *wait_semaphore);
   VkResult AcquireNextImage(const VkSemaphore semaphore);
@@ -35,10 +40,10 @@ private:
   VkSwapchainKHR swapchain_current_{VK_NULL_HANDLE};
   VkSwapchainKHR swapchain_previous_{VK_NULL_HANDLE};
   VkSurfaceFormatKHR surface_format_;
-  VkExtent2D surface_extent_;
+  Extent2D surface_extent_;
   std::vector<VkImage> images_;
   std::vector<VkImageView> image_views_;
-  uint32_t current_image_{0};
+  uint32_t current_image_index_{0};
 };
 
 } // namespace Innsmouth

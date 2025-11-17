@@ -11,7 +11,11 @@ public:
 
   ~Fence();
 
-  Fence(Fence &&) noexcept;
+  Fence(const Fence &) = delete;
+  Fence &operator=(const Fence &) = delete;
+
+  Fence(Fence &&other) noexcept;
+  Fence &operator=(Fence &&other) noexcept;
 
   void Wait();
 

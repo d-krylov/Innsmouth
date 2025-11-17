@@ -9,13 +9,22 @@ namespace Innsmouth {
 
 class Buffer {
 public:
+  Buffer() = default;
+
   Buffer(std::size_t buffer_size, BufferUsageMask buffer_usage);
 
   ~Buffer();
 
-  void Map();
+  Buffer(const Buffer &) = delete;
+  Buffer &operator=(const Buffer &) = delete;
 
+  Buffer(Buffer &&other) noexcept;
+  Buffer &operator=(Buffer &&other) noexcept;
+
+  void Map();
   void Unmap();
+
+  template <typename T> void SetData(std::span<const T> data, std::size_t offset = 0);
 
   template <typename T> std::span<T> GetMappedData();
 
@@ -30,7 +39,7 @@ private:
   VkBuffer buffer_{VK_NULL_HANDLE};
   VmaAllocation vma_allocation_{VK_NULL_HANDLE};
   std::size_t buffer_size_{0};
-  std::byte *mapped_data_{nullptr};
+  std::byte *mapped_memory_{nullptr};
   BufferUsageMask buffer_usage_;
 };
 

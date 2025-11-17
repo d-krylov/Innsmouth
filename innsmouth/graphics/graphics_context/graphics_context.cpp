@@ -167,28 +167,28 @@ void GraphicsContext::CreateDevice() {
 
   auto required_device_extensions = GetRequiredDeviceExtensions();
 
-  VkPhysicalDeviceVulkan14Features physical_device_features_14{};
-  {
-    physical_device_features_14.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES;
-    physical_device_features_14.maintenance5 = true;
-    physical_device_features_14.maintenance6 = true;
-    physical_device_features_14.pushDescriptor = true;
-    physical_device_features_14.pNext = nullptr;
-  }
+  PhysicalDeviceVulkan14Features physical_device_features_14;
+  physical_device_features_14.maintenance5 = true;
+  physical_device_features_14.maintenance6 = true;
+  physical_device_features_14.pushDescriptor = true;
+  physical_device_features_14.pNext = nullptr;
 
-  VkPhysicalDeviceVulkan13Features physical_device_features_13{};
-  {
-    physical_device_features_13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-    physical_device_features_13.synchronization2 = VK_TRUE;
-    physical_device_features_13.dynamicRendering = VK_TRUE;
-    physical_device_features_13.pNext = &physical_device_features_14;
-  }
+  PhysicalDeviceVulkan13Features physical_device_features_13;
+  physical_device_features_13.synchronization2 = true;
+  physical_device_features_13.dynamicRendering = true;
+  physical_device_features_13.pNext = &physical_device_features_14;
 
-  VkPhysicalDeviceFeatures2 physical_device_features_2{};
-  {
-    physical_device_features_2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-    physical_device_features_2.pNext = &physical_device_features_13;
-  }
+  PhysicalDeviceVulkan12Features physical_device_features_12;
+  physical_device_features_12.bufferDeviceAddress = true;
+  physical_device_features_12.descriptorIndexing = true;
+  physical_device_features_12.pNext = &physical_device_features_13;
+
+  PhysicalDeviceVulkan11Features physical_device_features_11;
+  physical_device_features_11.shaderDrawParameters = true;
+  physical_device_features_11.pNext = &physical_device_features_12;
+
+  PhysicalDeviceFeatures2 physical_device_features_2;
+  physical_device_features_2.pNext = &physical_device_features_11;
 
   VkDeviceCreateInfo device_ci{};
   {

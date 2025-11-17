@@ -1,6 +1,7 @@
 #include "swapchain.h"
 #include "innsmouth/graphics/command/command_buffer.h"
 #include "innsmouth/graphics/synchronization/fence.h"
+#include "innsmouth/graphics/core/structure_tools.h"
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <limits>
@@ -36,7 +37,8 @@ void Swapchain::CreateSwapchain() {
   auto surface_capabilities = GetSurfaceCapabilities(surface_);
   auto image_count = ComputeImageCount(surface_capabilities);
 
-  surface_extent_ = surface_capabilities.currentExtent;
+  surface_extent_.width = surface_capabilities.currentExtent.width;
+  surface_extent_.height = surface_capabilities.currentExtent.height;
 
   std::array required_present_modes{VkPresentModeKHR::VK_PRESENT_MODE_MAILBOX_KHR};
 
@@ -67,14 +69,7 @@ void Swapchain::CreateSwapchain() {
 void Swapchain::CreateImageViews() {
   image_views_.resize(images_.size());
 
-  VkImageSubresourceRange subresource_range{};
-  {
-    subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    subresource_range.baseArrayLayer = 0;
-    subresource_range.layerCount = 1;
-    subresource_range.baseMipLevel = 0;
-    subresource_range.levelCount = 1;
-  }
+  auto subresource_range = GetImageSubresourceRange();
 
   for (auto i = 0; i < images_.size(); i++) {
     VkImageViewCreateInfo image_view_ci{};
@@ -90,8 +85,8 @@ void Swapchain::CreateImageViews() {
 
     CommandBuffer command_buffer(GraphicsContext::Get()->GetGeneralCommandPool());
     command_buffer.Begin();
-    command_buffer.CommandImageMemoryBarrier(images_[i], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-                                             VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    command_buffer.CommandImageMemoryBarrier(images_[i], ImageLayout::E_UNDEFINED, ImageLayout::E_PRESENT_SRC_KHR,
+                                             PipelineStageMaskBits2::E_TOP_OF_PIPE_BIT, PipelineStageMaskBits2::E_COLOR_ATTACHMENT_OUTPUT_BIT,
                                              subresource_range);
     command_buffer.End();
 
@@ -119,7 +114,7 @@ void Swapchain::CreateSurface(GLFWwindow *native_window) {
   surface_format_ = SelectSurfaceFormat(surface_, required_formats);
 }
 
-const VkExtent2D &Swapchain::GetExtent() const {
+const Extent2D &Swapchain::GetExtent() const {
   return surface_extent_;
 }
 
@@ -131,12 +126,16 @@ std::span<const VkImageView> Swapchain::GetImageViews() const {
   return image_views_;
 }
 
-std::size_t Swapchain::GetImageCount() const {
+uint32_t Swapchain::GetImageCount() const {
   return image_views_.size();
 }
 
+uint32_t Swapchain::GetCurrentImageIndex() const {
+  return current_image_index_;
+}
+
 const VkImageView Swapchain::GetCurrentImageView() const {
-  return image_views_[current_image_];
+  return image_views_[current_image_index_];
 }
 
 void Swapchain::Cleanup() {
@@ -167,13 +166,14 @@ VkResult Swapchain::Present(const VkSemaphore *wait_semaphore) {
     present_info.pWaitSemaphores = wait_semaphore;
     present_info.swapchainCount = 1;
     present_info.pSwapchains = &swapchain_current_;
-    present_info.pImageIndices = &current_image_;
+    present_info.pImageIndices = &current_image_index_;
   }
   return vkQueuePresentKHR(GraphicsContext::Get()->GetGeneralQueue(), &present_info);
 }
 
 VkResult Swapchain::AcquireNextImage(const VkSemaphore semaphore) {
-  auto ret = vkAcquireNextImageKHR(GraphicsContext::Get()->GetDevice(), swapchain_current_, UINT64_MAX, semaphore, nullptr, &current_image_);
+  auto ret =
+    vkAcquireNextImageKHR(GraphicsContext::Get()->GetDevice(), swapchain_current_, UINT64_MAX, semaphore, nullptr, &current_image_index_);
   return ret;
 }
 

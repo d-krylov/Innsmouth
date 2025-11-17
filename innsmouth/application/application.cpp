@@ -4,8 +4,8 @@ namespace Innsmouth {
 
 Application *Application::application_instance_ = nullptr;
 
-Application &Application::Get() {
-  return *application_instance_;
+Application *Application::Get() {
+  return application_instance_;
 }
 
 Application::Application()
@@ -79,6 +79,9 @@ void Application::Run() {
 
     command_buffers_[current_frame_].End();
 
+    auto index = swapchain_.GetCurrentImageIndex();
+    auto &render_finished_semaphore = render_finished_semaphores[index];
+
     VkSubmitInfo submit_info{};
     {
       submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -88,12 +91,12 @@ void Application::Run() {
       submit_info.commandBufferCount = 1;
       submit_info.pCommandBuffers = command_buffers_[current_frame_].get();
       submit_info.signalSemaphoreCount = 1;
-      submit_info.pSignalSemaphores = render_finished_semaphores[current_frame_].get();
+      submit_info.pSignalSemaphores = render_finished_semaphore.get();
     }
 
     VK_CHECK(vkQueueSubmit(GraphicsContext::Get()->GetGeneralQueue(), 1, &submit_info, fences_[current_frame_].GetHandle()));
 
-    result = swapchain_.Present(render_finished_semaphores[current_frame_].get());
+    result = swapchain_.Present(render_finished_semaphore.get());
 
     current_frame_ = (current_frame_ + 1) % (swapchain_.GetImageCount() - 1);
   }

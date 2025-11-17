@@ -36,7 +36,7 @@ private:
   Buffer vertex_buffer_;
   Buffer index_buffer_;
   GuiPushConstants gui_push_constants_;
-  std::unique_ptr<Image> font_image_;
+  Image font_image_;
 };
 
 } // namespace Innsmouth

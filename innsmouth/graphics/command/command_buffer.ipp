@@ -4,8 +4,8 @@
 namespace Innsmouth {
 
 template <typename T>
-void CommandBuffer::CommandPushConstants(const VkPipelineLayout layout, VkShaderStageFlags stage, const T &data, uint32_t offset) {
-  vkCmdPushConstants(command_buffer_, layout, stage, offset, sizeof(T), &data);
+void CommandBuffer::CommandPushConstants(const VkPipelineLayout layout, ShaderStageMask stage, const T &data, uint32_t offset) {
+  vkCmdPushConstants(command_buffer_, layout, stage.GetValue(), offset, sizeof(T), &data);
 }
 
 } // namespace Innsmouth

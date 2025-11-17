@@ -16,6 +16,7 @@ FetchContent_MakeAvailable(
   imgui
   fastgltf
   glm
+  stb
 )
 
 set(CMAKE_BUILD_TYPE Debug)
@@ -32,8 +33,9 @@ if(${PROJECT_IS_TOP_LEVEL})
 endif()
 
 file(GLOB SHADER_FILES 
-  "${PROJECT_SOURCE_DIR}/shaders/sources/gui/*"
-  "${PROJECT_SOURCE_DIR}/shaders/sources/tests/*"
+  "${PROJECT_SOURCE_DIR}/shaders/gui/*"
+  "${PROJECT_SOURCE_DIR}/shaders/mesh/*"
+  "${PROJECT_SOURCE_DIR}/shaders/tests/*"
   ".vert" ".frag"
 )
 

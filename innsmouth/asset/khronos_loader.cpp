@@ -30,15 +30,20 @@ auto LoadIndices(const fgf::Asset &asset, std::size_t accessor_index, std::size_
 
 template <typename T, typename Function>
 void LoadVertexData(const fgf::Asset &asset, const fgf::Primitive &primitive, std::string_view attribute_name, Function &&callback) {
-  const auto attribute = primitive.findAttribute(attribute_name);
-  if (attribute == primitive.attributes.end()) {
-    return;
+  if (const auto &attribute = primitive.findAttribute(attribute_name); attribute != primitive.attributes.end()) {
+    const auto &accessor = asset.accessors[attribute->accessorIndex];
+    fgf::iterateAccessorWithIndex<T>(asset, accessor, std::forward<Function>(callback));
   }
-  auto accessor = asset.accessors[attribute->accessorIndex];
-  fastgltf::iterateAccessorWithIndex<T>(asset, accessor, std::forward<Function>(callback));
 }
 
-void LoadVertices(const fgf::Asset &asset, const fgf::Primitive &primitive, std::size_t vertices_offset, std::span<Vertex> out_vertices) {
+auto LoadVertices(const fgf::Asset &asset, const fgf::Primitive &primitive, std::size_t vertices_offset, std::span<Vertex> out_vertices) {
+  auto position_attribute = primitive.findAttribute("POSITION");
+  const auto &position_accessor = asset.accessors[position_attribute->accessorIndex];
+  auto set_position = [&](const Vector3f &position, std::size_t index) { out_vertices[vertices_offset + index].position_ = position; };
+  auto set_normal = [&](const Vector3f &normal, std::size_t index) { out_vertices[vertices_offset + index].normal_ = normal; };
+  fgf::iterateAccessorWithIndex<Vector3f>(asset, position_accessor, set_position);
+  LoadVertexData<Vector3f>(asset, primitive, "NORMAL", set_normal);
+  return vertices_offset + position_accessor.count;
 }
 
 void LoadPrimitives(const fgf::Asset &asset, std::span<Vertex> out_vertices, std::span<uint32_t> out_indices) {
@@ -47,6 +52,7 @@ void LoadPrimitives(const fgf::Asset &asset, std::span<Vertex> out_vertices, std
     for (auto &primitive : mesh.primitives) {
       auto indices_accessor_index = primitive.indicesAccessor;
       indices_offset = LoadIndices(asset, primitive.indicesAccessor.value(), indices_offset, vertices_offset, out_indices);
+      vertices_offset = LoadVertices(asset, primitive, vertices_offset, out_vertices);
     }
   }
 }
@@ -58,16 +64,22 @@ void LoadImages(const fgf::Asset &asset, const std::filesystem::path &path) {
   }
 }
 
-void LoadGLTF(const std::filesystem::path &path) {
-
+void Model::LoadKhronos(const std::filesystem::path &path) {
   auto extensions = fgf::Extensions::KHR_mesh_quantization | fgf::Extensions::KHR_texture_transform | fgf::Extensions::KHR_materials_variants;
   auto options = fgf::Options::DontRequireValidAssetMember | fgf::Options::LoadExternalBuffers | fgf::Options::GenerateMeshIndices;
 
   fastgltf::Parser parser(extensions);
 
   auto gltf_file = fastgltf::MappedGltfFile::FromPath(path);
-
   auto asset = parser.loadGltf(gltf_file.get(), path.parent_path(), options);
+
+  std::size_t vertices_count = 0, indices_count = 0;
+  GetModelProperties(asset.get(), vertices_count, indices_count);
+
+  vertices_.resize(vertices_count);
+  indices_.resize(indices_count);
+
+  LoadPrimitives(asset.get(), vertices_, indices_);
 }
 
 } // namespace Innsmouth

@@ -14,25 +14,22 @@ ImGuiRenderer::ImGuiRenderer(Format color_format)
   PipelineSpecification specification;
   specification.color_formats_ = {color_format};
   specification.shader_paths_ = {shader_directory / "gui" / "gui.vert.spv", shader_directory / "gui" / "gui.frag.spv"};
+  specification.dynamic_states_.emplace_back(DynamicState::E_CULL_MODE);
   graphics_pipeline_ = GraphicsPipeline(specification);
   CreateFontsTexture();
 }
 
 void ImGuiRenderer::SetBuffers() {
   auto draw_data = ImGui::GetDrawData();
-  vertex_buffer_.Map();
-  index_buffer_.Map();
   std::size_t vbo_offset = 0, ibo_offset = 0;
   for (const auto &commands : draw_data->CmdLists) {
     std::span<ImDrawVert> vertices(commands->VtxBuffer.Data, commands->VtxBuffer.Size);
     std::span<ImDrawIdx> indices(commands->IdxBuffer.Data, commands->IdxBuffer.Size);
-    std::ranges::copy(vertices, vertex_buffer_.GetMappedData<ImDrawVert>().begin() + vbo_offset);
-    std::ranges::copy(indices, index_buffer_.GetMappedData<ImDrawIdx>().begin() + ibo_offset);
+    vertex_buffer_.SetData<ImDrawVert>(vertices, vbo_offset);
+    index_buffer_.SetData<ImDrawIdx>(indices, ibo_offset);
     vbo_offset += vertices.size();
     ibo_offset += indices.size();
   }
-  vertex_buffer_.Unmap();
-  index_buffer_.Unmap();
 }
 
 void ImGuiRenderer::SetupRenderState(CommandBuffer &command_buffer) {
@@ -40,6 +37,8 @@ void ImGuiRenderer::SetupRenderState(CommandBuffer &command_buffer) {
   auto draw_data = ImGui::GetDrawData();
 
   command_buffer.CommandBindGraphicsPipeline(graphics_pipeline_.GetPipeline());
+
+  command_buffer.CommandSetCullMode(CullModeMaskBits::E_NONE);
 
   auto index_type = sizeof(ImDrawIdx) == 2 ? VK_INDEX_TYPE_UINT16 : VK_INDEX_TYPE_UINT32;
 
@@ -55,7 +54,7 @@ void ImGuiRenderer::SetupRenderState(CommandBuffer &command_buffer) {
   gui_push_constants_.translate_x = -1.0f - draw_data->DisplayPos.x * gui_push_constants_.scale_x,
   gui_push_constants_.translate_y = -1.0f - draw_data->DisplayPos.y * gui_push_constants_.scale_y;
 
-  command_buffer.CommandPushConstants(graphics_pipeline_.GetPipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, gui_push_constants_);
+  command_buffer.CommandPushConstants(graphics_pipeline_.GetPipelineLayout(), ShaderStageMaskBits::E_VERTEX_BIT, gui_push_constants_);
 }
 
 void ImGuiRenderer::RenderDrawData(CommandBuffer &command_buffer) {
@@ -115,22 +114,27 @@ void ImGuiRenderer::CreateFontsTexture() {
   int32_t width, height, channels;
   io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height, &channels);
   auto data = std::span(pixels, width * height * channels);
-  font_image_ = std::make_unique<Image>(VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM,
-                                        ImageSpecification(width, height));
-  font_image_->SetData<unsigned char>(data);
-  io.Fonts->SetTexID((ImTextureID)(intptr_t)font_image_.get());
+
+  ImageSpecification image_specification;
+  image_specification.extent_ = Extent3D(width, height, 1);
+  image_specification.format_ = Format::E_R8G8B8A8_UNORM;
+  image_specification.image_type_ = ImageType::E_2D;
+  image_specification.view_type_ = ImageViewType::E_2D;
+  image_specification.usage_ = ImageUsageMaskBits::E_SAMPLED_BIT | ImageUsageMaskBits::E_TRANSFER_DST_BIT;
+  font_image_ = Image(image_specification, SamplerSpecification());
+  font_image_.SetImageData(std::as_bytes(data));
+  io.Fonts->SetTexID((ImTextureID)(intptr_t)&font_image_);
 }
 
 void ImGuiRenderer::Begin(CommandBuffer &command_buffer, const Swapchain &swapchain) {
   ImGui::NewFrame();
 
-  std::array<VkRenderingAttachmentInfo, 1> rendering_ai = {};
+  std::array<RenderingAttachmentInfo, 1> rendering_ai = {};
   {
-    rendering_ai[0].sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR;
     rendering_ai[0].imageView = swapchain.GetCurrentImageView();
-    rendering_ai[0].imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    rendering_ai[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    rendering_ai[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    rendering_ai[0].imageLayout = ImageLayout::E_COLOR_ATTACHMENT_OPTIMAL;
+    rendering_ai[0].loadOp = AttachmentLoadOp::E_LOAD;
+    rendering_ai[0].storeOp = AttachmentStoreOp::E_STORE;
     rendering_ai[0].clearValue.color = {0.0f, 0.0f, 0.0f, 1.0f};
   }
 

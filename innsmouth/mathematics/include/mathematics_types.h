@@ -23,6 +23,8 @@ using Vector4d = glm::dvec4;
 using Matrix4f = glm::mat4x4;
 using Quaternion = glm::quat;
 
+constexpr auto PI_ = glm::pi<float>();
+
 } // namespace Innsmouth
 
 #endif // INNSMOUTH_MATHEMATICS_TYPES_H

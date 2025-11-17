@@ -10,6 +10,8 @@ set(INNSMOUTH_GRAPHICS_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/graphics/presentation/swapchain.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/command/command_buffer.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/image/image.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/image/image2D.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/image/sampler.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/buffer/buffer.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/graphics_pipeline.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/shader_module.cpp
@@ -35,6 +37,11 @@ set(INNSMOUTH_GUI_SOURCES
 
 set(INNSMOUTH_CORE_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/core/core.cpp
+  ${INNSMOUTH_SOURCE_DIR}/core/image_wrapper.cpp
+)
+
+set(INNSMOUTH_SCENE_SOURCES
+  ${INNSMOUTH_SOURCE_DIR}/scene/camera.cpp
 )
 
 set(INNSMOUTH_SOURCES
@@ -42,6 +49,7 @@ set(INNSMOUTH_SOURCES
   ${INNSMOUTH_GRAPHICS_SOURCES}
   ${INNSMOUTH_CORE_SOURCES}
   ${INNSMOUTH_ASSET_SOURCES}
+  ${INNSMOUTH_SCENE_SOURCES}
   ${INNSMOUTH_SOURCE_DIR}/application/application.cpp
 )
 
@@ -78,10 +86,11 @@ add_library(${PROJECT_NAME} STATIC
   
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC
-  ${PROJECT_SOURCE_DIR}
-  ${PROJECT_BINARY_DIR}
-  ${Vulkan_INCLUDE_DIR}
+target_include_directories(${PROJECT_NAME} 
+  PUBLIC ${PROJECT_SOURCE_DIR}
+  PUBLIC ${PROJECT_BINARY_DIR}
+  PUBLIC ${Vulkan_INCLUDE_DIR}
+  PUBLIC ${stb_SOURCE_DIR}
 )
 
 target_link_libraries(${PROJECT_NAME} 

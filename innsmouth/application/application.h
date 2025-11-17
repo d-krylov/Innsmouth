@@ -23,7 +23,7 @@ public:
 
   void AddLayer(Layer *layer);
 
-  static Application &Get();
+  static Application *Get();
 
   Swapchain &GetSwapchain() {
     return swapchain_;
