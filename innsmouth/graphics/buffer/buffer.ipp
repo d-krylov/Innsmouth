@@ -9,8 +9,8 @@ template <typename T> std::span<T> Buffer::GetMappedData() {
   return std::span(out_data, out_size);
 }
 
-template <typename T> void Buffer::SetData(std::span<const T> data, std::size_t offset) {
-  GraphicsAllocator::Get()->CopyMemoryToAllocation(std::as_bytes(data), vma_allocation_, offset * sizeof(T));
+template <typename T> void Buffer::SetData(std::span<const T> data, std::size_t byte_offset) {
+  GraphicsAllocator::Get()->CopyMemoryToAllocation(std::as_bytes(data), vma_allocation_, byte_offset);
 }
 
 } // namespace Innsmouth

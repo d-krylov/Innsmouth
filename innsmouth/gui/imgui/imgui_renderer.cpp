@@ -7,26 +7,29 @@
 
 namespace Innsmouth {
 
-ImGuiRenderer::ImGuiRenderer(Format color_format)
-  : vertex_buffer_(20_MiB, BufferUsageMaskBits::E_VERTEX_BUFFER_BIT), index_buffer_(20_MiB, BufferUsageMaskBits::E_INDEX_BUFFER_BIT) {
-
+ImGuiRenderer::ImGuiRenderer(Format color_format) {
   auto shader_directory = GetInnsmouthShadersDirectory();
   PipelineSpecification specification;
   specification.color_formats_ = {color_format};
   specification.shader_paths_ = {shader_directory / "gui" / "gui.vert.spv", shader_directory / "gui" / "gui.frag.spv"};
   specification.dynamic_states_.emplace_back(DynamicState::E_CULL_MODE);
   graphics_pipeline_ = GraphicsPipeline(specification);
+  auto buffer_allocation = AllocationCreateMaskBits::E_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | AllocationCreateMaskBits::E_MAPPED_BIT;
+  vertex_buffer_ = Buffer(20_MiB, BufferUsageMaskBits::E_VERTEX_BUFFER_BIT, buffer_allocation);
+  index_buffer_ = Buffer(20_MiB, BufferUsageMaskBits::E_INDEX_BUFFER_BIT, buffer_allocation);
   CreateFontsTexture();
 }
 
 void ImGuiRenderer::SetBuffers() {
   auto draw_data = ImGui::GetDrawData();
   std::size_t vbo_offset = 0, ibo_offset = 0;
+  auto vertex_buffer_memory = vertex_buffer_.GetMappedData<ImDrawVert>();
+  auto index_buffer_memory = index_buffer_.GetMappedData<ImDrawIdx>();
   for (const auto &commands : draw_data->CmdLists) {
     std::span<ImDrawVert> vertices(commands->VtxBuffer.Data, commands->VtxBuffer.Size);
     std::span<ImDrawIdx> indices(commands->IdxBuffer.Data, commands->IdxBuffer.Size);
-    vertex_buffer_.SetData<ImDrawVert>(vertices, vbo_offset);
-    index_buffer_.SetData<ImDrawIdx>(indices, ibo_offset);
+    std::ranges::copy(vertices, vertex_buffer_memory.begin() + vbo_offset);
+    std::ranges::copy(indices, index_buffer_memory.begin() + ibo_offset);
     vbo_offset += vertices.size();
     ibo_offset += indices.size();
   }

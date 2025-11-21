@@ -9,9 +9,19 @@ namespace Innsmouth {
 
 class CommandBuffer {
 public:
+  CommandBuffer(uint32_t family_index);
+
   CommandBuffer(const VkCommandPool command_pool);
 
   ~CommandBuffer();
+
+  CommandBuffer(const CommandBuffer &) = delete;
+  CommandBuffer &operator=(const CommandBuffer &) = delete;
+
+  CommandBuffer(CommandBuffer &&other) noexcept;
+  CommandBuffer &operator=(CommandBuffer &&other) noexcept;
+
+  static VkCommandBuffer AllocateCommandBuffer(VkCommandPool command_pool);
 
   void Begin(VkCommandBufferUsageFlags usage = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
   void Reset();
@@ -21,9 +31,7 @@ public:
 
   void BeginRendering();
 
-  const VkCommandBuffer *get() const {
-    return &command_buffer_;
-  }
+  const VkCommandBuffer *get() const;
 
   void CommandBeginRendering(const Extent2D &extent, std::span<const RenderingAttachmentInfo> colors,
                              const std::optional<RenderingAttachmentInfo> &depth = std::nullopt,
@@ -58,17 +66,25 @@ public:
   void CommandImageMemoryBarrier(const VkImage &image, ImageLayout from_layout, ImageLayout to_layout, PipelineStageMask2 from_stage,
                                  PipelineStageMask2 to_stage, const ImageSubresourceRange &range);
 
+  // COPY
   void CommandCopyBufferToImage(const VkBuffer buffer, const VkImage image, const VkExtent3D &extent);
+  void CommandCopyBuffer(VkBuffer source, VkBuffer destination, std::size_t from_offset, std::size_t to_offset, std::size_t size);
 
   // PUSH
+  void CommandPushDescriptorSet(VkPipelineLayout layout, uint32_t set, uint32_t binding, const VkAccelerationStructureKHR &acceleration);
   void CommandPushDescriptorSet(VkPipelineLayout layout, uint32_t set_number, uint32_t binding, VkBuffer buffer);
   void CommandPushDescriptorSet(const VkPipelineLayout layout, uint32_t set_number, uint32_t binding, const VkImageView image_view,
                                 const VkSampler sampler);
 
   template <typename T> void CommandPushConstants(const VkPipelineLayout layout, ShaderStageMask stage, const T &data, uint32_t offset = 0);
 
+  void CommandBuildAccelerationStructure(std::span<const AccelerationStructureBuildGeometryInfoKHR> build_geometry_infos,
+                                         std::span<const AccelerationStructureBuildRangeInfoKHR *> build_range_infos);
+
 private:
   VkCommandBuffer command_buffer_{VK_NULL_HANDLE};
+  VkCommandPool command_pool_{VK_NULL_HANDLE};
+  bool destroy_pool_{false};
 };
 
 } // namespace Innsmouth

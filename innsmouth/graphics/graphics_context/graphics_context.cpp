@@ -28,15 +28,14 @@ const VkQueue GraphicsContext::GetGeneralQueue() const {
   return general_queue_;
 }
 
-const VkCommandPool GraphicsContext::GetGeneralCommandPool() const {
-  return general_command_pool_;
+uint32_t GraphicsContext::GetGraphicsQueueIndex() const {
+  return general_queue_index_;
 }
 
 GraphicsContext::GraphicsContext() {
   CreateInstance();
   PickPhysicalDevice();
   CreateDevice();
-  CreateCommandPool();
   graphics_context_instance_ = this;
 }
 
@@ -115,16 +114,6 @@ void GraphicsContext::CreateInstance() {
   VK_CHECK(vkCreateDebugUtilsMessengerEXT(instance_, &debug_ci, nullptr, &debug_messenger_));
 }
 
-void GraphicsContext::CreateCommandPool() {
-  VkCommandPoolCreateInfo command_pool_ci{};
-  {
-    command_pool_ci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    command_pool_ci.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    command_pool_ci.queueFamilyIndex = general_queue_index_;
-  }
-  VK_CHECK(vkCreateCommandPool(device_, &command_pool_ci, nullptr, &general_command_pool_));
-}
-
 void GraphicsContext::PickPhysicalDevice() {
   auto physical_devices = Enumerate(vkEnumeratePhysicalDevices, instance_);
 
@@ -167,11 +156,19 @@ void GraphicsContext::CreateDevice() {
 
   auto required_device_extensions = GetRequiredDeviceExtensions();
 
+  PhysicalDeviceRayQueryFeaturesKHR physical_device_ray_query_features{};
+  physical_device_ray_query_features.rayQuery = true;
+  physical_device_ray_query_features.pNext = nullptr;
+
+  PhysicalDeviceAccelerationStructureFeaturesKHR physical_device_acceleration_structure_features;
+  physical_device_acceleration_structure_features.accelerationStructure = true;
+  physical_device_acceleration_structure_features.pNext = &physical_device_ray_query_features;
+
   PhysicalDeviceVulkan14Features physical_device_features_14;
   physical_device_features_14.maintenance5 = true;
   physical_device_features_14.maintenance6 = true;
   physical_device_features_14.pushDescriptor = true;
-  physical_device_features_14.pNext = nullptr;
+  physical_device_features_14.pNext = &physical_device_acceleration_structure_features;
 
   PhysicalDeviceVulkan13Features physical_device_features_13;
   physical_device_features_13.synchronization2 = true;

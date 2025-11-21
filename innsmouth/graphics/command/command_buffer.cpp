@@ -1,27 +1,54 @@
 #include "command_buffer.h"
+#include "command_pool.h"
 
 namespace Innsmouth {
 
-CommandBuffer::CommandBuffer(const VkCommandPool command_pool) {
-  VkCommandBufferAllocateInfo command_buffer_ai{};
-  {
-    command_buffer_ai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    command_buffer_ai.commandPool = command_pool;
-    command_buffer_ai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    command_buffer_ai.commandBufferCount = 1;
-  }
-  VK_CHECK(vkAllocateCommandBuffers(GraphicsContext::Get()->GetDevice(), &command_buffer_ai, &command_buffer_));
+CommandBuffer::CommandBuffer(const VkCommandPool command_pool) : command_pool_(command_pool) {
+  command_buffer_ = AllocateCommandBuffer(command_pool_);
+}
+
+CommandBuffer::CommandBuffer(uint32_t family_index) {
+  command_pool_ = CommandPool::CreateCommandPool(family_index, CommandPoolCreateMaskBits::E_RESET_COMMAND_BUFFER_BIT);
+  command_buffer_ = AllocateCommandBuffer(command_pool_);
+}
+
+CommandBuffer::CommandBuffer(CommandBuffer &&other) noexcept {
+  command_buffer_ = std::exchange(other.command_buffer_, VK_NULL_HANDLE);
+  command_pool_ = std::exchange(other.command_pool_, VK_NULL_HANDLE);
+  destroy_pool_ = std::exchange(other.destroy_pool_, false);
+}
+
+CommandBuffer &CommandBuffer::operator=(CommandBuffer &&other) noexcept {
+  std::swap(command_buffer_, other.command_buffer_);
+  std::swap(command_pool_, other.command_pool_);
+  std::swap(destroy_pool_, other.destroy_pool_);
+  return *this;
 }
 
 CommandBuffer::~CommandBuffer() {
+  if (destroy_pool_) {
+    vkDestroyCommandPool(GraphicsContext::Get()->GetDevice(), command_pool_, nullptr);
+  }
+}
+
+VkCommandBuffer CommandBuffer::AllocateCommandBuffer(VkCommandPool command_pool) {
+  VkCommandBuffer command_buffer = VK_NULL_HANDLE;
+  CommandBufferAllocateInfo command_buffer_ai;
+  command_buffer_ai.commandPool = command_pool;
+  command_buffer_ai.level = CommandBufferLevel::E_PRIMARY;
+  command_buffer_ai.commandBufferCount = 1;
+  VK_CHECK(vkAllocateCommandBuffers(GraphicsContext::Get()->GetDevice(), command_buffer_ai, &command_buffer));
+  return command_buffer;
+}
+
+const VkCommandBuffer *CommandBuffer::get() const {
+  return &command_buffer_;
 }
 
 void CommandBuffer::Submit() {
   SubmitInfo submit_info;
-  {
-    submit_info.commandBufferCount = 1;
-    submit_info.pCommandBuffers = &command_buffer_;
-  }
+  submit_info.commandBufferCount = 1;
+  submit_info.pCommandBuffers = &command_buffer_;
   VK_CHECK(vkQueueSubmit(GraphicsContext::Get()->GetGeneralQueue(), 1, submit_info, VK_NULL_HANDLE));
 }
 
@@ -235,6 +262,37 @@ void CommandBuffer::CommandCopyBufferToImage(const VkBuffer buffer, const VkImag
   }
 
   vkCmdCopyBufferToImage(command_buffer_, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &buffer_image_copy);
+}
+
+void CommandBuffer::CommandCopyBuffer(VkBuffer source, VkBuffer destination, std::size_t from_offset, std::size_t to_offset, std::size_t size) {
+  BufferCopy buffer_copy;
+  buffer_copy.srcOffset = from_offset;
+  buffer_copy.dstOffset = to_offset;
+  buffer_copy.size = size;
+  vkCmdCopyBuffer(command_buffer_, source, destination, 1, buffer_copy);
+}
+
+void CommandBuffer::CommandBuildAccelerationStructure(std::span<const AccelerationStructureBuildGeometryInfoKHR> build_geometry_infos,
+                                                      std::span<const AccelerationStructureBuildRangeInfoKHR *> build_range_infos) {
+  auto primitive_count = build_range_infos.size();
+  auto geometry_infos = reinterpret_cast<const VkAccelerationStructureBuildGeometryInfoKHR *>(build_geometry_infos.data());
+  auto range_infos = reinterpret_cast<const VkAccelerationStructureBuildRangeInfoKHR **>(build_range_infos.data());
+  vkCmdBuildAccelerationStructuresKHR(command_buffer_, primitive_count, geometry_infos, range_infos);
+}
+
+void CommandBuffer::CommandPushDescriptorSet(VkPipelineLayout layout, uint32_t set, uint32_t binding,
+                                             const VkAccelerationStructureKHR &acceleration) {
+  WriteDescriptorSetAccelerationStructureKHR descriptor_ai{};
+  descriptor_ai.accelerationStructureCount = 1;
+  descriptor_ai.pAccelerationStructures = &acceleration;
+
+  WriteDescriptorSet write_descriptor_set;
+  write_descriptor_set.dstBinding = binding;
+  write_descriptor_set.descriptorType = DescriptorType::E_ACCELERATION_STRUCTURE_KHR;
+  write_descriptor_set.descriptorCount = 1;
+  write_descriptor_set.pNext = &descriptor_ai;
+
+  vkCmdPushDescriptorSetKHR(command_buffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, set, 1, write_descriptor_set);
 }
 
 } // namespace Innsmouth

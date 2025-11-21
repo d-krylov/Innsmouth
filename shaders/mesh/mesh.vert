@@ -29,7 +29,7 @@ void main() {
 	vec3 position = vec3(vertex.px, vertex.py, vertex.pz);
 	vec3 normal = vec3(vertex.nx, vertex.ny, vertex.nz);
 
-	out_position = position;
+	out_position = vec3(pc.model * vec4(position, 1.0));
 	out_normal = mat3(transpose(inverse(pc.model))) * normal;
 	out_uv = vec2(vertex.uvx, vertex.uvy);
 	out_drawid = gl_DrawIDARB;

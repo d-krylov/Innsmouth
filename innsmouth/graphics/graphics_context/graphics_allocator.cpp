@@ -59,11 +59,20 @@ VmaAllocation GraphicsAllocator::AllocateImage(const VkImageCreateInfo &image_ci
   return allocation;
 }
 
-VmaAllocation GraphicsAllocator::AllocateBuffer(const BufferCreateInfo &buffer_ci, VkBuffer &out_buffer) {
+AllocationInformation GraphicsAllocator::AllocateBuffer(const BufferCreateInfo &buffer_ci, VkBuffer &out_buffer,
+                                                        AllocationCreateMask allocation_mask) {
+
+  AllocationCreateMask cpu_bit = AllocationCreateMaskBits::E_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | //
+                                 AllocationCreateMaskBits::E_HOST_ACCESS_RANDOM_BIT;
+
+  auto has_cpu = allocation_mask.HasAnyBits(cpu_bit);
+
+  VmaMemoryUsage memory_usage = has_cpu ? VMA_MEMORY_USAGE_AUTO_PREFER_HOST : VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
+
   VmaAllocationCreateInfo vma_allocation_ci{};
   {
-    vma_allocation_ci.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-    vma_allocation_ci.usage = VMA_MEMORY_USAGE_AUTO;
+    vma_allocation_ci.flags = allocation_mask.GetValue();
+    vma_allocation_ci.usage = memory_usage;
     vma_allocation_ci.requiredFlags = 0;
     vma_allocation_ci.preferredFlags = 0;
     vma_allocation_ci.memoryTypeBits = 0;
@@ -76,7 +85,11 @@ VmaAllocation GraphicsAllocator::AllocateBuffer(const BufferCreateInfo &buffer_c
 
   VK_CHECK(vmaCreateBuffer(vma_allocator_, buffer_ci, &vma_allocation_ci, &out_buffer, &allocation, &allocation_info));
 
-  return allocation;
+  AllocationInformation allocation_information;
+  allocation_information.allocation_ = allocation;
+  allocation_information.mapped_memory_ = static_cast<std::byte *>(allocation_info.pMappedData);
+
+  return allocation_information;
 }
 
 void GraphicsAllocator::MapMemory(VmaAllocation allocation, std::byte **mapped_memory) {
@@ -89,6 +102,14 @@ void GraphicsAllocator::UnmapMemory(VmaAllocation allocation) {
 
 void GraphicsAllocator::CopyMemoryToAllocation(std::span<const std::byte> source, VmaAllocation destination, std::size_t offset) {
   vmaCopyMemoryToAllocation(vma_allocator_, source.data(), destination, offset, source.size());
+}
+
+void GraphicsAllocator::DestroyImage(VkImage image, VmaAllocation allocation) {
+  vmaDestroyImage(vma_allocator_, image, allocation);
+}
+
+void GraphicsAllocator::DestroyBuffer(VkBuffer buffer, VmaAllocation allocation) {
+  vmaDestroyBuffer(vma_allocator_, buffer, allocation);
 }
 
 } // namespace Innsmouth

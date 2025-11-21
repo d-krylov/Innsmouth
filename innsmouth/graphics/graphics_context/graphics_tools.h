@@ -2,7 +2,7 @@
 #define INNSMOUTH_GRAPHICS_TOOLS_H
 
 #include "innsmouth/core/include/type_tools.h"
-#include "graphics_types.h"
+#include "innsmouth/graphics/core/graphics_types.h"
 #include <source_location>
 #include <vector>
 

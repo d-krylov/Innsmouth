@@ -8,6 +8,7 @@
 #include "innsmouth/graphics/synchronization/fence.h"
 #include "innsmouth/graphics/synchronization/semaphore.h"
 #include "innsmouth/graphics/command/command_buffer.h"
+#include "innsmouth/graphics/command/command_pool.h"
 #include "innsmouth/gui/imgui/imgui_layer.h"
 #include "innsmouth/gui/imgui/imgui_renderer.h"
 #include "layer.h"
@@ -42,6 +43,7 @@ private:
   Window main_window_;
   GraphicsContext graphics_context_;
   GraphicsAllocator graphics_allocator_;
+  CommandPool command_pool_;
   Swapchain swapchain_;
   ImGuiLayer imgui_layer_;
   ImGuiRenderer imgui_renderer_;

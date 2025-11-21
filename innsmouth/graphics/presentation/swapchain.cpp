@@ -71,6 +71,8 @@ void Swapchain::CreateImageViews() {
 
   auto subresource_range = GetImageSubresourceRange();
 
+  CommandBuffer command_buffer(GraphicsContext::Get()->GetGraphicsQueueIndex());
+
   for (auto i = 0; i < images_.size(); i++) {
     VkImageViewCreateInfo image_view_ci{};
     {
@@ -83,7 +85,6 @@ void Swapchain::CreateImageViews() {
 
     VK_CHECK(vkCreateImageView(GraphicsContext::Get()->GetDevice(), &image_view_ci, nullptr, &image_views_[i]));
 
-    CommandBuffer command_buffer(GraphicsContext::Get()->GetGeneralCommandPool());
     command_buffer.Begin();
     command_buffer.CommandImageMemoryBarrier(images_[i], ImageLayout::E_UNDEFINED, ImageLayout::E_PRESENT_SRC_KHR,
                                              PipelineStageMaskBits2::E_TOP_OF_PIPE_BIT, PipelineStageMaskBits2::E_COLOR_ATTACHMENT_OUTPUT_BIT,

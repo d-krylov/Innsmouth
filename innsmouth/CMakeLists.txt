@@ -3,12 +3,13 @@ set(INNSMOUTH_SOURCE_DIR ${PROJECT_SOURCE_DIR}/innsmouth)
 set(INNSMOUTH_GRAPHICS_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/graphics/core/graphics_structures.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/core/structure_tools.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/core/graphics_types.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_context/graphics_context.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_context/graphics_tools.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_context/graphics_allocator.cpp
-  ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_context/graphics_types.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/presentation/swapchain.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/command/command_buffer.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/command/command_pool.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/image/image.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/image/image2D.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/image/sampler.cpp

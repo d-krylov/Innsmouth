@@ -17,6 +17,8 @@ Image::Image(const ImageSpecification &image_specification, const SamplerSpecifi
 }
 
 Image::~Image() {
+  vkDestroyImageView(GraphicsContext::Get()->GetDevice(), GetImageView(), nullptr);
+  GraphicsAllocator::Get()->DestroyImage(image_, vma_allocation_);
 }
 
 void Image::CreateImage() {
@@ -57,10 +59,10 @@ void Image::SetLayout(ImageLayout destination_layout) {
 }
 
 void Image::SetImageData(std::span<const std::byte> data) {
-  Buffer buffer(data.size(), BufferUsageMaskBits::E_TRANSFER_SRC_BIT);
+  Buffer buffer(data.size(), BufferUsageMaskBits::E_TRANSFER_SRC_BIT, AllocationCreateMaskBits::E_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
   buffer.SetData<std::byte>(data);
 
-  CommandBuffer command_buffer(GraphicsContext::Get()->GetGeneralCommandPool());
+  CommandBuffer command_buffer(GraphicsContext::Get()->GetGraphicsQueueIndex());
   command_buffer.Begin();
 
   ImageAspectMask aspect =

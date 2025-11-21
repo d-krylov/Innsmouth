@@ -2,7 +2,6 @@
 #define INNSMOUTH_GRAPHICS_CONTEXT_H
 
 #include "graphics_tools.h"
-#include "innsmouth/graphics/core/graphics_structures.h"
 
 namespace Innsmouth {
 
@@ -17,7 +16,8 @@ public:
   const VkDevice GetDevice() const;
 
   const VkQueue GetGeneralQueue() const;
-  const VkCommandPool GetGeneralCommandPool() const;
+
+  uint32_t GetGraphicsQueueIndex() const;
 
   static GraphicsContext *Get();
 
@@ -25,7 +25,6 @@ protected:
   void CreateInstance();
   void PickPhysicalDevice();
   void CreateDevice();
-  void CreateCommandPool();
 
   std::vector<const char *> GetInstanceLayers() const;
 
@@ -40,7 +39,6 @@ private:
   VkQueue general_queue_{VK_NULL_HANDLE};
   VkQueue compute_queue_{VK_NULL_HANDLE};
   VkQueue transfer_queue_{VK_NULL_HANDLE};
-  VkCommandPool general_command_pool_{VK_NULL_HANDLE};
   static GraphicsContext *graphics_context_instance_;
 };
 

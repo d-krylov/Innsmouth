@@ -18,10 +18,16 @@ public:
 
   void OnImGui() override {
     auto position = camera.GetPosition();
+    auto yaw = camera.GetYaw();
+    auto pitch = camera.GetPitch();
     ImGui::Begin("Camera");
     ImGui::DragFloat3("position", glm::value_ptr(position));
+    ImGui::DragFloat("Yaw", &yaw);
+    ImGui::DragFloat("Pitch", &pitch);
     ImGui::End();
     camera.SetPosition(position);
+    camera.SetYaw(yaw);
+    camera.SetPitch(pitch);
   }
 
   bool OnResize(WindowResizeEvent &event) {
@@ -62,7 +68,7 @@ public:
 
     matrices.projection = camera.GetProjectionMatrix();
     matrices.view = camera.GetViewMatrix();
-    matrices.model = glm::rotate(Matrix4f(1.0f), PI_ / 2.0f, Vector3f(0.0f, 1.0f, 0.0f));
+    matrices.model = Matrix4f(1.0f); // glm::rotate(Matrix4f(1.0f), PI_ / 2.0f, Vector3f(0.0f, 1.0f, 0.0f));
 
     command_buffer.CommandBeginRendering(swapchain.GetExtent(), rendering_ai, depth_ai);
     command_buffer.CommandBindGraphicsPipeline(graphics_pipeline.GetPipeline());
@@ -71,6 +77,7 @@ public:
     command_buffer.CommandBindIndexBuffer(index_buffer.GetHandle(), 0);
     command_buffer.CommandPushConstants(graphics_pipeline.GetPipelineLayout(), ShaderStageMaskBits::E_VERTEX_BIT, matrices);
     command_buffer.CommandPushDescriptorSet(graphics_pipeline.GetPipelineLayout(), 0, 0, vertex_buffer.GetHandle());
+    command_buffer.CommandPushDescriptorSet(graphics_pipeline.GetPipelineLayout(), 0, 1, tlas.GetAccelerationStructures().front());
     command_buffer.CommandSetViewport(0.0f, extent.height, extent.width, -float(extent.height));
     command_buffer.CommandSetScissor(0, 0, extent.width, extent.height);
     command_buffer.CommandDrawIndexed(model.GetIndicesNumber());
@@ -87,13 +94,39 @@ public:
     depth_image_specification.usage_ = ImageUsageMaskBits::E_DEPTH_STENCIL_ATTACHMENT_BIT;
     depth_image = Image(depth_image_specification);
     model = Model(model_path);
-    vertex_buffer = Buffer(100_MiB, BufferUsageMaskBits::E_STORAGE_BUFFER_BIT);
-    index_buffer = Buffer(100_MiB, BufferUsageMaskBits::E_INDEX_BUFFER_BIT);
 
-    vertex_buffer.SetData(model.GetVertices());
-    index_buffer.SetData(model.GetIndices());
+    CommandBuffer command_buffer(GraphicsContext::Get()->GetGraphicsQueueIndex());
+    Buffer staging(100_MiB, BufferUsageMaskBits::E_TRANSFER_SRC_BIT, AllocationCreateMaskBits::E_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+
+    BufferUsageMask usage = BufferUsageMaskBits::E_SHADER_DEVICE_ADDRESS_BIT | BufferUsageMaskBits::E_TRANSFER_DST_BIT |
+                            BufferUsageMaskBits::E_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
+
+    vertex_buffer = Buffer(100_MiB, BufferUsageMaskBits::E_STORAGE_BUFFER_BIT | usage, {});
+    index_buffer = Buffer(100_MiB, BufferUsageMaskBits::E_INDEX_BUFFER_BIT | usage, {});
+
+    auto offset = model.GetVerticesNumber() * sizeof(Vertex);
+
+    staging.SetData(model.GetVertices());
+    staging.SetData(model.GetIndices(), offset);
+
+    command_buffer.Begin();
+    command_buffer.CommandCopyBuffer(staging.GetHandle(), vertex_buffer.GetHandle(), 0, 0, offset);
+    command_buffer.CommandCopyBuffer(staging.GetHandle(), index_buffer.GetHandle(), offset, 0, model.GetIndicesNumber() * sizeof(uint32_t));
+    command_buffer.End();
+    command_buffer.Submit();
 
     auto shader_directory = GetInnsmouthShadersDirectory();
+
+    BLASSpecification specifications[1];
+    specifications[0].indices_number_ = model.GetIndicesNumber();
+    specifications[0].indices_offset_ = 0;
+    specifications[0].vertices_number_ = model.GetVerticesNumber();
+    specifications[0].vertices_offset_ = 0;
+
+    blas = AccelerationStructure(vertex_buffer.GetBufferAddress(), index_buffer.GetBufferAddress(), sizeof(Vertex), specifications);
+
+    TLASInstance instance[1];
+    tlas = AccelerationStructure(blas.GetAccelerationStructures(), instance);
 
     PipelineSpecification pipeline_specification;
     pipeline_specification.color_formats_ = {swapchain.GetFormat()};
@@ -113,6 +146,8 @@ private:
   Model model;
   ModelMatrices matrices;
   ImageSpecification depth_image_specification;
+  AccelerationStructure blas;
+  AccelerationStructure tlas;
 };
 
 int main(int argc, char **argv) {

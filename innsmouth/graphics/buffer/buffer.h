@@ -11,7 +11,7 @@ class Buffer {
 public:
   Buffer() = default;
 
-  Buffer(std::size_t buffer_size, BufferUsageMask buffer_usage);
+  Buffer(std::size_t buffer_size, BufferUsageMask buffer_usage, AllocationCreateMask allocation_mask);
 
   ~Buffer();
 
@@ -24,7 +24,7 @@ public:
   void Map();
   void Unmap();
 
-  template <typename T> void SetData(std::span<const T> data, std::size_t offset = 0);
+  template <typename T> void SetData(std::span<const T> data, std::size_t byte_offset = 0);
 
   template <typename T> std::span<T> GetMappedData();
 
@@ -33,7 +33,7 @@ public:
   VkDeviceAddress GetBufferAddress() const;
 
 protected:
-  void CreateBuffer();
+  void CreateBuffer(AllocationCreateMask allocation_mask);
 
 private:
   VkBuffer buffer_{VK_NULL_HANDLE};

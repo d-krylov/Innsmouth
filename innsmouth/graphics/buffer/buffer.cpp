@@ -1,12 +1,15 @@
 #include "buffer.h"
+#include "innsmouth/core/include/core.h"
 
 namespace Innsmouth {
 
-Buffer::Buffer(std::size_t buffer_size, BufferUsageMask buffer_usage) : buffer_size_(buffer_size), buffer_usage_(buffer_usage) {
-  CreateBuffer();
+Buffer::Buffer(std::size_t buffer_size, BufferUsageMask buffer_usage, AllocationCreateMask allocation_mask)
+  : buffer_size_(buffer_size), buffer_usage_(buffer_usage) {
+  CreateBuffer(allocation_mask);
 }
 
 Buffer::~Buffer() {
+  GraphicsAllocator::Get()->DestroyBuffer(buffer_, vma_allocation_);
 }
 
 Buffer::Buffer(Buffer &&other) noexcept {
@@ -24,13 +27,16 @@ Buffer &Buffer::operator=(Buffer &&other) noexcept {
   return *this;
 }
 
-void Buffer::CreateBuffer() {
+void Buffer::CreateBuffer(AllocationCreateMask allocation_mask) {
   BufferCreateInfo buffer_ci;
   buffer_ci.size = buffer_size_;
   buffer_ci.usage = buffer_usage_;
   buffer_ci.sharingMode = SharingMode::E_EXCLUSIVE;
 
-  vma_allocation_ = GraphicsAllocator::Get()->AllocateBuffer(buffer_ci, buffer_);
+  auto allocation_information = GraphicsAllocator::Get()->AllocateBuffer(buffer_ci, buffer_, allocation_mask);
+
+  vma_allocation_ = allocation_information.allocation_;
+  mapped_memory_ = allocation_information.mapped_memory_;
 }
 
 const VkBuffer Buffer::GetHandle() const {

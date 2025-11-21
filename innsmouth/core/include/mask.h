@@ -47,6 +47,10 @@ public:
     return (*this & requiered_mask) == requiered_mask;
   }
 
+  bool HasAnyBits(const Mask<MaskBit> &requiered_mask) const {
+    return !(*this & requiered_mask);
+  }
+
   constexpr Mask<MaskBit> operator&(const Mask<MaskBit> &rhs) const {
     return Mask<MaskBit>(mask_ & rhs.mask_);
   }

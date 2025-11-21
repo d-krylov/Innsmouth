@@ -3,6 +3,7 @@
 #include "fastgltf/types.hpp"
 #include "fastgltf/tools.hpp"
 #include "innsmouth/asset/include/model.h"
+#include "innsmouth/core/include/image_wrapper.h"
 
 namespace Innsmouth {
 
@@ -80,6 +81,12 @@ void Model::LoadKhronos(const std::filesystem::path &path) {
   indices_.resize(indices_count);
 
   LoadPrimitives(asset.get(), vertices_, indices_);
+
+  for (auto &image : asset->images) {
+    auto image_name = std::get<fastgltf::sources::URI>(image.data).uri.path();
+    auto image_path = path.parent_path() / image_name;
+    ImageWrapper image_w(image_path);
+  }
 }
 
 } // namespace Innsmouth

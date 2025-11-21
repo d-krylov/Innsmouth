@@ -9,8 +9,11 @@ Application *Application::Get() {
 }
 
 Application::Application()
-  : main_window_("Innsmouth", 800, 600), swapchain_(main_window_.GetNativeWindow()), imgui_layer_(&main_window_),
-    imgui_renderer_(swapchain_.GetFormat()) {
+  : main_window_("Innsmouth", 800, 600),                                                                                   //
+    graphics_context_(),                                                                                                   //
+    graphics_allocator_(),                                                                                                 //
+    command_pool_(GraphicsContext::Get()->GetGraphicsQueueIndex(), CommandPoolCreateMaskBits::E_RESET_COMMAND_BUFFER_BIT), //
+    swapchain_(main_window_.GetNativeWindow()), imgui_layer_(&main_window_), imgui_renderer_(swapchain_.GetFormat()) {
   Initialize();
 
   main_window_.SetEventHandler(BIND_FUNCTION(Application::OnEvent));
@@ -22,7 +25,7 @@ Application::Application()
 void Application::Initialize() {
   for (const auto &image_view : swapchain_.GetImageViews()) {
     fences_.emplace_back(FenceCreateMaskBits::E_SIGNALED_BIT);
-    command_buffers_.emplace_back(GraphicsContext::Get()->GetGeneralCommandPool());
+    command_buffers_.emplace_back(command_pool_.GetHandle());
     image_available_semaphores.emplace_back();
     render_finished_semaphores.emplace_back();
   }
