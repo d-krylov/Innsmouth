@@ -24,25 +24,23 @@ DescriptorSet::DescriptorSet(VkDescriptorPool descriptor_pool, VkDescriptorSetLa
 DescriptorSet::~DescriptorSet() {
 }
 
-void DescriptorSet::Update(uint32_t binding) {
+DescriptorSet::DescriptorSet(DescriptorSet &&other) noexcept {
+  descriptor_set_ = std::exchange(other.descriptor_set_, VK_NULL_HANDLE);
+}
 
-  DescriptorImageInfo descriptor_ii{};
-  {
-    // descriptor_ii.imageView = images[i].image_view_;
-    // descriptor_ii.sampler = images[i].sampler_;
-    descriptor_ii.imageLayout = ImageLayout::E_GENERAL;
-  }
+DescriptorSet &DescriptorSet::operator=(DescriptorSet &&other) noexcept {
+  std::swap(descriptor_set_, other.descriptor_set_);
+  return *this;
+}
 
-  WriteDescriptorSet write_descriptor_set{};
-  {
-    write_descriptor_set.dstSet = GetHandle();
-    write_descriptor_set.dstBinding = binding;
-    // write_descriptor_set.dstArrayElement = i;
-    // write_descriptor_set.descriptorCount = 1;
-    write_descriptor_set.descriptorType = DescriptorType::E_COMBINED_IMAGE_SAMPLER;
-    write_descriptor_set.pImageInfo = &descriptor_ii;
-  }
-
+void DescriptorSet::Update(std::span<const DescriptorImageInfo> images, uint32_t binding, DescriptorType descriptor_type, uint32_t start) {
+  WriteDescriptorSet write_descriptor_set;
+  write_descriptor_set.dstSet = descriptor_set_;
+  write_descriptor_set.dstBinding = binding;
+  write_descriptor_set.dstArrayElement = start;
+  write_descriptor_set.descriptorType = descriptor_type;
+  write_descriptor_set.descriptorCount = images.size();
+  write_descriptor_set.pImageInfo = images.data();
   vkUpdateDescriptorSets(GraphicsContext::Get()->GetDevice(), 1, write_descriptor_set, 0, nullptr);
 }
 

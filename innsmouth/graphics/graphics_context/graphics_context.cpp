@@ -156,9 +156,14 @@ void GraphicsContext::CreateDevice() {
 
   auto required_device_extensions = GetRequiredDeviceExtensions();
 
+  PhysicalDeviceRayTracingPipelineFeaturesKHR physical_device_ray_tracing_pipeline_features;
+  physical_device_ray_tracing_pipeline_features.rayTracingPipeline = true;
+  physical_device_ray_tracing_pipeline_features.rayTracingPipelineTraceRaysIndirect = true;
+  physical_device_ray_tracing_pipeline_features.pNext = nullptr;
+
   PhysicalDeviceRayQueryFeaturesKHR physical_device_ray_query_features{};
   physical_device_ray_query_features.rayQuery = true;
-  physical_device_ray_query_features.pNext = nullptr;
+  physical_device_ray_query_features.pNext = &physical_device_ray_tracing_pipeline_features;
 
   PhysicalDeviceAccelerationStructureFeaturesKHR physical_device_acceleration_structure_features;
   physical_device_acceleration_structure_features.accelerationStructure = true;
@@ -175,9 +180,16 @@ void GraphicsContext::CreateDevice() {
   physical_device_features_13.dynamicRendering = true;
   physical_device_features_13.pNext = &physical_device_features_14;
 
-  PhysicalDeviceVulkan12Features physical_device_features_12;
+  PhysicalDeviceVulkan12Features physical_device_features_12{};
   physical_device_features_12.bufferDeviceAddress = true;
   physical_device_features_12.descriptorIndexing = true;
+  physical_device_features_12.shaderSampledImageArrayNonUniformIndexing = true;
+  physical_device_features_12.descriptorBindingSampledImageUpdateAfterBind = true;
+  physical_device_features_12.descriptorBindingUpdateUnusedWhilePending = true;
+  physical_device_features_12.descriptorBindingPartiallyBound = true;
+  physical_device_features_12.descriptorBindingVariableDescriptorCount = true;
+  physical_device_features_12.runtimeDescriptorArray = true;
+  physical_device_features_12.drawIndirectCount = true;
   physical_device_features_12.pNext = &physical_device_features_13;
 
   PhysicalDeviceVulkan11Features physical_device_features_11;
@@ -186,6 +198,7 @@ void GraphicsContext::CreateDevice() {
 
   PhysicalDeviceFeatures2 physical_device_features_2;
   physical_device_features_2.pNext = &physical_device_features_11;
+  physical_device_features_2.features.multiDrawIndirect = true;
 
   VkDeviceCreateInfo device_ci{};
   {

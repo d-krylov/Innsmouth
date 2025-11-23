@@ -1,10 +1,10 @@
 #include "graphics_pipeline.h"
 #include "innsmouth/graphics/core/structure_tools.h"
+#include "innsmouth/graphics/core/graphics_formats.h"
 #include <print>
 #include <ranges>
 #include <algorithm>
 #include <map>
-#include <vulkan/utility/vk_format_utils.h>
 
 namespace Innsmouth {
 
@@ -27,12 +27,17 @@ VkDescriptorSetLayout CreateDescriptorSetLayout(std::span<const DescriptorSetLay
   descriptor_set_layout_ci.bindingCount = descriptor_set_bindings.size();
   descriptor_set_layout_ci.pBindings = descriptor_set_bindings.data();
 
-  DescriptorBindingMask binding_mask = DescriptorBindingMaskBits::E_UPDATE_AFTER_BIND_BIT | DescriptorBindingMaskBits::E_PARTIALLY_BOUND_BIT |
+  DescriptorBindingMask binding_mask = DescriptorBindingMaskBits::E_UPDATE_AFTER_BIND_BIT | //
+                                       DescriptorBindingMaskBits::E_PARTIALLY_BOUND_BIT |   //
                                        DescriptorBindingMaskBits::E_VARIABLE_DESCRIPTOR_COUNT_BIT;
+
+  DescriptorSetLayoutBindingFlagsCreateInfo set_binding_flags_ci;
+  set_binding_flags_ci.bindingCount = 1;
+  set_binding_flags_ci.pBindingFlags = &binding_mask;
 
   if (bindless) {
     descriptor_set_layout_ci.flags = DescriptorSetLayoutCreateMaskBits::E_UPDATE_AFTER_BIND_POOL_BIT;
-    descriptor_set_layout_ci.pNext = &binding_mask;
+    descriptor_set_layout_ci.pNext = &set_binding_flags_ci;
   } else {
     descriptor_set_layout_ci.flags = DescriptorSetLayoutCreateMaskBits::E_PUSH_DESCRIPTOR_BIT;
   }
@@ -88,7 +93,7 @@ VkPipeline CreateGraphicsPipeline(const PipelineSpecification &specification, st
 
     const auto &back_attribute = vertex_input_attributes.back();
 
-    auto stride = back_attribute.offset + vkuFormatTexelBlockSize(VkFormat(back_attribute.format));
+    auto stride = back_attribute.offset + GetFormatTexelBlockSize(back_attribute.format);
 
     vertex_binding_description.binding = 0;
     vertex_binding_description.inputRate = VertexInputRate::E_VERTEX;
@@ -174,17 +179,29 @@ VkPipeline GraphicsPipeline::GetPipeline() const {
   return graphics_pipeline_;
 }
 
+std::span<const VkDescriptorSetLayout> GraphicsPipeline::GetDescriptorSetLayouts() const {
+  return descriptor_set_layouts_;
+}
+
 GraphicsPipeline::GraphicsPipeline(const PipelineSpecification &pipeline_specification) {
   std::vector<ShaderModule> shader_modules;
-  DescriptorSetLayoutBindingMap descriptor_sets;
+  DescriptorSetLayoutBindingMap push_descriptor_sets;
+  DescriptorSetLayoutBindingMap pool_descriptor_sets;
   for (const auto &shader_path : pipeline_specification.shader_paths_) {
     auto &shader_module = shader_modules.emplace_back(shader_path);
-    MergeDescriptorSets(descriptor_sets, shader_module.GetPushDescriptorSetLayoutBindings());
+    MergeDescriptorSets(push_descriptor_sets, shader_module.GetPushDescriptorSetLayoutBindings());
+    MergeDescriptorSets(pool_descriptor_sets, shader_module.GetPoolDescriptorSetLayoutBindings());
   }
-  descriptor_set_layouts_.resize(descriptor_sets.size());
-  for (const auto &[set, bindings] : descriptor_sets) {
+  descriptor_set_layouts_.resize(push_descriptor_sets.size() + pool_descriptor_sets.size());
+
+  for (const auto &[set, bindings] : push_descriptor_sets) {
     descriptor_set_layouts_[set] = CreateDescriptorSetLayout(bindings, false);
   }
+
+  for (const auto &[set, bindings] : pool_descriptor_sets) {
+    descriptor_set_layouts_[set] = CreateDescriptorSetLayout(bindings, true);
+  }
+
   pipeline_layout_ = CreatePipelineLayout(descriptor_set_layouts_, shader_modules[0].GetPushConstantRanges());
   graphics_pipeline_ = CreateGraphicsPipeline(pipeline_specification, shader_modules, pipeline_layout_);
 }
@@ -198,7 +215,7 @@ GraphicsPipeline::GraphicsPipeline(GraphicsPipeline &&other) noexcept {
 GraphicsPipeline &GraphicsPipeline::operator=(GraphicsPipeline &&other) noexcept {
   std::swap(graphics_pipeline_, other.graphics_pipeline_);
   std::swap(pipeline_layout_, other.pipeline_layout_);
-  descriptor_set_layouts_ = std::move(other.descriptor_set_layouts_);
+  std::swap(descriptor_set_layouts_, other.descriptor_set_layouts_);
   return *this;
 }
 

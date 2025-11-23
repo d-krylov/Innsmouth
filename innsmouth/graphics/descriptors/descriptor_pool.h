@@ -8,9 +8,17 @@ namespace Innsmouth {
 
 class DescriptorPool {
 public:
+  DescriptorPool() = default;
+
   DescriptorPool(std::span<const DescriptorPoolSize> descriptor_pool_sizes, DescriptorPoolCreateMask mask, uint32_t max_sets);
 
   ~DescriptorPool();
+
+  DescriptorPool(const DescriptorPool &) = delete;
+  DescriptorPool &operator=(const DescriptorPool &) = delete;
+
+  DescriptorPool(DescriptorPool &&other) noexcept;
+  DescriptorPool &operator=(DescriptorPool &&other) noexcept;
 
   VkDescriptorPool GetHandle() const;
 

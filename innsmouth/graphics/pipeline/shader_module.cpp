@@ -3,7 +3,7 @@
 #include <numeric>
 #include <print>
 #include <fstream>
-#include <vulkan/utility/vk_format_utils.h>
+#include "innsmouth/graphics/core/graphics_formats.h"
 #include <SPIRV-Reflect/spirv_reflect.h>
 
 namespace Innsmouth {
@@ -28,7 +28,7 @@ std::vector<VertexInputAttributeDescription> ReflecttShaderInputs(const SpvRefle
     vertex_input_description.binding = 0;
     vertex_input_description.format = static_cast<Format>(input->format);
     vertex_input_description.offset = offset;
-    offset += vkuFormatTexelBlockSize(VkFormat(input->format));
+    offset += GetFormatTexelBlockSize(vertex_input_description.format);
   }
   return result;
 }
@@ -74,7 +74,7 @@ void ShaderModule::ParseShader(std::span<const uint32_t> shader_binary_data) {
   auto status = spvReflectCreateShaderModule(shader_binary_data.size_bytes(), spirv_.data(), &spv_module);
   shader_stage_ = static_cast<ShaderStageMaskBits>(spv_module.shader_stage);
   push_constant_ranges_ = ReflectPushConstants(spv_module, shader_stage_);
-  ReflectDescriptorSetBindings(spv_module, shader_stage_, push_descriptor_set_bindings_, pull_descriptor_set_bindings_);
+  ReflectDescriptorSetBindings(spv_module, shader_stage_, push_descriptor_set_bindings_, pool_descriptor_set_bindings_);
   input_attribute_descriptions_ = ReflecttShaderInputs(spv_module);
 }
 
@@ -103,8 +103,8 @@ const DescriptorSetLayoutBindingMap &ShaderModule::GetPushDescriptorSetLayoutBin
   return push_descriptor_set_bindings_;
 }
 
-const DescriptorSetLayoutBindingMap &ShaderModule::GetPullDescriptorSetLayoutBindings() const {
-  return pull_descriptor_set_bindings_;
+const DescriptorSetLayoutBindingMap &ShaderModule::GetPoolDescriptorSetLayoutBindings() const {
+  return pool_descriptor_set_bindings_;
 }
 
 std::size_t ShaderModule::GetSize() const {

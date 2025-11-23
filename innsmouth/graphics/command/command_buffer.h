@@ -50,6 +50,10 @@ public:
 
   // DRAW
   void CommandDraw(uint32_t vertex_count, uint32_t instance_count = 1, uint32_t first_vertex = 0, uint32_t first_instance = 0);
+
+  void CommandDrawIndexedIndirect(VkBuffer buffer, std::size_t offset, uint32_t draw_count,
+                                  uint32_t stride = sizeof(DrawIndexedIndirectCommand));
+
   void CommandDrawIndexed(uint32_t index_count, uint32_t instance_count = 1, uint32_t first_index = 0, int32_t vertex_offset = 0,
                           uint32_t first_instance = 0);
 
@@ -60,6 +64,7 @@ public:
   void CommandBindComputePipeline(const VkPipeline graphics_pipeline);
   void CommandBindVertexBuffer(const VkBuffer buffer, std::size_t offset);
   void CommandBindIndexBuffer(const VkBuffer buffer, std::size_t offset, VkIndexType index_type = VkIndexType::VK_INDEX_TYPE_UINT32);
+  void CommandBindDescriptorSet(VkPipelineLayout pipeline_layout, VkDescriptorSet descriptor_set, uint32_t set);
 
   // BARRIER
   void CommandPipelineBarrier(std::span<const ImageMemoryBarrier2> image_barriers, std::span<const BufferMemoryBarrier2> buffer_barriers);
@@ -80,6 +85,8 @@ public:
 
   void CommandBuildAccelerationStructure(std::span<const AccelerationStructureBuildGeometryInfoKHR> build_geometry_infos,
                                          std::span<const AccelerationStructureBuildRangeInfoKHR *> build_range_infos);
+
+  void CommandBlitImage(VkImage source_image, ImageLayout source_layout);
 
 private:
   VkCommandBuffer command_buffer_{VK_NULL_HANDLE};

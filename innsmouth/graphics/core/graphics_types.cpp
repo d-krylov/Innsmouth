@@ -16,6 +16,20 @@ AccessMask2 GetAccessMask(ImageLayout layout) {
   }
 }
 
+ImageAspectMask GetAspectMask(Format format) {
+  switch (format) {
+  case Format::E_D16_UNORM:
+  case Format::E_X8_D24_UNORM_PACK32:
+  case Format::E_D32_SFLOAT: return ImageAspectMaskBits::E_DEPTH_BIT;
+  case Format::E_S8_UINT: return ImageAspectMaskBits::E_STENCIL_BIT;
+  case Format::E_D16_UNORM_S8_UINT:
+  case Format::E_D24_UNORM_S8_UINT:
+  case Format::E_D32_SFLOAT_S8_UINT: return ImageAspectMaskBits::E_DEPTH_BIT | ImageAspectMaskBits::E_STENCIL_BIT;
+  default: break;
+  }
+  return ImageAspectMaskBits::E_COLOR_BIT;
+}
+
 bool HasBits(VkFlags supported_mask, VkFlags requiered_mask) {
   return (supported_mask & requiered_mask) == requiered_mask;
 }

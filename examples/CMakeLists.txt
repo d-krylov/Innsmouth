@@ -1,5 +1,6 @@
 set(EXECUTABLES
   mesh_viewer
+  ray_tracer
 )
 
 foreach(exe ${EXECUTABLES})

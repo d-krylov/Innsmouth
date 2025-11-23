@@ -30,6 +30,7 @@ public:
 
   VkPipelineLayout GetPipelineLayout() const;
   VkPipeline GetPipeline() const;
+  std::span<const VkDescriptorSetLayout> GetDescriptorSetLayouts() const;
 
 private:
   VkPipeline graphics_pipeline_{VK_NULL_HANDLE};

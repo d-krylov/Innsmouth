@@ -11,6 +11,19 @@ struct ModelMatrices {
   Matrix4f model = Matrix4f(1.0f);
 };
 
+std::vector<DrawIndexedIndirectCommand> GetIndirectCommandsFromMeshes(std::span<const Mesh> meshes) {
+  std::vector<DrawIndexedIndirectCommand> commands;
+  for (const auto &mesh : meshes) {
+    auto &command = commands.emplace_back();
+    command.firstIndex = mesh.indices_offset;
+    command.indexCount = mesh.indices_size;
+    command.vertexOffset = 0;
+    command.firstInstance = 0;
+    command.instanceCount = 1;
+  }
+  return commands;
+}
+
 class MeshViewer : public Innsmouth::Layer {
 public:
   void OnSwapchain() override {
@@ -34,8 +47,7 @@ public:
     auto w = event.GetWidth();
     auto h = event.GetHeight();
     camera.SetAspect(float(w) / float(h));
-    depth_image_specification.extent_ = Extent3D(w, h, 1);
-    depth_image = std::move(Image(depth_image_specification));
+    depth_image = std::move(ImageDepth(w, h));
     return true;
   }
 
@@ -78,21 +90,18 @@ public:
     command_buffer.CommandPushConstants(graphics_pipeline.GetPipelineLayout(), ShaderStageMaskBits::E_VERTEX_BIT, matrices);
     command_buffer.CommandPushDescriptorSet(graphics_pipeline.GetPipelineLayout(), 0, 0, vertex_buffer.GetHandle());
     command_buffer.CommandPushDescriptorSet(graphics_pipeline.GetPipelineLayout(), 0, 1, tlas.GetAccelerationStructures().front());
+    command_buffer.CommandPushDescriptorSet(graphics_pipeline.GetPipelineLayout(), 0, 2, mesh_buffer.GetHandle());
+    command_buffer.CommandBindDescriptorSet(graphics_pipeline.GetPipelineLayout(), descriptor_set.GetHandle(), 1);
     command_buffer.CommandSetViewport(0.0f, extent.height, extent.width, -float(extent.height));
     command_buffer.CommandSetScissor(0, 0, extent.width, extent.height);
-    command_buffer.CommandDrawIndexed(model.GetIndicesNumber());
+    command_buffer.CommandDrawIndexedIndirect(indirect_buffer.GetHandle(), 0, model.GetMeshes().size());
     command_buffer.CommandEndRendering();
   }
 
   void OnAttach() override {
     auto &swapchain = Application::Get()->GetSwapchain();
     auto extent = swapchain.GetExtent();
-    depth_image_specification.extent_ = Extent3D(extent.width, extent.height, 1);
-    depth_image_specification.format_ = Format::E_D32_SFLOAT;
-    depth_image_specification.image_type_ = ImageType::E_2D;
-    depth_image_specification.view_type_ = ImageViewType::E_2D;
-    depth_image_specification.usage_ = ImageUsageMaskBits::E_DEPTH_STENCIL_ATTACHMENT_BIT;
-    depth_image = Image(depth_image_specification);
+    depth_image = ImageDepth(extent.width, extent.height);
     model = Model(model_path);
 
     CommandBuffer command_buffer(GraphicsContext::Get()->GetGraphicsQueueIndex());
@@ -103,6 +112,13 @@ public:
 
     vertex_buffer = Buffer(100_MiB, BufferUsageMaskBits::E_STORAGE_BUFFER_BIT | usage, {});
     index_buffer = Buffer(100_MiB, BufferUsageMaskBits::E_INDEX_BUFFER_BIT | usage, {});
+    indirect_buffer = Buffer(10_MiB, BufferUsageMaskBits::E_INDIRECT_BUFFER_BIT, AllocationCreateMaskBits::E_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+    mesh_buffer = Buffer(10_MiB, BufferUsageMaskBits::E_STORAGE_BUFFER_BIT, AllocationCreateMaskBits::E_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+
+    auto commands = GetIndirectCommandsFromMeshes(model.GetMeshes());
+    indirect_buffer.SetData<DrawIndexedIndirectCommand>(commands);
+
+    mesh_buffer.SetData<Mesh>(model.GetMeshes());
 
     auto offset = model.GetVerticesNumber() * sizeof(Vertex);
 
@@ -114,6 +130,17 @@ public:
     command_buffer.CommandCopyBuffer(staging.GetHandle(), index_buffer.GetHandle(), offset, 0, model.GetIndicesNumber() * sizeof(uint32_t));
     command_buffer.End();
     command_buffer.Submit();
+
+    DescriptorPoolSize descriptor_pool_size[1];
+    descriptor_pool_size[0].type = DescriptorType::E_COMBINED_IMAGE_SAMPLER;
+    descriptor_pool_size[0].descriptorCount = model.GetImages().size();
+
+    descriptor_pool = DescriptorPool(descriptor_pool_size, DescriptorPoolCreateMaskBits::E_UPDATE_AFTER_BIND_BIT, 1);
+
+    std::vector<DescriptorImageInfo> image_infos;
+    for (const auto &image : model.GetImages()) {
+      image_infos.emplace_back(image.GetDescriptor());
+    }
 
     auto shader_directory = GetInnsmouthShadersDirectory();
 
@@ -133,19 +160,25 @@ public:
     pipeline_specification.depth_format_ = Format::E_D32_SFLOAT;
     pipeline_specification.dynamic_states_.emplace_back(DynamicState::E_DEPTH_TEST_ENABLE);
     pipeline_specification.dynamic_states_.emplace_back(DynamicState::E_DEPTH_WRITE_ENABLE);
-    pipeline_specification.shader_paths_ = {shader_directory / "mesh" / "mesh.vert.spv", shader_directory / "mesh" / "mesh.frag.spv"};
+    pipeline_specification.shader_paths_ = {shader_directory / "mesh" / "mesh.vert.spv", shader_directory / "mesh" / "mesh_indirect.frag.spv"};
     graphics_pipeline = GraphicsPipeline(pipeline_specification);
+
+    descriptor_set = DescriptorSet(descriptor_pool.GetHandle(), graphics_pipeline.GetDescriptorSetLayouts()[1], model.GetImages().size());
+    descriptor_set.Update(image_infos, 0, DescriptorType::E_COMBINED_IMAGE_SAMPLER, 0);
   }
 
 private:
-  Image depth_image;
+  ImageDepth depth_image;
   Buffer vertex_buffer;
   Buffer index_buffer;
+  Buffer indirect_buffer;
+  Buffer mesh_buffer;
   GraphicsPipeline graphics_pipeline;
   Camera camera;
   Model model;
   ModelMatrices matrices;
-  ImageSpecification depth_image_specification;
+  DescriptorPool descriptor_pool;
+  DescriptorSet descriptor_set;
   AccelerationStructure blas;
   AccelerationStructure tlas;
 };

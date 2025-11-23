@@ -3,29 +3,25 @@
 
 #include "sampler.h"
 #include "vma/vk_mem_alloc.h"
+#include <optional>
 #include <span>
 
 namespace Innsmouth {
 
-class ImageSpecification {
-public:
-  ImageViewType view_type_;
-  ImageType image_type_;
-  ImageUsageMask usage_;
-  Extent3D extent_;
+struct ImageSpecification {
   Format format_;
+  Extent3D extent_;
   uint32_t levels_{1};
   uint32_t layers_{1};
-  ImageLayout layout_ = ImageLayout::E_UNDEFINED;
+  ImageUsageMask usage_;
 };
 
 class Image {
 public:
   Image() = default;
 
-  Image(const ImageSpecification &image_specification);
-
-  Image(const ImageSpecification &image_specification, const SamplerSpecification &sampler_specification);
+  Image(ImageType type, ImageViewType view_type, const ImageSpecification &image_specification,
+        const std::optional<SamplerSpecification> &sampler_specification);
 
   ~Image();
 
@@ -39,18 +35,33 @@ public:
   const VkImageView GetImageView() const;
   const VkSampler GetSampler() const;
 
+  DescriptorImageInfo GetDescriptor() const;
+
+  Format GetFormat() const;
+  ImageUsageMask GetUsage() const;
+  uint32_t GetLevelCoount() const;
+  uint32_t GetLayerCoount() const;
+
+  static VkImageView CreateImageView(VkImage image, Format format, ImageViewType image_view_type, const ImageSubresourceRange &subresource);
+
   void SetImageData(std::span<const std::byte> data);
 
 protected:
-  void CreateImage();
-  void CreateImageView();
+  void Initialize(ImageType type, ImageViewType view_type, const ImageSpecification &image_specification,
+                  const std::optional<SamplerSpecification> &sampler_specification = std::nullopt);
+
+  void CreateImage(ImageType image_type);
+
   void SetLayout(ImageLayout destination_layout);
+
+  void GenerateMipmaps();
 
 private:
   VkImage image_{VK_NULL_HANDLE};
   VmaAllocation vma_allocation_{VK_NULL_HANDLE};
   VkImageView image_view_{VK_NULL_HANDLE};
   VkSampler image_sampler_{VK_NULL_HANDLE};
+  ImageLayout current_layout_ = ImageLayout::E_UNDEFINED;
   ImageSpecification image_specification_;
 };
 

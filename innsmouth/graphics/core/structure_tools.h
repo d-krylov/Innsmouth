@@ -13,7 +13,7 @@ PipelineColorBlendAttachmentState GetColorBlendAttachmentState(bool enable, Blen
                                                                BlendFactor to_color = BlendFactor::E_ONE_MINUS_SRC_ALPHA, //
                                                                BlendOp color_operation = BlendOp::E_ADD,                  //
                                                                BlendFactor from_alpha = BlendFactor::E_ONE,
-                                                               BlendFactor to_alpha = BlendFactor::E_ONE_MINUS_SRC_ALPHA,
+                                                               BlendFactor to_alpha = BlendFactor::E_ZERO,
                                                                BlendOp alpha_operation = BlendOp::E_ADD);
 
 } // namespace Innsmouth

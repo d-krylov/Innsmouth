@@ -22,4 +22,12 @@ std::span<const uint32_t> Model::GetIndices() const {
   return indices_;
 }
 
+std::span<const Mesh> Model::GetMeshes() const {
+  return meshes_;
+}
+
+std::span<const Image2D> Model::GetImages() const {
+  return images_;
+}
+
 } // namespace Innsmouth

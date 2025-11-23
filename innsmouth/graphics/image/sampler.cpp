@@ -21,7 +21,7 @@ VkSampler Sampler::GetHandle() const {
   return sampler_;
 }
 
-VkSampler Sampler::CreateVulkanSampler(const SamplerSpecification &specification) {
+VkSampler Sampler::CreateSampler(const SamplerSpecification &specification) {
   VkSampler sampler = VK_NULL_HANDLE;
   SamplerCreateInfo sampler_ci;
   {

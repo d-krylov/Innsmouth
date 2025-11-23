@@ -188,6 +188,10 @@ void CommandBuffer::CommandBindIndexBuffer(const VkBuffer buffer, std::size_t of
   vkCmdBindIndexBuffer(command_buffer_, buffer, offset, index_type);
 }
 
+void CommandBuffer::CommandBindDescriptorSet(VkPipelineLayout pipeline_layout, VkDescriptorSet descriptor_set, uint32_t set) {
+  vkCmdBindDescriptorSets(command_buffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout, set, 1, &descriptor_set, 0, nullptr);
+}
+
 // DRAW
 void CommandBuffer::CommandDraw(uint32_t vertex_count, uint32_t instance_count, uint32_t first_vertex, uint32_t first_instance) {
   vkCmdDraw(command_buffer_, vertex_count, instance_count, first_vertex, first_instance);
@@ -196,6 +200,10 @@ void CommandBuffer::CommandDraw(uint32_t vertex_count, uint32_t instance_count, 
 void CommandBuffer::CommandDrawIndexed(uint32_t index_count, uint32_t instance_count, uint32_t first_index, int32_t vertex_offset,
                                        uint32_t first_instance) {
   vkCmdDrawIndexed(command_buffer_, index_count, instance_count, first_index, vertex_offset, first_instance);
+}
+
+void CommandBuffer::CommandDrawIndexedIndirect(VkBuffer buffer, std::size_t byte_offset, uint32_t draw_count, uint32_t stride) {
+  vkCmdDrawIndexedIndirect(command_buffer_, buffer, byte_offset, draw_count, stride);
 }
 
 void CommandBuffer::CommandDrawIndirect(const VkBuffer buffer, uint64_t offset, uint32_t draw_count, uint32_t stride) {
@@ -293,6 +301,10 @@ void CommandBuffer::CommandPushDescriptorSet(VkPipelineLayout layout, uint32_t s
   write_descriptor_set.pNext = &descriptor_ai;
 
   vkCmdPushDescriptorSetKHR(command_buffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, set, 1, write_descriptor_set);
+}
+
+void CommandBuffer::CommandBlitImage(VkImage source_image, ImageLayout source_layout) {
+  // vkCmdBlitImage(command_buffer_, source_image, source_layout,  );
 }
 
 } // namespace Innsmouth

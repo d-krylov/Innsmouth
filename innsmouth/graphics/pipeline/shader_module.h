@@ -20,7 +20,7 @@ public:
   std::span<const PushConstantRange> GetPushConstantRanges() const;
   std::span<const VertexInputAttributeDescription> GetVertexInputAttributes() const;
   const DescriptorSetLayoutBindingMap &GetPushDescriptorSetLayoutBindings() const;
-  const DescriptorSetLayoutBindingMap &GetPullDescriptorSetLayoutBindings() const;
+  const DescriptorSetLayoutBindingMap &GetPoolDescriptorSetLayoutBindings() const;
 
 protected:
   void ParseShader(std::span<const uint32_t> shader_binary_data);
@@ -31,7 +31,7 @@ private:
   std::vector<PushConstantRange> push_constant_ranges_;
   std::vector<VertexInputAttributeDescription> input_attribute_descriptions_;
   DescriptorSetLayoutBindingMap push_descriptor_set_bindings_;
-  DescriptorSetLayoutBindingMap pull_descriptor_set_bindings_;
+  DescriptorSetLayoutBindingMap pool_descriptor_set_bindings_;
 };
 
 } // namespace Innsmouth

@@ -4,6 +4,7 @@ set(INNSMOUTH_GRAPHICS_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/graphics/core/graphics_structures.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/core/structure_tools.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/core/graphics_types.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/core/graphics_formats.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_context/graphics_context.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_context/graphics_tools.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/graphics_context/graphics_allocator.cpp
@@ -12,9 +13,11 @@ set(INNSMOUTH_GRAPHICS_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/graphics/command/command_pool.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/image/image.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/image/image2D.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/image/image_depth.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/image/sampler.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/buffer/buffer.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/graphics_pipeline.cpp
+  ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/ray_tracing_pipeline.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/pipeline/shader_module.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/synchronization/fence.cpp
   ${INNSMOUTH_SOURCE_DIR}/graphics/synchronization/semaphore.cpp

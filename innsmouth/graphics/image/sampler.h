@@ -24,7 +24,7 @@ public:
   Sampler(Sampler &&other) noexcept;
   Sampler &operator=(Sampler &&other) noexcept;
 
-  static VkSampler CreateVulkanSampler(const SamplerSpecification &specification);
+  static VkSampler CreateSampler(const SamplerSpecification &specification);
 
   VkSampler GetHandle() const;
 

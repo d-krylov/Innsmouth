@@ -117,15 +117,7 @@ void ImGuiRenderer::CreateFontsTexture() {
   int32_t width, height, channels;
   io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height, &channels);
   auto data = std::span(pixels, width * height * channels);
-
-  ImageSpecification image_specification;
-  image_specification.extent_ = Extent3D(width, height, 1);
-  image_specification.format_ = Format::E_R8G8B8A8_UNORM;
-  image_specification.image_type_ = ImageType::E_2D;
-  image_specification.view_type_ = ImageViewType::E_2D;
-  image_specification.usage_ = ImageUsageMaskBits::E_SAMPLED_BIT | ImageUsageMaskBits::E_TRANSFER_DST_BIT;
-  font_image_ = Image(image_specification, SamplerSpecification());
-  font_image_.SetImageData(std::as_bytes(data));
+  font_image_ = Image2D(width, height, std::as_bytes(data), SamplerSpecification());
   io.Fonts->SetTexID((ImTextureID)(intptr_t)&font_image_);
 }
 

@@ -2,7 +2,7 @@
 #define INNSMOUTH_IMGUI_RENDERER_H
 
 #include "innsmouth/graphics/buffer/buffer.h"
-#include "innsmouth/graphics/image/image.h"
+#include "innsmouth/graphics/image/image2D.h"
 #include "innsmouth/graphics/pipeline/graphics_pipeline.h"
 
 namespace Innsmouth {
@@ -36,7 +36,7 @@ private:
   Buffer vertex_buffer_;
   Buffer index_buffer_;
   GuiPushConstants gui_push_constants_;
-  Image font_image_;
+  Image2D font_image_;
 };
 
 } // namespace Innsmouth

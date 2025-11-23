@@ -20,4 +20,13 @@ VkDescriptorPool DescriptorPool::GetHandle() const {
   return descriptor_pool_;
 }
 
+DescriptorPool::DescriptorPool(DescriptorPool &&other) noexcept {
+  descriptor_pool_ = std::exchange(other.descriptor_pool_, VK_NULL_HANDLE);
+}
+
+DescriptorPool &DescriptorPool::operator=(DescriptorPool &&other) noexcept {
+  std::swap(descriptor_pool_, other.descriptor_pool_);
+  return *this;
+}
+
 } // namespace Innsmouth

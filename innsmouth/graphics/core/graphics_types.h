@@ -8,6 +8,7 @@
 namespace Innsmouth {
 
 AccessMask2 GetAccessMask(ImageLayout layout);
+ImageAspectMask GetAspectMask(Format format);
 
 bool HasBits(VkFlags supported_mask, VkFlags requiered_mask);
 bool NotBits(VkFlags supported_mask, VkFlags requiered_mask);
