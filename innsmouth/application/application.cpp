@@ -57,6 +57,7 @@ void Application::Run() {
     if ((result == VK_ERROR_OUT_OF_DATE_KHR) || (result == VK_SUBOPTIMAL_KHR)) {
       if (result == VK_ERROR_OUT_OF_DATE_KHR) {
         swapchain_.Recreate();
+        OnSwapchain();
       }
       continue;
     } else {
@@ -115,6 +116,16 @@ void Application::Run() {
 
     current_frame_ = (current_frame_ + 1) % (swapchain_.GetImageCount() - 1);
   }
+}
+
+void Application::OnSwapchain() {
+  for (auto &layer : layers_) {
+    layer->OnSwapchain();
+  }
+}
+
+const Swapchain &Application::GetSwapchain() const {
+  return swapchain_;
 }
 
 } // namespace Innsmouth

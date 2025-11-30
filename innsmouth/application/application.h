@@ -26,14 +26,9 @@ public:
 
   static Application *Get();
 
-  Swapchain &GetSwapchain() {
-    return swapchain_;
-  }
+  const Swapchain &GetSwapchain() const;
 
-  const Swapchain &GetSwapchain() const {
-    return swapchain_;
-  }
-
+  void OnSwapchain();
   void OnEvent(Event &event);
 
 protected:

@@ -77,7 +77,6 @@ void ShaderBindingTable::CreateShaderBindingTable(VkPipeline pipeline, const Sha
   CopyRegion(handles, scratch_buffer, shader_groups.raygen_, offset, index, handle_size, aligned_handle_size, base_alignment);
   CopyRegion(handles, scratch_buffer, shader_groups.miss_, offset, index, handle_size, aligned_handle_size, base_alignment);
   CopyRegion(handles, scratch_buffer, shader_groups.hit_, offset, index, handle_size, aligned_handle_size, base_alignment);
-  CopyRegion(handles, scratch_buffer, shader_groups.callable_, offset, index, handle_size, aligned_handle_size, base_alignment);
 
   CommandBuffer command_buffer(GraphicsContext::Get()->GetGraphicsQueueIndex());
   command_buffer.Begin();
