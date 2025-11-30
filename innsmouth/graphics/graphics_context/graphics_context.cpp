@@ -24,12 +24,12 @@ const VkDevice GraphicsContext::GetDevice() const {
   return device_;
 }
 
-const VkQueue GraphicsContext::GetGeneralQueue() const {
-  return general_queue_;
+const VkQueue GraphicsContext::GetGraphicsQueue() const {
+  return graphics_queue_;
 }
 
 uint32_t GraphicsContext::GetGraphicsQueueIndex() const {
-  return general_queue_index_;
+  return graphics_queue_index_;
 }
 
 GraphicsContext::GraphicsContext() {
@@ -43,7 +43,7 @@ GraphicsContext::~GraphicsContext() {
 }
 
 std::vector<const char *> GraphicsContext::GetInstanceLayers() const {
-  auto layers = Enumerate(vkEnumerateInstanceLayerProperties);
+  auto layers = Enumerate<LayerProperties>(vkEnumerateInstanceLayerProperties);
 
   std::vector required_layers = {"VK_LAYER_KHRONOS_validation"};
 
@@ -70,52 +70,51 @@ std::vector<const char *> GetSwapchainExtensions() {
 void GraphicsContext::CreateInstance() {
   VK_CHECK(volkInitialize());
 
-  VkApplicationInfo application_info{};
-  {
-    application_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    application_info.pApplicationName = "Innsmouth Application";
-    application_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    application_info.pEngineName = "Innsmouth Engine";
-    application_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    application_info.apiVersion = VK_API_VERSION_1_3;
-  }
+  ApplicationInfo application_info{};
+  application_info.pApplicationName = "Innsmouth Application";
+  application_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+  application_info.pEngineName = "Innsmouth Engine";
+  application_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+  application_info.apiVersion = VK_API_VERSION_1_3;
 
   std::vector<const char *> required_layers = GetInstanceLayers();
-  std::vector<const char *> required_extensions{VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME, VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
+  std::vector<const char *> required_extensions{VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
 
   auto swapchain_extensions = GetSwapchainExtensions();
   required_extensions.insert(required_extensions.end(), swapchain_extensions.begin(), swapchain_extensions.end());
 
-  VkDebugUtilsMessengerCreateInfoEXT debug_ci{};
-  {
-    debug_ci.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    debug_ci.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT;
-    debug_ci.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
-                               VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
-    debug_ci.pfnUserCallback = DebugCallback;
-  }
+  std::array enabled_validation{ValidationFeatureEnableEXT::E_SYNCHRONIZATION_VALIDATION_EXT, ValidationFeatureEnableEXT::E_BEST_PRACTICES_EXT};
 
-  VkInstanceCreateInfo instance_ci{};
-  {
-    instance_ci.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    instance_ci.pApplicationInfo = &application_info;
-    instance_ci.enabledLayerCount = required_layers.size();
-    instance_ci.ppEnabledLayerNames = required_layers.data();
-    instance_ci.enabledExtensionCount = required_extensions.size();
-    instance_ci.ppEnabledExtensionNames = required_extensions.data();
-  }
+  ValidationFeaturesEXT validation_features;
+  validation_features.enabledValidationFeatureCount = enabled_validation.size();
+  validation_features.pEnabledValidationFeatures = enabled_validation.data();
+
+  DebugUtilsMessengerCreateInfoEXT debug_ci{};
+  debug_ci.messageType = DebugUtilsMessageTypeMaskBitsEXT::E_VALIDATION_BIT_EXT | DebugUtilsMessageTypeMaskBitsEXT::E_GENERAL_BIT_EXT;
+  debug_ci.messageSeverity = DebugUtilsMessageSeverityMaskBitsEXT::E_ERROR_BIT_EXT | DebugUtilsMessageSeverityMaskBitsEXT::E_INFO_BIT_EXT |
+                             DebugUtilsMessageSeverityMaskBitsEXT::E_WARNING_BIT_EXT | DebugUtilsMessageSeverityMaskBitsEXT::E_VERBOSE_BIT_EXT;
+
+  debug_ci.pfnUserCallback = DebugCallback;
+  debug_ci.pNext = &validation_features;
+
+  InstanceCreateInfo instance_ci{};
+  instance_ci.pApplicationInfo = &application_info;
+  instance_ci.enabledLayerCount = required_layers.size();
+  instance_ci.ppEnabledLayerNames = required_layers.data();
+  instance_ci.enabledExtensionCount = required_extensions.size();
+  instance_ci.ppEnabledExtensionNames = required_extensions.data();
 
   instance_ci.pNext = &debug_ci;
 
-  VK_CHECK(vkCreateInstance(&instance_ci, nullptr, &instance_));
+  VK_CHECK(vkCreateInstance(instance_ci, nullptr, &instance_));
 
   volkLoadInstanceOnly(instance_);
 
-  VK_CHECK(vkCreateDebugUtilsMessengerEXT(instance_, &debug_ci, nullptr, &debug_messenger_));
+  VK_CHECK(vkCreateDebugUtilsMessengerEXT(instance_, debug_ci, nullptr, &debug_messenger_));
 }
 
 void GraphicsContext::PickPhysicalDevice() {
-  auto physical_devices = Enumerate(vkEnumeratePhysicalDevices, instance_);
+  auto physical_devices = Enumerate<VkPhysicalDevice>(vkEnumeratePhysicalDevices, instance_);
 
   for (const auto &physical_device : physical_devices) {
     auto b = EvaluatePhysicalDevice(physical_device);
@@ -128,31 +127,15 @@ void GraphicsContext::PickPhysicalDevice() {
 }
 
 void GraphicsContext::CreateDevice() {
-  auto queue_indices = PickPhysicalDeviceQueues(physical_device_);
-
-  general_queue_index_ = queue_indices.general;
-  compute_queue_index_ = queue_indices.compute;
-  transfer_queue_index_ = queue_indices.transfer;
+  graphics_queue_index_ = PickPhysicalDeviceQueue(physical_device_);
 
   std::array queue_priorities = {0.0f};
 
-  std::vector<VkDeviceQueueCreateInfo> device_queue_cis;
+  std::array<DeviceQueueCreateInfo, 1> device_queue_cis;
 
-  for (const auto &queue_index : {general_queue_index_, compute_queue_index_, transfer_queue_index_}) {
-
-    if (queue_index != -1) {
-
-      VkDeviceQueueCreateInfo queue_ci{};
-      {
-        queue_ci.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        queue_ci.queueFamilyIndex = queue_index;
-        queue_ci.pQueuePriorities = queue_priorities.data();
-        queue_ci.queueCount = 1;
-      }
-
-      device_queue_cis.emplace_back(queue_ci);
-    }
-  }
+  device_queue_cis[0].queueFamilyIndex = graphics_queue_index_;
+  device_queue_cis[0].pQueuePriorities = queue_priorities.data();
+  device_queue_cis[0].queueCount = 1;
 
   auto required_device_extensions = GetRequiredDeviceExtensions();
 
@@ -200,23 +183,18 @@ void GraphicsContext::CreateDevice() {
   physical_device_features_2.pNext = &physical_device_features_11;
   physical_device_features_2.features.multiDrawIndirect = true;
 
-  VkDeviceCreateInfo device_ci{};
-  {
-    device_ci.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    device_ci.pQueueCreateInfos = device_queue_cis.data();
-    device_ci.queueCreateInfoCount = device_queue_cis.size();
-    device_ci.ppEnabledExtensionNames = required_device_extensions.data();
-    device_ci.enabledExtensionCount = required_device_extensions.size();
-    device_ci.pNext = &physical_device_features_2;
-  }
+  DeviceCreateInfo device_ci{};
+  device_ci.pQueueCreateInfos = device_queue_cis.data();
+  device_ci.queueCreateInfoCount = device_queue_cis.size();
+  device_ci.ppEnabledExtensionNames = required_device_extensions.data();
+  device_ci.enabledExtensionCount = required_device_extensions.size();
+  device_ci.pNext = &physical_device_features_2;
 
-  VK_CHECK(vkCreateDevice(physical_device_, &device_ci, nullptr, &device_));
+  VK_CHECK(vkCreateDevice(physical_device_, device_ci, nullptr, &device_));
 
   volkLoadDevice(device_);
 
-  vkGetDeviceQueue(device_, general_queue_index_, 0, &general_queue_);
-  vkGetDeviceQueue(device_, compute_queue_index_, 0, &compute_queue_);
-  vkGetDeviceQueue(device_, transfer_queue_index_, 0, &transfer_queue_);
+  vkGetDeviceQueue(device_, graphics_queue_index_, 0, &graphics_queue_);
 }
 
 } // namespace Innsmouth

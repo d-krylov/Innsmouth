@@ -1,5 +1,6 @@
 #include "command_buffer.h"
 #include "command_pool.h"
+#include "innsmouth/graphics/synchronization/fence.h"
 
 namespace Innsmouth {
 
@@ -49,16 +50,15 @@ void CommandBuffer::Submit() {
   SubmitInfo submit_info;
   submit_info.commandBufferCount = 1;
   submit_info.pCommandBuffers = &command_buffer_;
-  VK_CHECK(vkQueueSubmit(GraphicsContext::Get()->GetGeneralQueue(), 1, submit_info, VK_NULL_HANDLE));
+  Fence fence;
+  VK_CHECK(vkQueueSubmit(GraphicsContext::Get()->GetGraphicsQueue(), 1, submit_info, fence.GetHandle()));
+  fence.Wait();
 }
 
-void CommandBuffer::Begin(VkCommandBufferUsageFlags usage) {
-  VkCommandBufferBeginInfo command_buffer_bi{};
-  {
-    command_buffer_bi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    command_buffer_bi.flags = usage;
-  }
-  VK_CHECK(vkBeginCommandBuffer(command_buffer_, &command_buffer_bi));
+void CommandBuffer::Begin(CommandBufferUsageMask usage) {
+  CommandBufferBeginInfo command_buffer_bi;
+  command_buffer_bi.flags = usage;
+  VK_CHECK(vkBeginCommandBuffer(command_buffer_, command_buffer_bi));
 }
 
 void CommandBuffer::End() {
@@ -73,15 +73,14 @@ void CommandBuffer::CommandBeginRendering(const Extent2D &extent, std::span<cons
                                           const std::optional<RenderingAttachmentInfo> &depth,
                                           const std::optional<RenderingAttachmentInfo> &stencil) {
   RenderingInfo rendering_info;
-  {
-    rendering_info.renderArea.offset = {0, 0};
-    rendering_info.renderArea.extent = extent;
-    rendering_info.layerCount = 1;
-    rendering_info.colorAttachmentCount = colors.size();
-    rendering_info.pColorAttachments = colors.data();
-    rendering_info.pDepthAttachment = depth.has_value() ? &depth.value() : nullptr;
-    rendering_info.pStencilAttachment = stencil.has_value() ? &stencil.value() : nullptr;
-  }
+
+  rendering_info.renderArea.offset = {0, 0};
+  rendering_info.renderArea.extent = extent;
+  rendering_info.layerCount = 1;
+  rendering_info.colorAttachmentCount = colors.size();
+  rendering_info.pColorAttachments = colors.data();
+  rendering_info.pDepthAttachment = depth.has_value() ? &depth.value() : nullptr;
+  rendering_info.pStencilAttachment = stencil.has_value() ? &stencil.value() : nullptr;
 
   vkCmdBeginRendering(command_buffer_, rendering_info);
 }
@@ -133,7 +132,8 @@ void CommandBuffer::CommandEnableStencilTest(bool enabled) {
 }
 
 void CommandBuffer::CommandPipelineBarrier(std::span<const ImageMemoryBarrier2> image_barriers,
-                                           std::span<const BufferMemoryBarrier2> buffer_barriers) {
+                                           std::span<const BufferMemoryBarrier2> buffer_barriers,
+                                           std::span<const MemoryBarrier2> memory_barriers) {
   DependencyInfo dependency_info{};
 
   dependency_info.dependencyFlags = {};
@@ -141,43 +141,63 @@ void CommandBuffer::CommandPipelineBarrier(std::span<const ImageMemoryBarrier2> 
   dependency_info.pBufferMemoryBarriers = buffer_barriers.data();
   dependency_info.imageMemoryBarrierCount = image_barriers.size();
   dependency_info.pImageMemoryBarriers = image_barriers.data();
+  dependency_info.memoryBarrierCount = memory_barriers.size();
+  dependency_info.pMemoryBarriers = memory_barriers.data();
 
   vkCmdPipelineBarrier2(command_buffer_, dependency_info);
 }
 
-void CommandBuffer::CommandImageMemoryBarrier(const VkImage &image, ImageLayout from_layout, ImageLayout to_layout,
-                                              PipelineStageMask2 from_stage, PipelineStageMask2 to_stage, const ImageSubresourceRange &range) {
+void CommandBuffer::CommandMemoryBarrier(PipelineStageMask2 source_stage, AccessMask2 source_access, PipelineStageMask2 destination_stage,
+                                         AccessMask2 destination_access) {
+  std::array<MemoryBarrier2, 1> memory_barrier;
+  memory_barrier[0].srcStageMask = source_stage;
+  memory_barrier[0].srcAccessMask = source_access;
+  memory_barrier[0].dstStageMask = destination_stage;
+  memory_barrier[0].dstAccessMask = destination_access;
 
-  auto from_access_mask = GetAccessMask(from_layout);
-  auto to_access_mask = GetAccessMask(to_layout);
+  CommandPipelineBarrier({}, {}, memory_barrier);
+}
 
-  std::array<ImageMemoryBarrier2, 1> image_memory_barrier = {};
-  {
-    image_memory_barrier[0].srcStageMask = from_stage;
-    image_memory_barrier[0].srcAccessMask = from_access_mask;
-    image_memory_barrier[0].dstStageMask = to_stage;
-    image_memory_barrier[0].dstAccessMask = to_access_mask;
-    image_memory_barrier[0].oldLayout = from_layout;
-    image_memory_barrier[0].newLayout = to_layout;
-    image_memory_barrier[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    image_memory_barrier[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    image_memory_barrier[0].image = image;
-    image_memory_barrier[0].subresourceRange = range;
-  }
+void CommandBuffer::CommandImageMemoryBarrier(VkImage image, ImageLayout source_layout, ImageLayout destination_layout,
+                                              PipelineStageMask2 source_stage, PipelineStageMask2 destination_stage, AccessMask2 source_access,
+                                              AccessMask2 destination_access, const ImageSubresourceRange &subresource) {
 
-  std::array<BufferMemoryBarrier2, 0> buffer_memory_barrier{};
+  std::array<ImageMemoryBarrier2, 1> image_memory_barrier;
 
-  CommandPipelineBarrier(image_memory_barrier, buffer_memory_barrier);
+  image_memory_barrier[0].srcStageMask = source_stage;
+  image_memory_barrier[0].srcAccessMask = source_access;
+  image_memory_barrier[0].dstStageMask = destination_stage;
+  image_memory_barrier[0].dstAccessMask = destination_access;
+  image_memory_barrier[0].oldLayout = source_layout;
+  image_memory_barrier[0].newLayout = destination_layout;
+  image_memory_barrier[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  image_memory_barrier[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  image_memory_barrier[0].image = image;
+  image_memory_barrier[0].subresourceRange = subresource;
+
+  CommandPipelineBarrier(image_memory_barrier, {}, {});
+}
+
+void CommandBuffer::CommandBufferMemoryBarrier(VkBuffer buffer, PipelineStageMask2 source_stage, AccessMask2 source_access, //
+                                               PipelineStageMask2 destination_stage, AccessMask2 destination_access) {
+  std::array<BufferMemoryBarrier2, 1> buffer_memory_barrier;
+  buffer_memory_barrier[0].buffer = buffer;
+  buffer_memory_barrier[0].srcStageMask = source_stage;
+  buffer_memory_barrier[0].srcAccessMask = source_access;
+  buffer_memory_barrier[0].dstStageMask = destination_stage;
+  buffer_memory_barrier[0].dstAccessMask = destination_access;
+  buffer_memory_barrier[0].offset = 0;
+  buffer_memory_barrier[0].size = VK_WHOLE_SIZE;
+  buffer_memory_barrier[0].srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  buffer_memory_barrier[0].dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+
+  CommandPipelineBarrier({}, buffer_memory_barrier, {});
 }
 
 // BIND
 
-void CommandBuffer::CommandBindGraphicsPipeline(const VkPipeline graphics_pipeline) {
-  vkCmdBindPipeline(command_buffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline);
-}
-
-void CommandBuffer::CommandBindComputePipeline(const VkPipeline graphics_pipeline) {
-  vkCmdBindPipeline(command_buffer_, VK_PIPELINE_BIND_POINT_COMPUTE, graphics_pipeline);
+void CommandBuffer::CommandBindPipeline(VkPipeline pipeline, PipelineBindPoint bind_point) {
+  vkCmdBindPipeline(command_buffer_, VkPipelineBindPoint(bind_point), pipeline);
 }
 
 void CommandBuffer::CommandBindVertexBuffer(const VkBuffer buffer, std::size_t offset) {
@@ -210,66 +230,69 @@ void CommandBuffer::CommandDrawIndirect(const VkBuffer buffer, uint64_t offset, 
   vkCmdDrawIndirect(command_buffer_, buffer, offset, draw_count, stride);
 }
 
-void CommandBuffer::CommandPushDescriptorSet(const VkPipelineLayout layout, uint32_t set_number, uint32_t binding, const VkImageView image_view,
-                                             const VkSampler sampler) {
-  VkDescriptorImageInfo descriptor_ii{};
-  {
-    descriptor_ii.sampler = sampler;
-    descriptor_ii.imageView = image_view;
-    descriptor_ii.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  }
+// PUSH DESCRIPTORS
+void CommandBuffer::CommandPushDescriptorSet(std::span<const DescriptorImageInfo> images, VkPipelineLayout layout, uint32_t set_number,
+                                             uint32_t binding, DescriptorType descriptor_type, PipelineBindPoint bind_point) {
+  WriteDescriptorSet write_descriptor_set;
+  write_descriptor_set.dstBinding = binding;
+  write_descriptor_set.dstArrayElement = 0;
+  write_descriptor_set.descriptorType = descriptor_type;
+  write_descriptor_set.descriptorCount = images.size();
+  write_descriptor_set.pImageInfo = images.data();
 
-  VkWriteDescriptorSet write_descriptor_set{};
-  {
-    write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    write_descriptor_set.dstBinding = binding;
-    write_descriptor_set.dstArrayElement = 0;
-    write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    write_descriptor_set.descriptorCount = 1;
-    write_descriptor_set.pImageInfo = &descriptor_ii;
-  }
-  vkCmdPushDescriptorSetKHR(command_buffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, set_number, 1, &write_descriptor_set);
+  vkCmdPushDescriptorSetKHR(command_buffer_, VkPipelineBindPoint(bind_point), layout, set_number, 1, write_descriptor_set);
 }
 
-void CommandBuffer::CommandPushDescriptorSet(VkPipelineLayout layout, uint32_t set_number, uint32_t binding, VkBuffer buffer) {
+void CommandBuffer::CommandPushDescriptorSet(VkPipelineLayout layout, uint32_t set_number, uint32_t binding, VkBuffer buffer,
+                                             PipelineBindPoint bind_point) {
   DescriptorBufferInfo descriptor_bi;
-  {
-    descriptor_bi.buffer = buffer;
-    descriptor_bi.offset = 0;
-    descriptor_bi.range = VK_WHOLE_SIZE;
-  }
+  descriptor_bi.buffer = buffer;
+  descriptor_bi.offset = 0;
+  descriptor_bi.range = VK_WHOLE_SIZE;
 
   WriteDescriptorSet write_descriptor_set;
-  {
-    write_descriptor_set.dstBinding = binding;
-    write_descriptor_set.dstArrayElement = 0;
-    write_descriptor_set.descriptorType = DescriptorType::E_STORAGE_BUFFER;
-    write_descriptor_set.descriptorCount = 1;
-    write_descriptor_set.pBufferInfo = &descriptor_bi;
-  }
-  vkCmdPushDescriptorSetKHR(command_buffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, set_number, 1, write_descriptor_set);
+  write_descriptor_set.dstBinding = binding;
+  write_descriptor_set.dstArrayElement = 0;
+  write_descriptor_set.descriptorType = DescriptorType::E_STORAGE_BUFFER;
+  write_descriptor_set.descriptorCount = 1;
+  write_descriptor_set.pBufferInfo = &descriptor_bi;
+
+  vkCmdPushDescriptorSetKHR(command_buffer_, VkPipelineBindPoint(bind_point), layout, set_number, 1, write_descriptor_set);
 }
 
-void CommandBuffer::CommandCopyBufferToImage(const VkBuffer buffer, const VkImage image, const VkExtent3D &extent) {
-  VkImageSubresourceLayers subresource_layers{};
-  {
-    subresource_layers.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    subresource_layers.mipLevel = 0;
-    subresource_layers.baseArrayLayer = 0;
-    subresource_layers.layerCount = 1;
-  }
+void CommandBuffer::CommandPushDescriptorSet(VkPipelineLayout layout, uint32_t set, uint32_t binding,
+                                             const VkAccelerationStructureKHR &acceleration, PipelineBindPoint bind_point) {
+  WriteDescriptorSetAccelerationStructureKHR descriptor_ai{};
+  descriptor_ai.accelerationStructureCount = 1;
+  descriptor_ai.pAccelerationStructures = &acceleration;
 
-  VkBufferImageCopy buffer_image_copy{};
-  {
-    buffer_image_copy.bufferOffset = 0;
-    buffer_image_copy.bufferRowLength = 0;
-    buffer_image_copy.bufferImageHeight = 0;
-    buffer_image_copy.imageSubresource = subresource_layers;
-    buffer_image_copy.imageOffset = VkOffset3D(0, 0, 0);
-    buffer_image_copy.imageExtent = extent;
-  }
+  WriteDescriptorSet write_descriptor_set;
+  write_descriptor_set.dstBinding = binding;
+  write_descriptor_set.descriptorType = DescriptorType::E_ACCELERATION_STRUCTURE_KHR;
+  write_descriptor_set.descriptorCount = 1;
+  write_descriptor_set.pNext = &descriptor_ai;
 
-  vkCmdCopyBufferToImage(command_buffer_, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &buffer_image_copy);
+  vkCmdPushDescriptorSetKHR(command_buffer_, VkPipelineBindPoint(bind_point), layout, set, 1, write_descriptor_set);
+}
+
+void CommandBuffer::CommandCopyBufferToImage(VkBuffer buffer, VkImage image, const Extent3D &extent) {
+  ImageSubresourceLayers subresource_layers;
+
+  subresource_layers.aspectMask = ImageAspectMaskBits::E_COLOR_BIT;
+  subresource_layers.mipLevel = 0;
+  subresource_layers.baseArrayLayer = 0;
+  subresource_layers.layerCount = 1;
+
+  BufferImageCopy buffer_image_copy;
+
+  buffer_image_copy.bufferOffset = 0;
+  buffer_image_copy.bufferRowLength = 0;
+  buffer_image_copy.bufferImageHeight = 0;
+  buffer_image_copy.imageSubresource = subresource_layers;
+  buffer_image_copy.imageOffset = Offset3D(0, 0, 0);
+  buffer_image_copy.imageExtent = extent;
+
+  vkCmdCopyBufferToImage(command_buffer_, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, buffer_image_copy);
 }
 
 void CommandBuffer::CommandCopyBuffer(VkBuffer source, VkBuffer destination, std::size_t from_offset, std::size_t to_offset, std::size_t size) {
@@ -288,23 +311,14 @@ void CommandBuffer::CommandBuildAccelerationStructure(std::span<const Accelerati
   vkCmdBuildAccelerationStructuresKHR(command_buffer_, primitive_count, geometry_infos, range_infos);
 }
 
-void CommandBuffer::CommandPushDescriptorSet(VkPipelineLayout layout, uint32_t set, uint32_t binding,
-                                             const VkAccelerationStructureKHR &acceleration) {
-  WriteDescriptorSetAccelerationStructureKHR descriptor_ai{};
-  descriptor_ai.accelerationStructureCount = 1;
-  descriptor_ai.pAccelerationStructures = &acceleration;
-
-  WriteDescriptorSet write_descriptor_set;
-  write_descriptor_set.dstBinding = binding;
-  write_descriptor_set.descriptorType = DescriptorType::E_ACCELERATION_STRUCTURE_KHR;
-  write_descriptor_set.descriptorCount = 1;
-  write_descriptor_set.pNext = &descriptor_ai;
-
-  vkCmdPushDescriptorSetKHR(command_buffer_, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, set, 1, write_descriptor_set);
-}
-
 void CommandBuffer::CommandBlitImage(VkImage source_image, ImageLayout source_layout) {
   // vkCmdBlitImage(command_buffer_, source_image, source_layout,  );
+}
+
+void CommandBuffer::CommandTraceRay(const StridedDeviceAddressRegionKHR &raygen, const StridedDeviceAddressRegionKHR &miss,
+                                    const StridedDeviceAddressRegionKHR &hit, uint32_t width, uint32_t height, uint32_t depth) {
+  StridedDeviceAddressRegionKHR callable;
+  vkCmdTraceRaysKHR(command_buffer_, raygen, miss, hit, callable, width, height, depth);
 }
 
 } // namespace Innsmouth

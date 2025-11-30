@@ -1,12 +1,9 @@
 #include "acceleration_structure.h"
+#include "innsmouth/core/include/core.h"
 #include "innsmouth/graphics/command/command_buffer.h"
 #include <print>
 
 namespace Innsmouth {
-
-constexpr std::size_t AlignUp(std::size_t value, std::size_t alignment) noexcept {
-  return (value + alignment - 1) & ~(alignment - 1);
-}
 
 TransformMatrixKHR ConvertTransform(const Matrix4f &matrix) {
   TransformMatrixKHR out{};

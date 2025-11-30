@@ -1,12 +1,12 @@
 #ifndef INNSMOUTH_GRAPHICS_PIPELINE_H
 #define INNSMOUTH_GRAPHICS_PIPELINE_H
 
-#include "shader_module.h"
+#include "pipeline_tools.h"
 #include <filesystem>
 
 namespace Innsmouth {
 
-struct PipelineSpecification {
+struct GraphicsPipelineSpecification {
   std::vector<std::filesystem::path> shader_paths_;
   std::vector<DynamicState> dynamic_states_{DynamicState::E_VIEWPORT, DynamicState::E_SCISSOR};
   std::vector<Format> color_formats_;
@@ -18,7 +18,7 @@ class GraphicsPipeline {
 public:
   GraphicsPipeline() = default;
 
-  GraphicsPipeline(const PipelineSpecification &pipeline_specification);
+  GraphicsPipeline(const GraphicsPipelineSpecification &pipeline_specification);
 
   ~GraphicsPipeline();
 

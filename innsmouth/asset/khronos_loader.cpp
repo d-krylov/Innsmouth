@@ -1,9 +1,9 @@
 #include "fastgltf/glm_element_traits.hpp"
 #include "fastgltf/core.hpp"
-#include "fastgltf/types.hpp"
-#include "fastgltf/tools.hpp"
 #include "innsmouth/asset/include/model.h"
 #include "innsmouth/core/include/image_wrapper.h"
+#include "innsmouth/core/include/core.h"
+#include <print>
 
 namespace Innsmouth {
 
@@ -83,13 +83,17 @@ void LoadImages(const fgf::Asset &asset, const std::filesystem::path &path) {
 }
 
 void Model::LoadKhronos(const std::filesystem::path &path) {
-  auto extensions = fgf::Extensions::KHR_mesh_quantization | fgf::Extensions::KHR_texture_transform | fgf::Extensions::KHR_materials_variants;
+  auto extensions = fgf::Extensions::KHR_mesh_quantization | fgf::Extensions::KHR_texture_transform | fgf::Extensions::KHR_materials_variants |
+                    fgf::Extensions::KHR_materials_pbrSpecularGlossiness;
+
   auto options = fgf::Options::DontRequireValidAssetMember | fgf::Options::LoadExternalBuffers | fgf::Options::GenerateMeshIndices;
 
   fastgltf::Parser parser(extensions);
 
   auto gltf_file = fastgltf::MappedGltfFile::FromPath(path);
   auto asset = parser.loadGltf(gltf_file.get(), path.parent_path(), options);
+
+  CORE_ASSERT(asset.error() == fgf::Error::None, fastgltf::getErrorMessage(asset.error()));
 
   std::size_t vertices_count = 0, indices_count = 0;
   GetModelProperties(asset.get(), vertices_count, indices_count);
@@ -102,6 +106,7 @@ void Model::LoadKhronos(const std::filesystem::path &path) {
   SamplerSpecification sampler_specification;
   sampler_specification.address_mode_ = SamplerAddressMode::E_REPEAT;
 
+  // images_.reserve(asset->images.size());
   for (auto &image : asset->images) {
     auto image_name = std::get<fastgltf::sources::URI>(image.data).uri.path();
     auto image_path = path.parent_path() / image_name;

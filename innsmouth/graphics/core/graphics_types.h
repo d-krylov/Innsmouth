@@ -7,11 +7,9 @@
 
 namespace Innsmouth {
 
-AccessMask2 GetAccessMask(ImageLayout layout);
 ImageAspectMask GetAspectMask(Format format);
-
-bool HasBits(VkFlags supported_mask, VkFlags requiered_mask);
-bool NotBits(VkFlags supported_mask, VkFlags requiered_mask);
+AccessMask2 GetAccessMaskFromLayout(ImageLayout layout, bool destination);
+PipelineStageMask2 GetPipelineStageMaskFromLayout(ImageLayout layout, bool destination);
 
 enum class AllocationCreateMaskBits {
   E_DEDICATED_MEMORY_BIT = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,

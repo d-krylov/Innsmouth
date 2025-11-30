@@ -52,5 +52,5 @@ void main() {
 
   vec3 color = 0.5 * ambient.rgb + vec3(0.4, 0.4, 0.1) * NdotL;
 
-  out_color = vec4(color, ambient.a);
+  out_color = vec4(color, 1.0);
 }

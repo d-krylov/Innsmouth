@@ -47,7 +47,7 @@ public:
     auto w = event.GetWidth();
     auto h = event.GetHeight();
     camera.SetAspect(float(w) / float(h));
-    depth_image = std::move(ImageDepth(w, h));
+    depth_image = ImageDepth(w, h);
     return true;
   }
 
@@ -83,14 +83,16 @@ public:
     matrices.model = Matrix4f(1.0f); // glm::rotate(Matrix4f(1.0f), PI_ / 2.0f, Vector3f(0.0f, 1.0f, 0.0f));
 
     command_buffer.CommandBeginRendering(swapchain.GetExtent(), rendering_ai, depth_ai);
-    command_buffer.CommandBindGraphicsPipeline(graphics_pipeline.GetPipeline());
+    command_buffer.CommandBindPipeline(graphics_pipeline.GetPipeline(), PipelineBindPoint::E_GRAPHICS);
     command_buffer.CommandEnableDepthTest(true);
     command_buffer.CommandEnableDepthWrite(true);
     command_buffer.CommandBindIndexBuffer(index_buffer.GetHandle(), 0);
     command_buffer.CommandPushConstants(graphics_pipeline.GetPipelineLayout(), ShaderStageMaskBits::E_VERTEX_BIT, matrices);
-    command_buffer.CommandPushDescriptorSet(graphics_pipeline.GetPipelineLayout(), 0, 0, vertex_buffer.GetHandle());
-    command_buffer.CommandPushDescriptorSet(graphics_pipeline.GetPipelineLayout(), 0, 1, tlas.GetAccelerationStructures().front());
-    command_buffer.CommandPushDescriptorSet(graphics_pipeline.GetPipelineLayout(), 0, 2, mesh_buffer.GetHandle());
+    command_buffer.CommandPushDescriptorSet(graphics_pipeline.GetPipelineLayout(), 0, 0, vertex_buffer.GetHandle(),
+                                            PipelineBindPoint::E_GRAPHICS);
+    command_buffer.CommandPushDescriptorSet(graphics_pipeline.GetPipelineLayout(), 0, 1, tlas.GetAccelerationStructures().front(),
+                                            PipelineBindPoint::E_GRAPHICS);
+    command_buffer.CommandPushDescriptorSet(graphics_pipeline.GetPipelineLayout(), 0, 2, mesh_buffer.GetHandle(), PipelineBindPoint::E_GRAPHICS);
     command_buffer.CommandBindDescriptorSet(graphics_pipeline.GetPipelineLayout(), descriptor_set.GetHandle(), 1);
     command_buffer.CommandSetViewport(0.0f, extent.height, extent.width, -float(extent.height));
     command_buffer.CommandSetScissor(0, 0, extent.width, extent.height);
@@ -105,15 +107,15 @@ public:
     model = Model(model_path);
 
     CommandBuffer command_buffer(GraphicsContext::Get()->GetGraphicsQueueIndex());
-    Buffer staging(100_MiB, BufferUsageMaskBits::E_TRANSFER_SRC_BIT, AllocationCreateMaskBits::E_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+    Buffer staging(400_MiB, BufferUsageMaskBits::E_TRANSFER_SRC_BIT, AllocationCreateMaskBits::E_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 
     BufferUsageMask usage = BufferUsageMaskBits::E_SHADER_DEVICE_ADDRESS_BIT | BufferUsageMaskBits::E_TRANSFER_DST_BIT |
                             BufferUsageMaskBits::E_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
 
-    vertex_buffer = Buffer(100_MiB, BufferUsageMaskBits::E_STORAGE_BUFFER_BIT | usage, {});
-    index_buffer = Buffer(100_MiB, BufferUsageMaskBits::E_INDEX_BUFFER_BIT | usage, {});
-    indirect_buffer = Buffer(10_MiB, BufferUsageMaskBits::E_INDIRECT_BUFFER_BIT, AllocationCreateMaskBits::E_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
-    mesh_buffer = Buffer(10_MiB, BufferUsageMaskBits::E_STORAGE_BUFFER_BIT, AllocationCreateMaskBits::E_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+    vertex_buffer = Buffer(400_MiB, BufferUsageMaskBits::E_STORAGE_BUFFER_BIT | usage, {});
+    index_buffer = Buffer(400_MiB, BufferUsageMaskBits::E_INDEX_BUFFER_BIT | usage, {});
+    indirect_buffer = Buffer(40_MiB, BufferUsageMaskBits::E_INDIRECT_BUFFER_BIT, AllocationCreateMaskBits::E_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+    mesh_buffer = Buffer(40_MiB, BufferUsageMaskBits::E_STORAGE_BUFFER_BIT, AllocationCreateMaskBits::E_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
 
     auto commands = GetIndirectCommandsFromMeshes(model.GetMeshes());
     indirect_buffer.SetData<DrawIndexedIndirectCommand>(commands);
@@ -128,6 +130,10 @@ public:
     command_buffer.Begin();
     command_buffer.CommandCopyBuffer(staging.GetHandle(), vertex_buffer.GetHandle(), 0, 0, offset);
     command_buffer.CommandCopyBuffer(staging.GetHandle(), index_buffer.GetHandle(), offset, 0, model.GetIndicesNumber() * sizeof(uint32_t));
+
+    command_buffer.CommandMemoryBarrier(PipelineStageMaskBits2::E_COPY_BIT, AccessMaskBits2::E_TRANSFER_WRITE_BIT,
+                                        PipelineStageMaskBits2::E_ACCELERATION_STRUCTURE_BUILD_BIT_KHR, AccessMaskBits2::E_SHADER_READ_BIT);
+
     command_buffer.End();
     command_buffer.Submit();
 
@@ -155,7 +161,7 @@ public:
     TLASInstance instance[1];
     tlas = AccelerationStructure(blas.GetAccelerationStructures(), instance);
 
-    PipelineSpecification pipeline_specification;
+    GraphicsPipelineSpecification pipeline_specification;
     pipeline_specification.color_formats_ = {swapchain.GetFormat()};
     pipeline_specification.depth_format_ = Format::E_D32_SFLOAT;
     pipeline_specification.dynamic_states_.emplace_back(DynamicState::E_DEPTH_TEST_ENABLE);

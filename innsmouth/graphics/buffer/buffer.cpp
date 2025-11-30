@@ -17,6 +17,7 @@ Buffer::Buffer(Buffer &&other) noexcept {
   vma_allocation_ = std::exchange(other.vma_allocation_, VK_NULL_HANDLE);
   mapped_memory_ = std::exchange(other.mapped_memory_, nullptr);
   buffer_size_ = std::exchange(other.buffer_size_, 0);
+  buffer_usage_ = std::exchange(other.buffer_usage_, BufferUsageMask());
 }
 
 Buffer &Buffer::operator=(Buffer &&other) noexcept {
@@ -24,6 +25,7 @@ Buffer &Buffer::operator=(Buffer &&other) noexcept {
   std::swap(vma_allocation_, other.vma_allocation_);
   std::swap(mapped_memory_, other.mapped_memory_);
   std::swap(buffer_size_, other.buffer_size_);
+  std::swap(buffer_usage_, other.buffer_usage_);
   return *this;
 }
 
@@ -39,7 +41,7 @@ void Buffer::CreateBuffer(AllocationCreateMask allocation_mask) {
   mapped_memory_ = allocation_information.mapped_memory_;
 }
 
-const VkBuffer Buffer::GetHandle() const {
+VkBuffer Buffer::GetHandle() const {
   return buffer_;
 }
 
@@ -49,6 +51,10 @@ void Buffer::Map() {
 
 void Buffer::Unmap() {
   GraphicsAllocator::Get()->UnmapMemory(vma_allocation_);
+}
+
+std::size_t Buffer::GetSize() const {
+  return buffer_size_;
 }
 
 VkDeviceAddress Buffer::GetBufferAddress() const {

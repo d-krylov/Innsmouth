@@ -16,6 +16,10 @@ std::filesystem::path GetInnsmouthShadersDirectory();
 
 void CORE_ASSERT(bool status, std::string_view message, std::source_location location = std::source_location::current());
 
+constexpr inline std::size_t AlignUp(std::size_t value, std::size_t alignment) {
+  return (value + alignment - 1) & ~(alignment - 1);
+}
+
 constexpr inline std::size_t operator""_KiB(unsigned long long int x) {
   return 1024ULL * x;
 }

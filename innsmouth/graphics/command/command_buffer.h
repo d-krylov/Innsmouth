@@ -23,7 +23,7 @@ public:
 
   static VkCommandBuffer AllocateCommandBuffer(VkCommandPool command_pool);
 
-  void Begin(VkCommandBufferUsageFlags usage = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT);
+  void Begin(CommandBufferUsageMask usage = CommandBufferUsageMaskBits::E_SIMULTANEOUS_USE_BIT);
   void Reset();
   void End();
 
@@ -60,26 +60,37 @@ public:
   void CommandDrawIndirect(const VkBuffer buffer, uint64_t offset, uint32_t draw_count, uint32_t stride);
 
   // BIND
-  void CommandBindGraphicsPipeline(const VkPipeline graphics_pipeline);
-  void CommandBindComputePipeline(const VkPipeline graphics_pipeline);
+  void CommandBindPipeline(VkPipeline pipeline, PipelineBindPoint bind_point);
   void CommandBindVertexBuffer(const VkBuffer buffer, std::size_t offset);
   void CommandBindIndexBuffer(const VkBuffer buffer, std::size_t offset, VkIndexType index_type = VkIndexType::VK_INDEX_TYPE_UINT32);
   void CommandBindDescriptorSet(VkPipelineLayout pipeline_layout, VkDescriptorSet descriptor_set, uint32_t set);
 
   // BARRIER
-  void CommandPipelineBarrier(std::span<const ImageMemoryBarrier2> image_barriers, std::span<const BufferMemoryBarrier2> buffer_barriers);
-  void CommandImageMemoryBarrier(const VkImage &image, ImageLayout from_layout, ImageLayout to_layout, PipelineStageMask2 from_stage,
-                                 PipelineStageMask2 to_stage, const ImageSubresourceRange &range);
+  void CommandMemoryBarrier(PipelineStageMask2 source_stage, AccessMask2 source_access, PipelineStageMask2 destination_stage,
+                            AccessMask2 destination_access);
+
+  void CommandImageMemoryBarrier(VkImage image, ImageLayout source_layout, ImageLayout destination_layout, PipelineStageMask2 source_stage,
+                                 PipelineStageMask2 destination_stage, AccessMask2 source_access, AccessMask2 destination_access,
+                                 const ImageSubresourceRange &subresource);
+
+  void CommandBufferMemoryBarrier(VkBuffer buffer, PipelineStageMask2 source_stage, AccessMask2 source_access,
+                                  PipelineStageMask2 destination_stage, AccessMask2 destination_access);
+
+  void CommandPipelineBarrier(std::span<const ImageMemoryBarrier2> image_barriers, std::span<const BufferMemoryBarrier2> buffer_barriers,
+                              std::span<const MemoryBarrier2> memory_barriers);
 
   // COPY
-  void CommandCopyBufferToImage(const VkBuffer buffer, const VkImage image, const VkExtent3D &extent);
+  void CommandCopyBufferToImage(VkBuffer buffer, VkImage image, const Extent3D &extent);
   void CommandCopyBuffer(VkBuffer source, VkBuffer destination, std::size_t from_offset, std::size_t to_offset, std::size_t size);
 
   // PUSH
-  void CommandPushDescriptorSet(VkPipelineLayout layout, uint32_t set, uint32_t binding, const VkAccelerationStructureKHR &acceleration);
-  void CommandPushDescriptorSet(VkPipelineLayout layout, uint32_t set_number, uint32_t binding, VkBuffer buffer);
-  void CommandPushDescriptorSet(const VkPipelineLayout layout, uint32_t set_number, uint32_t binding, const VkImageView image_view,
-                                const VkSampler sampler);
+  void CommandPushDescriptorSet(VkPipelineLayout layout, uint32_t set, uint32_t binding, const VkAccelerationStructureKHR &acceleration,
+                                PipelineBindPoint bind_point);
+
+  void CommandPushDescriptorSet(VkPipelineLayout layout, uint32_t set_number, uint32_t binding, VkBuffer buffer, PipelineBindPoint bind_point);
+
+  void CommandPushDescriptorSet(std::span<const DescriptorImageInfo> images, const VkPipelineLayout layout, uint32_t set_number,
+                                uint32_t binding, DescriptorType descriptor_type, PipelineBindPoint bind_point);
 
   template <typename T> void CommandPushConstants(const VkPipelineLayout layout, ShaderStageMask stage, const T &data, uint32_t offset = 0);
 
@@ -87,6 +98,9 @@ public:
                                          std::span<const AccelerationStructureBuildRangeInfoKHR *> build_range_infos);
 
   void CommandBlitImage(VkImage source_image, ImageLayout source_layout);
+
+  void CommandTraceRay(const StridedDeviceAddressRegionKHR &raygen, const StridedDeviceAddressRegionKHR &miss,
+                       const StridedDeviceAddressRegionKHR &hit, uint32_t width, uint32_t height, uint32_t depth);
 
 private:
   VkCommandBuffer command_buffer_{VK_NULL_HANDLE};

@@ -9,7 +9,7 @@ namespace Innsmouth {
 
 ImGuiRenderer::ImGuiRenderer(Format color_format) {
   auto shader_directory = GetInnsmouthShadersDirectory();
-  PipelineSpecification specification;
+  GraphicsPipelineSpecification specification;
   specification.color_formats_ = {color_format};
   specification.shader_paths_ = {shader_directory / "gui" / "gui.vert.spv", shader_directory / "gui" / "gui.frag.spv"};
   specification.dynamic_states_.emplace_back(DynamicState::E_CULL_MODE);
@@ -39,7 +39,7 @@ void ImGuiRenderer::SetupRenderState(CommandBuffer &command_buffer) {
   auto &io = ImGui::GetIO();
   auto draw_data = ImGui::GetDrawData();
 
-  command_buffer.CommandBindGraphicsPipeline(graphics_pipeline_.GetPipeline());
+  command_buffer.CommandBindPipeline(graphics_pipeline_.GetPipeline(), PipelineBindPoint::E_GRAPHICS);
 
   command_buffer.CommandSetCullMode(CullModeMaskBits::E_NONE);
 
@@ -99,7 +99,9 @@ void ImGuiRenderer::RenderDrawData(CommandBuffer &command_buffer) {
       Image *image = reinterpret_cast<Image *>(command.GetTexID());
 
       if (image != nullptr) {
-        command_buffer.CommandPushDescriptorSet(graphics_pipeline_.GetPipelineLayout(), 0, 0, image->GetImageView(), image->GetSampler());
+        std::array descriptors{image->GetDescriptor()};
+        command_buffer.CommandPushDescriptorSet(descriptors, graphics_pipeline_.GetPipelineLayout(), 0, 0,
+                                                DescriptorType::E_COMBINED_IMAGE_SAMPLER, PipelineBindPoint::E_GRAPHICS);
       }
 
       command_buffer.CommandDrawIndexed(command.ElemCount, 1, command.IdxOffset + global_index_offset, command.VtxOffset + global_vertex_offset,

@@ -35,8 +35,11 @@ endif()
 file(GLOB SHADER_FILES 
   "${PROJECT_SOURCE_DIR}/shaders/gui/*"
   "${PROJECT_SOURCE_DIR}/shaders/mesh/*"
+  "${PROJECT_SOURCE_DIR}/shaders/ray/*"
+  "${PROJECT_SOURCE_DIR}/shaders/tools/*"
   "${PROJECT_SOURCE_DIR}/shaders/tests/*"
-  ".vert" ".frag"
 )
 
-compile_shaders("${SHADER_FILES}" "${PROJECT_BINARY_DIR}/spirv")
+set(EXCLUDED_SHADER_EXTENSIONS .glsl)
+
+compile_shaders("${SHADER_FILES}" "${PROJECT_BINARY_DIR}/spirv" "${EXCLUDED_SHADER_EXTENSIONS}")

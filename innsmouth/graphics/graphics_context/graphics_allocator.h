@@ -17,8 +17,7 @@ public:
 
   ~GraphicsAllocator();
 
-  VmaAllocation AllocateImage(const VkImageCreateInfo &image_ci, VkImage *image);
-
+  AllocationInformation AllocateImage(const VkImageCreateInfo &image_ci, VkImage &image);
   AllocationInformation AllocateBuffer(const BufferCreateInfo &buffer_ci, VkBuffer &out_buffer, AllocationCreateMask allocation_mask);
 
   static GraphicsAllocator *Get();

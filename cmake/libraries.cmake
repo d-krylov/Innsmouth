@@ -27,5 +27,7 @@ FetchContent_Declare(
 FetchContent_Declare(
 	fastgltf
 	GIT_REPOSITORY https://github.com/spnda/fastgltf
-	GIT_TAG v0.9.0
+	GIT_TAG main
 )
+
+set(FASTGLTF_ENABLE_DEPRECATED_EXT ON)

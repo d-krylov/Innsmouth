@@ -1,4 +1,5 @@
 #include "application.h"
+#include "innsmouth/graphics/core/structure_tools.h"
 
 namespace Innsmouth {
 
@@ -67,6 +68,12 @@ void Application::Run() {
     command_buffers_[current_frame_].Reset();
     command_buffers_[current_frame_].Begin();
 
+    auto subresource = GetImageSubresourceRange();
+    command_buffers_[current_frame_].CommandImageMemoryBarrier(
+      swapchain_.GetCurrentImage(), ImageLayout::E_UNDEFINED, ImageLayout::E_COLOR_ATTACHMENT_OPTIMAL,
+      PipelineStageMaskBits2::E_COLOR_ATTACHMENT_OUTPUT_BIT, PipelineStageMaskBits2::E_COLOR_ATTACHMENT_OUTPUT_BIT, AccessMaskBits2::E_NONE,
+      AccessMaskBits2::E_COLOR_ATTACHMENT_WRITE_BIT, subresource);
+
     for (auto &layer : layers_) {
       layer->OnUpdate(command_buffers_[current_frame_]);
     }
@@ -79,6 +86,11 @@ void Application::Run() {
     }
 
     imgui_renderer_.End(command_buffers_[current_frame_]);
+
+    command_buffers_[current_frame_].CommandImageMemoryBarrier(
+      swapchain_.GetCurrentImage(), ImageLayout::E_COLOR_ATTACHMENT_OPTIMAL, ImageLayout::E_PRESENT_SRC_KHR,
+      PipelineStageMaskBits2::E_COLOR_ATTACHMENT_OUTPUT_BIT, PipelineStageMaskBits2::E_NONE, AccessMaskBits2::E_COLOR_ATTACHMENT_WRITE_BIT,
+      AccessMaskBits2::E_NONE, subresource);
 
     command_buffers_[current_frame_].End();
 
@@ -97,7 +109,7 @@ void Application::Run() {
       submit_info.pSignalSemaphores = render_finished_semaphore.get();
     }
 
-    VK_CHECK(vkQueueSubmit(GraphicsContext::Get()->GetGeneralQueue(), 1, &submit_info, fences_[current_frame_].GetHandle()));
+    VK_CHECK(vkQueueSubmit(GraphicsContext::Get()->GetGraphicsQueue(), 1, &submit_info, fences_[current_frame_].GetHandle()));
 
     result = swapchain_.Present(render_finished_semaphore.get());
 

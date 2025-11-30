@@ -19,7 +19,8 @@ public:
   Format GetFormat() const;
 
   std::span<const VkImageView> GetImageViews() const;
-  const VkImageView GetCurrentImageView() const;
+  VkImageView GetCurrentImageView() const;
+  VkImage GetCurrentImage() const;
 
   uint32_t GetCurrentImageIndex() const;
   uint32_t GetImageCount() const;
@@ -39,7 +40,7 @@ private:
   VkSurfaceKHR surface_{VK_NULL_HANDLE};
   VkSwapchainKHR swapchain_current_{VK_NULL_HANDLE};
   VkSwapchainKHR swapchain_previous_{VK_NULL_HANDLE};
-  VkSurfaceFormatKHR surface_format_;
+  SurfaceFormatKHR surface_format_;
   Extent2D surface_extent_;
   std::vector<VkImage> images_;
   std::vector<VkImageView> image_views_;

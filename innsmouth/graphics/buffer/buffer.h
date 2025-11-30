@@ -9,6 +9,9 @@ namespace Innsmouth {
 
 class Buffer {
 public:
+  static constexpr AllocationCreateMask CPU = AllocationCreateMaskBits::E_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+  static constexpr AllocationCreateMask MAPPED = CPU | AllocationCreateMaskBits::E_MAPPED_BIT;
+
   Buffer() = default;
 
   Buffer(std::size_t buffer_size, BufferUsageMask buffer_usage, AllocationCreateMask allocation_mask);
@@ -24,13 +27,13 @@ public:
   void Map();
   void Unmap();
 
+  template <typename T> std::span<T> GetMappedData();
   template <typename T> void SetData(std::span<const T> data, std::size_t byte_offset = 0);
 
-  template <typename T> std::span<T> GetMappedData();
-
-  const VkBuffer GetHandle() const;
-
+  VkBuffer GetHandle() const;
   VkDeviceAddress GetBufferAddress() const;
+
+  std::size_t GetSize() const;
 
 protected:
   void CreateBuffer(AllocationCreateMask allocation_mask);

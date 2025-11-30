@@ -5,6 +5,7 @@
 #include <fstream>
 #include "innsmouth/graphics/core/graphics_formats.h"
 #include <SPIRV-Reflect/spirv_reflect.h>
+#include <vulkan/vk_enum_string_helper.h>
 
 namespace Innsmouth {
 
@@ -18,7 +19,7 @@ std::vector<uint32_t> ReadBinaryFile(const std::filesystem::path &path) {
 
 std::vector<VertexInputAttributeDescription> ReflecttShaderInputs(const SpvReflectShaderModule &module) {
   auto offset = 0;
-  auto inputs = Enumerate(spvReflectEnumerateInputVariables, &module);
+  auto inputs = Enumerate<SpvReflectInterfaceVariable *>(spvReflectEnumerateInputVariables, &module);
   auto result = std::vector<VertexInputAttributeDescription>();
   std::ranges::sort(inputs, std::less(), &SpvReflectInterfaceVariable::location);
   for (const auto &input : inputs) {
@@ -35,7 +36,7 @@ std::vector<VertexInputAttributeDescription> ReflecttShaderInputs(const SpvRefle
 
 auto ReflectDescriptorSetBindings(const SpvReflectShaderModule &module, ShaderStageMaskBits stage,
                                   DescriptorSetLayoutBindingMap &out_push_bindngs, DescriptorSetLayoutBindingMap &out_pull_bindngs) {
-  auto spv_descriptor_sets = Enumerate(spvReflectEnumerateDescriptorSets, &module);
+  auto spv_descriptor_sets = Enumerate<SpvReflectDescriptorSet *>(spvReflectEnumerateDescriptorSets, &module);
   std::map<uint32_t, std::vector<VkDescriptorSetLayoutBinding>> out_sets_bindings;
   for (const auto &spv_descriptor_set : spv_descriptor_sets) {
     std::span<SpvReflectDescriptorBinding *> spv_set_bindings(spv_descriptor_set->bindings, spv_descriptor_set->binding_count);
@@ -58,7 +59,7 @@ auto ReflectDescriptorSetBindings(const SpvReflectShaderModule &module, ShaderSt
 }
 
 std::vector<PushConstantRange> ReflectPushConstants(const SpvReflectShaderModule &module, ShaderStageMaskBits stage) {
-  auto spv_push_constants = Enumerate(spvReflectEnumeratePushConstantBlocks, &module);
+  auto spv_push_constants = Enumerate<SpvReflectBlockVariable *>(spvReflectEnumeratePushConstantBlocks, &module);
   auto push_constants = std::vector<PushConstantRange>();
   for (const auto &spv_block : spv_push_constants) {
     auto &push_constant_range = push_constants.emplace_back();

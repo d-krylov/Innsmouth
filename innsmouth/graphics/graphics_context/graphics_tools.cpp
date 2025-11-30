@@ -20,6 +20,7 @@ std::vector<const char *> GetRequiredDeviceExtensions() {
     VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,        //
     VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,   //
     VK_EXT_EXTENDED_DYNAMIC_STATE_2_EXTENSION_NAME, //
+    VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,     //
     VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,      //
     VK_KHR_RAY_QUERY_EXTENSION_NAME,                //
     VK_KHR_SWAPCHAIN_EXTENSION_NAME                 //
@@ -38,21 +39,16 @@ bool EvaluatePhysicalDevice(const VkPhysicalDevice physical_device) {
   return b;
 }
 
-QueueIndices PickPhysicalDeviceQueues(const VkPhysicalDevice physical_device) {
-  QueueIndices queue_indices;
-  auto queue_properties = Enumerate(vkGetPhysicalDeviceQueueFamilyProperties, physical_device);
+int32_t PickPhysicalDeviceQueue(const VkPhysicalDevice physical_device) {
+  int32_t graphics_queue_index{-1};
+  auto queue_properties = Enumerate<QueueFamilyProperties>(vkGetPhysicalDeviceQueueFamilyProperties, physical_device);
   for (const auto &[queue_index, queue_property] : std::views::enumerate(queue_properties)) {
-    if (HasBits(queue_property.queueFlags, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT)) {
-      queue_indices.general = queue_index;
-    } else if (HasBits(queue_property.queueFlags, VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT) &&
-               NotBits(queue_property.queueFlags, VK_QUEUE_GRAPHICS_BIT)) {
-      queue_indices.compute = queue_index;
-    } else if (HasBits(queue_property.queueFlags, VK_QUEUE_TRANSFER_BIT) &&
-               NotBits(queue_property.queueFlags, VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)) {
-      queue_indices.transfer = queue_index;
+    QueueMask queue_mask(queue_property.queueFlags);
+    if (queue_mask.HasBits(QueueMaskBits::E_GRAPHICS_BIT | QueueMaskBits::E_COMPUTE_BIT | QueueMaskBits::E_TRANSFER_BIT)) {
+      graphics_queue_index = queue_index;
     }
   }
-  return queue_indices;
+  return graphics_queue_index;
 }
 
 } // namespace Innsmouth

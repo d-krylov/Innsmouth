@@ -39,16 +39,12 @@ public:
     return *this;
   }
 
-  constexpr Mask<MaskBit> operator~() const {
-    return ~mask_;
+  bool HasBits(const Mask<MaskBit> &required_mask) const {
+    return (mask_ & required_mask.mask_) == required_mask.mask_;
   }
 
-  bool HasBits(const Mask<MaskBit> &requiered_mask) const {
-    return (*this & requiered_mask) == requiered_mask;
-  }
-
-  bool HasAnyBits(const Mask<MaskBit> &requiered_mask) const {
-    return !(*this & requiered_mask);
+  bool HasAnyBits(const Mask<MaskBit> &required_mask) const {
+    return (mask_ & required_mask.mask_) != 0;
   }
 
   constexpr Mask<MaskBit> operator&(const Mask<MaskBit> &rhs) const {
@@ -63,19 +59,19 @@ public:
     return Mask<MaskBit>(mask_ ^ rhs.mask_);
   }
 
-  constexpr bool operator!() const {
-    return mask_ == 0;
+  constexpr Mask<MaskBit> operator~() const {
+    return Mask<MaskBit>(~mask_);
   }
 
   explicit constexpr operator bool() const {
-    return !!mask_;
+    return mask_ != 0;
   }
 
   explicit constexpr operator MaskType() const {
     return mask_;
   }
 
-  auto GetValue() const {
+  constexpr MaskType GetValue() const {
     return mask_;
   }
 
@@ -84,11 +80,11 @@ private:
 };
 
 template <typename MaskBit> inline constexpr Mask<MaskBit> operator&(MaskBit bit, const Mask<MaskBit> &flags) {
-  return flags.operator&(bit);
+  return Mask<MaskBit>(bit) & flags;
 }
 
 template <typename MaskBit> inline constexpr Mask<MaskBit> operator|(MaskBit bit, const Mask<MaskBit> &flags) {
-  return flags.operator|(bit);
+  return Mask<MaskBit>(bit) | flags;
 }
 
 template <ScopedEnum MaskBit> inline constexpr Mask<MaskBit> operator&(MaskBit lhs, MaskBit rhs) {

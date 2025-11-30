@@ -8,79 +8,17 @@
 
 namespace Innsmouth {
 
-VkPipelineLayout CreatePipelineLayout(std::span<const VkDescriptorSetLayout> set_layouts, std::span<const PushConstantRange> push_constants) {
-  VkPipelineLayout pipeline_layout = VK_NULL_HANDLE;
-  PipelineLayoutCreateInfo pipeline_layout_ci;
-  {
-    pipeline_layout_ci.setLayoutCount = set_layouts.size();
-    pipeline_layout_ci.pSetLayouts = set_layouts.data();
-    pipeline_layout_ci.pushConstantRangeCount = push_constants.size();
-    pipeline_layout_ci.pPushConstantRanges = push_constants.data();
-  }
-  VK_CHECK(vkCreatePipelineLayout(GraphicsContext::Get()->GetDevice(), pipeline_layout_ci, nullptr, &pipeline_layout));
-  return pipeline_layout;
-}
-
-VkDescriptorSetLayout CreateDescriptorSetLayout(std::span<const DescriptorSetLayoutBinding> descriptor_set_bindings, bool bindless) {
-  VkDescriptorSetLayout descriptor_set_layout = VK_NULL_HANDLE;
-  DescriptorSetLayoutCreateInfo descriptor_set_layout_ci;
-  descriptor_set_layout_ci.bindingCount = descriptor_set_bindings.size();
-  descriptor_set_layout_ci.pBindings = descriptor_set_bindings.data();
-
-  DescriptorBindingMask binding_mask = DescriptorBindingMaskBits::E_UPDATE_AFTER_BIND_BIT | //
-                                       DescriptorBindingMaskBits::E_PARTIALLY_BOUND_BIT |   //
-                                       DescriptorBindingMaskBits::E_VARIABLE_DESCRIPTOR_COUNT_BIT;
-
-  DescriptorSetLayoutBindingFlagsCreateInfo set_binding_flags_ci;
-  set_binding_flags_ci.bindingCount = 1;
-  set_binding_flags_ci.pBindingFlags = &binding_mask;
-
-  if (bindless) {
-    descriptor_set_layout_ci.flags = DescriptorSetLayoutCreateMaskBits::E_UPDATE_AFTER_BIND_POOL_BIT;
-    descriptor_set_layout_ci.pNext = &set_binding_flags_ci;
-  } else {
-    descriptor_set_layout_ci.flags = DescriptorSetLayoutCreateMaskBits::E_PUSH_DESCRIPTOR_BIT;
-  }
-
-  VK_CHECK(vkCreateDescriptorSetLayout(GraphicsContext::Get()->GetDevice(), descriptor_set_layout_ci, 0, &descriptor_set_layout));
-  return descriptor_set_layout;
-}
-
-void MergeDescriptorSets(DescriptorSetLayoutBindingMap &destination, const DescriptorSetLayoutBindingMap &source) {
-  for (const auto &[set, set_bindings] : source) {
-    auto &destination_bindings = destination[set];
-    for (auto &set_binding : set_bindings) {
-      auto it = std::ranges::find(destination_bindings, set_binding.binding, &VkDescriptorSetLayoutBinding::binding);
-      if (it == destination_bindings.end()) {
-        destination_bindings.emplace_back(set_binding);
-      } else {
-        it->stageFlags |= set_binding.stageFlags;
-      }
-    }
-  }
-}
-
-GraphicsPipeline::~GraphicsPipeline() {
-}
-
-VkPipeline CreateGraphicsPipeline(const PipelineSpecification &specification, std::span<const ShaderModule> shader_modules,
+VkPipeline CreateGraphicsPipeline(const GraphicsPipelineSpecification &specification, std::span<const ShaderModule> shader_modules,
                                   VkPipelineLayout pipeline_layout) {
   std::vector<ShaderModuleCreateInfo> shader_modules_cis(shader_modules.size());
   std::vector<PipelineShaderStageCreateInfo> shader_stages_cis(shader_modules.size());
 
   for (auto i = 0; i < shader_modules.size(); i++) {
-    ShaderModuleCreateInfo shader_module_ci;
-    {
-      shader_modules_cis[i].codeSize = shader_modules[i].GetSize();
-      shader_modules_cis[i].pCode = shader_modules[i].GetBinaryData().data();
-    }
-
-    PipelineShaderStageCreateInfo shader_stage_ci;
-    {
-      shader_stages_cis[i].stage = shader_modules[i].GetShaderStage();
-      shader_stages_cis[i].pNext = &shader_modules_cis[i];
-      shader_stages_cis[i].pName = "main";
-    }
+    shader_modules_cis[i].codeSize = shader_modules[i].GetSize();
+    shader_modules_cis[i].pCode = shader_modules[i].GetBinaryData().data();
+    shader_stages_cis[i].stage = shader_modules[i].GetShaderStage();
+    shader_stages_cis[i].pNext = &shader_modules_cis[i];
+    shader_stages_cis[i].pName = "main";
   }
 
   // VERTEX INPUT STATE
@@ -183,27 +121,18 @@ std::span<const VkDescriptorSetLayout> GraphicsPipeline::GetDescriptorSetLayouts
   return descriptor_set_layouts_;
 }
 
-GraphicsPipeline::GraphicsPipeline(const PipelineSpecification &pipeline_specification) {
+GraphicsPipeline::GraphicsPipeline(const GraphicsPipelineSpecification &pipeline_specification) {
   std::vector<ShaderModule> shader_modules;
-  DescriptorSetLayoutBindingMap push_descriptor_sets;
-  DescriptorSetLayoutBindingMap pool_descriptor_sets;
   for (const auto &shader_path : pipeline_specification.shader_paths_) {
-    auto &shader_module = shader_modules.emplace_back(shader_path);
-    MergeDescriptorSets(push_descriptor_sets, shader_module.GetPushDescriptorSetLayoutBindings());
-    MergeDescriptorSets(pool_descriptor_sets, shader_module.GetPoolDescriptorSetLayoutBindings());
-  }
-  descriptor_set_layouts_.resize(push_descriptor_sets.size() + pool_descriptor_sets.size());
-
-  for (const auto &[set, bindings] : push_descriptor_sets) {
-    descriptor_set_layouts_[set] = CreateDescriptorSetLayout(bindings, false);
+    shader_modules.emplace_back(shader_path);
   }
 
-  for (const auto &[set, bindings] : pool_descriptor_sets) {
-    descriptor_set_layouts_[set] = CreateDescriptorSetLayout(bindings, true);
-  }
-
+  descriptor_set_layouts_ = CreateDescriptorSetLayouts(shader_modules);
   pipeline_layout_ = CreatePipelineLayout(descriptor_set_layouts_, shader_modules[0].GetPushConstantRanges());
   graphics_pipeline_ = CreateGraphicsPipeline(pipeline_specification, shader_modules, pipeline_layout_);
+}
+
+GraphicsPipeline::~GraphicsPipeline() {
 }
 
 GraphicsPipeline::GraphicsPipeline(GraphicsPipeline &&other) noexcept {

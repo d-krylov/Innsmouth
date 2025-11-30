@@ -7,7 +7,7 @@ namespace Innsmouth {
 
 class Fence {
 public:
-  Fence(FenceCreateMask fence_create_mask);
+  Fence(FenceCreateMask fence_create_mask = {});
 
   ~Fence();
 

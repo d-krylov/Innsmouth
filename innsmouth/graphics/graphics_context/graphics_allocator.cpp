@@ -39,7 +39,7 @@ void GraphicsAllocator::CreateAllocator() {
   VK_CHECK(vmaCreateAllocator(&allocator_ci, &vma_allocator_));
 }
 
-VmaAllocation GraphicsAllocator::AllocateImage(const VkImageCreateInfo &image_ci, VkImage *image) {
+AllocationInformation GraphicsAllocator::AllocateImage(const VkImageCreateInfo &image_ci, VkImage &image) {
   VmaAllocationCreateInfo vma_allocation_ci{};
   {
     vma_allocation_ci.flags = 0;
@@ -54,9 +54,12 @@ VmaAllocation GraphicsAllocator::AllocateImage(const VkImageCreateInfo &image_ci
   VmaAllocation allocation{VK_NULL_HANDLE};
   VmaAllocationInfo allocation_info{};
 
-  VK_CHECK(vmaCreateImage(vma_allocator_, &image_ci, &vma_allocation_ci, image, &allocation, &allocation_info));
+  VK_CHECK(vmaCreateImage(vma_allocator_, &image_ci, &vma_allocation_ci, &image, &allocation, &allocation_info));
 
-  return allocation;
+  AllocationInformation allocation_information;
+  allocation_information.allocation_ = allocation;
+
+  return allocation_information;
 }
 
 AllocationInformation GraphicsAllocator::AllocateBuffer(const BufferCreateInfo &buffer_ci, VkBuffer &out_buffer,
