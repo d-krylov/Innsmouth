@@ -23,7 +23,7 @@ public:
     target_image.SetImageLayout(ImageLayout::E_GENERAL, &command_buffer);
 
     command_buffer.CommandBindPipeline(ray_tracing_pipeline.GetPipeline(), PipelineBindPoint::E_RAY_TRACING_KHR);
-    command_buffer.CommandPushDescriptorSet(ray_tracing_pipeline.GetPipelineLayout(), 0, 0, tlas.GetAccelerationStructures().front(),
+    command_buffer.CommandPushDescriptorSet(ray_tracing_pipeline.GetPipelineLayout(), 0, 0, tlas.GetAccelerationStructure(),
                                             PipelineBindPoint::E_RAY_TRACING_KHR);
     command_buffer.CommandPushDescriptorSet(std::array{target_image.GetDescriptor()}, ray_tracing_pipeline.GetPipelineLayout(), 0, 1,
                                             DescriptorType::E_STORAGE_IMAGE, PipelineBindPoint::E_RAY_TRACING_KHR);
@@ -69,15 +69,23 @@ public:
   }
 
   void BuildAcceleration() {
-    BLASSpecification specifications[1];
-    specifications[0].indices_number_ = model.GetIndicesNumber();
-    specifications[0].indices_offset_ = 0;
-    specifications[0].vertices_number_ = model.GetVerticesNumber();
-    specifications[0].vertices_offset_ = 0;
-    blas = AccelerationStructure(vertex_buffer.GetBufferAddress(), index_buffer.GetBufferAddress(), sizeof(Vertex), specifications);
 
-    TLASInstance instance[1];
-    tlas = AccelerationStructure(blas.GetAccelerationStructures(), instance);
+    std::array<BottomLevelGeometry, 1> geometries;
+    TriangleGeometrySpecification specification;
+    specification.vertices_count_ = model.GetVerticesNumber();
+    specification.indices_count_ = model.GetIndicesNumber();
+    specification.vbo_offset_ = vertex_buffer.GetBufferAddress();
+    specification.ibo_offset_ = index_buffer.GetBufferAddress();
+    specification.vertex_stride_ = sizeof(Vertex);
+    geometries[0].AddTriangleGeometry(specification);
+
+    blas = BottomLevelAccelerationStructure(geometries);
+
+    std::array<BottomLevelAccelerationStructureInstances, 1> bottom_instances;
+    bottom_instances[0].instances_.emplace_back();
+    bottom_instances[0].acceleration_structure_ = blas.GetAccelerationStructure(0);
+
+    tlas = TopLevelAccelerationStructure(bottom_instances);
   }
 
   void SetBuffers() {
@@ -140,8 +148,8 @@ private:
   RayTracingPipeline ray_tracing_pipeline;
   GraphicsPipeline graphics_pipeline_;
   ShaderBindingTable shader_binding_table;
-  AccelerationStructure blas;
-  AccelerationStructure tlas;
+  BottomLevelAccelerationStructure blas;
+  TopLevelAccelerationStructure tlas;
   Image2D target_image;
   Camera camera;
   Model model;

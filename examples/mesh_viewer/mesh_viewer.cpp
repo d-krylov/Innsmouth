@@ -90,7 +90,7 @@ public:
     command_buffer.CommandPushConstants(graphics_pipeline.GetPipelineLayout(), ShaderStageMaskBits::E_VERTEX_BIT, matrices);
     command_buffer.CommandPushDescriptorSet(graphics_pipeline.GetPipelineLayout(), 0, 0, vertex_buffer.GetHandle(),
                                             PipelineBindPoint::E_GRAPHICS);
-    command_buffer.CommandPushDescriptorSet(graphics_pipeline.GetPipelineLayout(), 0, 1, tlas.GetAccelerationStructures().front(),
+    command_buffer.CommandPushDescriptorSet(graphics_pipeline.GetPipelineLayout(), 0, 1, tlas.GetAccelerationStructure(),
                                             PipelineBindPoint::E_GRAPHICS);
     command_buffer.CommandPushDescriptorSet(graphics_pipeline.GetPipelineLayout(), 0, 2, mesh_buffer.GetHandle(), PipelineBindPoint::E_GRAPHICS);
     command_buffer.CommandBindDescriptorSet(graphics_pipeline.GetPipelineLayout(), descriptor_set.GetHandle(), 1);
@@ -98,6 +98,26 @@ public:
     command_buffer.CommandSetScissor(0, 0, extent.width, extent.height);
     command_buffer.CommandDrawIndexedIndirect(indirect_buffer.GetHandle(), 0, model.GetMeshes().size());
     command_buffer.CommandEndRendering();
+  }
+
+  void BuildAcceleration() {
+
+    std::array<BottomLevelGeometry, 1> geometries;
+    TriangleGeometrySpecification specification;
+    specification.vertices_count_ = model.GetVerticesNumber();
+    specification.indices_count_ = model.GetIndicesNumber();
+    specification.vbo_offset_ = vertex_buffer.GetBufferAddress();
+    specification.ibo_offset_ = index_buffer.GetBufferAddress();
+    specification.vertex_stride_ = sizeof(Vertex);
+    geometries[0].AddTriangleGeometry(specification);
+
+    blas = BottomLevelAccelerationStructure(geometries);
+
+    std::array<BottomLevelAccelerationStructureInstances, 1> bottom_instances;
+    bottom_instances[0].instances_.emplace_back();
+    bottom_instances[0].acceleration_structure_ = blas.GetAccelerationStructure(0);
+
+    tlas = TopLevelAccelerationStructure(bottom_instances);
   }
 
   void OnAttach() override {
@@ -137,6 +157,8 @@ public:
     command_buffer.End();
     command_buffer.Submit();
 
+    BuildAcceleration();
+
     DescriptorPoolSize descriptor_pool_size[1];
     descriptor_pool_size[0].type = DescriptorType::E_COMBINED_IMAGE_SAMPLER;
     descriptor_pool_size[0].descriptorCount = model.GetImages().size();
@@ -149,17 +171,6 @@ public:
     }
 
     auto shader_directory = GetInnsmouthShadersDirectory();
-
-    BLASSpecification specifications[1];
-    specifications[0].indices_number_ = model.GetIndicesNumber();
-    specifications[0].indices_offset_ = 0;
-    specifications[0].vertices_number_ = model.GetVerticesNumber();
-    specifications[0].vertices_offset_ = 0;
-
-    blas = AccelerationStructure(vertex_buffer.GetBufferAddress(), index_buffer.GetBufferAddress(), sizeof(Vertex), specifications);
-
-    TLASInstance instance[1];
-    tlas = AccelerationStructure(blas.GetAccelerationStructures(), instance);
 
     GraphicsPipelineSpecification pipeline_specification;
     pipeline_specification.color_formats_ = {swapchain.GetFormat()};
@@ -185,8 +196,8 @@ private:
   ModelMatrices matrices;
   DescriptorPool descriptor_pool;
   DescriptorSet descriptor_set;
-  AccelerationStructure blas;
-  AccelerationStructure tlas;
+  BottomLevelAccelerationStructure blas;
+  TopLevelAccelerationStructure tlas;
 };
 
 int main(int argc, char **argv) {
