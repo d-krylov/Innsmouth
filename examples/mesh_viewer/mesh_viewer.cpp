@@ -78,9 +78,11 @@ public:
 
     auto extent = swapchain.GetExtent();
 
+    Transform transform(Vector3f(0.0f), Vector3f(0.1f));
+
     matrices.projection = camera.GetProjectionMatrix();
     matrices.view = camera.GetViewMatrix();
-    matrices.model = Matrix4f(1.0f); // glm::rotate(Matrix4f(1.0f), PI_ / 2.0f, Vector3f(0.0f, 1.0f, 0.0f));
+    matrices.model = transform.GetModelMatrix();
 
     command_buffer.CommandBeginRendering(swapchain.GetExtent(), rendering_ai, depth_ai);
     command_buffer.CommandBindPipeline(graphics_pipeline.GetPipeline(), PipelineBindPoint::E_GRAPHICS);
@@ -102,22 +104,24 @@ public:
 
   void BuildAcceleration() {
 
-    std::array<BottomLevelGeometry, 1> geometries;
+    BottomLevelGeometry geometry;
     TriangleGeometrySpecification specification;
     specification.vertices_count_ = model.GetVerticesNumber();
     specification.indices_count_ = model.GetIndicesNumber();
     specification.vbo_offset_ = vertex_buffer.GetBufferAddress();
     specification.ibo_offset_ = index_buffer.GetBufferAddress();
     specification.vertex_stride_ = sizeof(Vertex);
-    geometries[0].AddTriangleGeometry(specification);
+    geometry.AddTriangleGeometry(specification);
 
-    blas = BottomLevelAccelerationStructure(geometries);
+    blas = AccelerationStructure(geometry);
+
+    Transform transform(Vector3f(0.0f), Vector3f(0.1f));
 
     std::array<BottomLevelAccelerationStructureInstances, 1> bottom_instances;
-    bottom_instances[0].instances_.emplace_back();
-    bottom_instances[0].acceleration_structure_ = blas.GetAccelerationStructure(0);
+    bottom_instances[0].instances_.emplace_back(transform.GetModelMatrix());
+    bottom_instances[0].acceleration_structure_ = blas.GetAccelerationStructure();
 
-    tlas = TopLevelAccelerationStructure(bottom_instances);
+    tlas = AccelerationStructure(bottom_instances);
   }
 
   void OnAttach() override {
@@ -196,8 +200,8 @@ private:
   ModelMatrices matrices;
   DescriptorPool descriptor_pool;
   DescriptorSet descriptor_set;
-  BottomLevelAccelerationStructure blas;
-  TopLevelAccelerationStructure tlas;
+  AccelerationStructure blas;
+  AccelerationStructure tlas;
 };
 
 int main(int argc, char **argv) {

@@ -1,7 +1,7 @@
 #ifndef INNSMOUTH_BOTTOM_LEVEL_GEOMETRY_H
 #define INNSMOUTH_BOTTOM_LEVEL_GEOMETRY_H
 
-#include "innsmouth/graphics/core/graphics_types.h"
+#include "innsmouth/graphics/graphics_context/graphics_context.h"
 #include "innsmouth/mathematics/include/mathematics_types.h"
 #include <vector>
 

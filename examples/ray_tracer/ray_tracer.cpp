@@ -5,9 +5,20 @@ using namespace Innsmouth;
 
 std::filesystem::path model_path;
 
+bool dirty = false;
+
 class RayTracer : public Innsmouth::Layer {
 public:
   void OnImGui() override {
+    auto position = camera.GetPosition();
+    Vector3f temp_rotation = rotation;
+    ImGui::Begin("Settings");
+    ImGui::DragFloat3("camera position", glm::value_ptr(position));
+    ImGui::DragFloat3("model rotation", glm::value_ptr(temp_rotation));
+    ImGui::End();
+    camera.SetPosition(position);
+    dirty = temp_rotation != rotation;
+    rotation = temp_rotation;
   }
 
   void OnSwapchain() override {
@@ -19,6 +30,25 @@ public:
   void OnUpdate(CommandBuffer &command_buffer) override {
     auto &swapchain = Application::Get()->GetSwapchain();
     auto extent = swapchain.GetExtent();
+
+    std::array<BottomLevelAccelerationStructureInstances, 1> bottom_instances;
+
+    for (auto x = 0; x < 10; x++) {
+      for (auto z = 0; z < 10; z++) {
+        Transform transform;
+        transform.SetPosition(Vector3f(30.0f * x, 0.0f, 30.0f * z));
+        transform.SetOrientation(rotation);
+        transform.SetScale(Vector3f(0.2f));
+        bottom_instances[0].instances_.emplace_back(transform.GetModelMatrix());
+      }
+    }
+
+    bottom_instances[0].acceleration_structure_ = blas.GetAccelerationStructure();
+
+    if (dirty) {
+      tlas = AccelerationStructure(bottom_instances);
+      dirty = false;
+    }
 
     target_image.SetImageLayout(ImageLayout::E_GENERAL, &command_buffer);
 
@@ -33,6 +63,8 @@ public:
 
     command_buffer.CommandPushDescriptorSet(ray_tracing_pipeline.GetPipelineLayout(), 0, 3, index_buffer.GetHandle(),
                                             PipelineBindPoint::E_RAY_TRACING_KHR);
+
+    command_buffer.CommandPushConstants(ray_tracing_pipeline.GetPipelineLayout(), ShaderStageMaskBits::E_RAYGEN_BIT_KHR, camera.GetPosition());
 
     command_buffer.CommandTraceRay(shader_binding_table.raygen_shader_binding_table_, shader_binding_table.miss_shader_binding_table_,
                                    shader_binding_table.hit_shader_binding_table_, extent.width, extent.height, 1);
@@ -70,22 +102,34 @@ public:
 
   void BuildAcceleration() {
 
-    std::array<BottomLevelGeometry, 1> geometries;
+    BottomLevelGeometry geometry;
     TriangleGeometrySpecification specification;
     specification.vertices_count_ = model.GetVerticesNumber();
     specification.indices_count_ = model.GetIndicesNumber();
     specification.vbo_offset_ = vertex_buffer.GetBufferAddress();
     specification.ibo_offset_ = index_buffer.GetBufferAddress();
     specification.vertex_stride_ = sizeof(Vertex);
-    geometries[0].AddTriangleGeometry(specification);
+    geometry.AddTriangleGeometry(specification);
 
-    blas = BottomLevelAccelerationStructure(geometries);
+    blas = AccelerationStructure(geometry);
 
     std::array<BottomLevelAccelerationStructureInstances, 1> bottom_instances;
-    bottom_instances[0].instances_.emplace_back();
-    bottom_instances[0].acceleration_structure_ = blas.GetAccelerationStructure(0);
 
-    tlas = TopLevelAccelerationStructure(bottom_instances);
+    rotation = Vector3f(0.0f, PI_ / 2.0f, 0.0f);
+
+    for (auto x = 0; x < 10; x++) {
+      for (auto z = 0; z < 10; z++) {
+        Transform transform;
+        transform.SetPosition(Vector3f(30.0f * x, 0.0f, 30.0f * z));
+        transform.SetOrientation(rotation);
+        transform.SetScale(Vector3f(0.2f));
+        bottom_instances[0].instances_.emplace_back(transform.GetModelMatrix());
+      }
+    }
+
+    bottom_instances[0].acceleration_structure_ = blas.GetAccelerationStructure();
+
+    tlas = AccelerationStructure(bottom_instances);
   }
 
   void SetBuffers() {
@@ -148,10 +192,11 @@ private:
   RayTracingPipeline ray_tracing_pipeline;
   GraphicsPipeline graphics_pipeline_;
   ShaderBindingTable shader_binding_table;
-  BottomLevelAccelerationStructure blas;
-  TopLevelAccelerationStructure tlas;
+  AccelerationStructure blas;
+  AccelerationStructure tlas;
   Image2D target_image;
   Camera camera;
+  Vector3f rotation;
   Model model;
 };
 

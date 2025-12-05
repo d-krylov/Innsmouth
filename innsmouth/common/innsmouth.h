@@ -12,8 +12,8 @@
 #include "innsmouth/scene/include/camera.h"
 #include "innsmouth/asset/include/model.h"
 #include "innsmouth/core/include/image_wrapper.h"
-#include "innsmouth/graphics/raytracing/bottom_level_acceleration_structure.h"
-#include "innsmouth/graphics/raytracing/top_level_acceleration_structure.h"
+#include "innsmouth/graphics/raytracing/acceleration_structure.h"
 #include "innsmouth/graphics/raytracing/shader_binding_table.h"
+#include "innsmouth/mathematics/include/transform.h"
 
 #endif // INNSMOUTH_H

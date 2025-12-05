@@ -91,7 +91,7 @@ RayTracingPipeline::RayTracingPipeline(std::vector<ShaderGroupPaths> shader_grou
   }
 
   descriptor_set_layouts_ = CreateDescriptorSetLayouts(shader_modules);
-  pipeline_layout_ = CreatePipelineLayout(descriptor_set_layouts_, {});
+  pipeline_layout_ = CreatePipelineLayout(descriptor_set_layouts_, shader_modules[0].GetPushConstantRanges());
   ray_tracing_pipeline_ = CreateRayTracingPipeline(shader_groups, shader_modules, pipeline_layout_, maximum_recursion_depth);
 }
 

@@ -14,6 +14,7 @@ find_package(Vulkan REQUIRED COMPONENTS volk)
 
 FetchContent_MakeAvailable(
   imgui
+  tinyobjloader
   fastgltf
   glm
   stb

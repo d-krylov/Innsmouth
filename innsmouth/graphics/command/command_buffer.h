@@ -92,7 +92,7 @@ public:
   void CommandPushDescriptorSet(std::span<const DescriptorImageInfo> images, const VkPipelineLayout layout, uint32_t set_number,
                                 uint32_t binding, DescriptorType descriptor_type, PipelineBindPoint bind_point);
 
-  template <typename T> void CommandPushConstants(const VkPipelineLayout layout, ShaderStageMask stage, const T &data, uint32_t offset = 0);
+  template <typename T> void CommandPushConstants(VkPipelineLayout layout, ShaderStageMask stage, const T &data, uint32_t offset = 0);
 
   void CommandBuildAccelerationStructure(std::span<const AccelerationStructureBuildGeometryInfoKHR> build_geometry_infos,
                                          std::span<const AccelerationStructureBuildRangeInfoKHR *> build_range_infos);

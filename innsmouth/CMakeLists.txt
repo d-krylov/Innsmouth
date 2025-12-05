@@ -1,20 +1,9 @@
 set(INNSMOUTH_SOURCE_DIR ${PROJECT_SOURCE_DIR}/innsmouth)
 
-
+collect_source_recursive("${INNSMOUTH_SOURCE_DIR}/mathematics" ".cpp" INNSMOUTH_MATHEMATICS_SOURCES)
 collect_source_recursive("${INNSMOUTH_SOURCE_DIR}/graphics" ".cpp" INNSMOUTH_GRAPHICS_SOURCES)
-
-set(INNSMOUTH_ASSET_SOURCES
-  ${INNSMOUTH_SOURCE_DIR}/asset/model.cpp
-  ${INNSMOUTH_SOURCE_DIR}/asset/khronos_loader.cpp
-)
-
-set(INNSMOUTH_GUI_SOURCES
-  ${INNSMOUTH_SOURCE_DIR}/gui/window/key.cpp
-  ${INNSMOUTH_SOURCE_DIR}/gui/window/event.cpp
-  ${INNSMOUTH_SOURCE_DIR}/gui/window/window.cpp
-  ${INNSMOUTH_SOURCE_DIR}/gui/imgui/imgui_layer.cpp
-  ${INNSMOUTH_SOURCE_DIR}/gui/imgui/imgui_renderer.cpp
-)
+collect_source_recursive("${INNSMOUTH_SOURCE_DIR}/asset" ".cpp" INNSMOUTH_ASSET_SOURCES)
+collect_source_recursive("${INNSMOUTH_SOURCE_DIR}/gui" ".cpp" INNSMOUTH_GUI_SOURCES)
 
 set(INNSMOUTH_CORE_SOURCES
   ${INNSMOUTH_SOURCE_DIR}/core/core.cpp
@@ -31,6 +20,7 @@ set(INNSMOUTH_SOURCES
   ${INNSMOUTH_CORE_SOURCES}
   ${INNSMOUTH_ASSET_SOURCES}
   ${INNSMOUTH_SCENE_SOURCES}
+  ${INNSMOUTH_MATHEMATICS_SOURCES}
   ${INNSMOUTH_SOURCE_DIR}/application/application.cpp
 )
 
@@ -38,7 +28,7 @@ set(INNSMOUTH_SOURCES
 
 configure_file(
   ${INNSMOUTH_SOURCE_DIR}/common/innsmouth_config.h.in
-  ${CMAKE_BINARY_DIR}/config/innsmouth_config.h
+  ${PROJECT_BINARY_DIR}/config/innsmouth_config.h
 )
 
 # IMGUI
@@ -79,6 +69,7 @@ target_link_libraries(${PROJECT_NAME}
   imgui
   glfw
   fastgltf
+  tinyobjloader
   glm::glm
   SPIRV-reflect
 )

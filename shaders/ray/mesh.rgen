@@ -3,6 +3,10 @@
 #extension GL_GOOGLE_include_directive : require
 #extension GL_EXT_ray_query : require
 
+layout (push_constant) uniform PushConstants {
+	float camera_position_x, camera_position_y, camera_position_z;
+} pc;
+
 #include "common.glsl"
 
 layout (location = 0) rayPayloadEXT Hit payload;
@@ -17,7 +21,7 @@ void main() {
 
   vec2 uv = (vec2(pixel) + vec2(0.5)) / size.x;
 
-  vec3 origin = vec3(0.0, 500.0, 5.0);
+  vec3 origin = vec3(pc.camera_position_x, pc.camera_position_y, pc.camera_position_z);
   vec3 direction = normalize(vec3(uv * 2.0 - 1.0, -1.0));
 
   direction.xz *= rotate(1.5);

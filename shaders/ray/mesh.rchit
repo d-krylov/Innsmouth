@@ -41,6 +41,8 @@ void main() {
 
   vec3 sun = normalize(vec3(1.0, 1.0, 0.0));
 
+  normal = normalize(transpose(mat3(gl_WorldToObjectEXT)) * normal);
+
   float NdotL = clamp(dot(sun, normal), 0.0, 1.0);
 
   vec3 color = vec3(0.3) + NdotL * vec3(0.4, 0.4, 0.1);
